@@ -7,9 +7,10 @@ export function ListingCard({ listing }: { listing: Listing }) {
       <div className="card-body">
         <span className="chip">{listing.purpose === "Sale" ? "For sale" : "To rent"}</span><span className="chip">{listing.type}</span>
         <p className="price">{money(listing.priceGyd, listing.purpose)}</p>
-        <p className="meta">About USD {usd(listing.priceGyd).toLocaleString()}</p>
-        <strong>{listing.title}</strong>
-        <p className="meta">{listing.area} · {listing.beds ? listing.beds + " bed · " + listing.baths + " bath" : listing.type}</p>
+        <p className="meta">Guide USD {usd(listing.priceGyd).toLocaleString()}</p>
+        <strong>{listing.area}</strong>
+        <p className="meta">{listing.title}</p>
+        <div className="facts"><span>{listing.beds || "\u2014"} bed</span><span>{listing.baths || "\u2014"} bath</span><span>{listing.sqft.toLocaleString()} sqft</span></div>
       </div>
     </Link>
   );
