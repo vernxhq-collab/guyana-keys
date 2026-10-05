@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { ListingCard } from "../../components/ListingCard";
 import { MapView } from "../../components/MapView";
 import { listings } from "../../lib/data";
 import { areas } from "../../lib/areas";
-export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; view?: string }> }) {
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string }> }) {
   const params = await searchParams;
   const q = (params.q || "").toLowerCase();
   const shown = listings.filter((item) => {
@@ -12,15 +11,8 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
     if (params.type && item.type !== params.type) return false;
     return true;
   });
-  const map = params.view === "map";
-  const next = new URLSearchParams();
-  if (params.q) next.set("q", params.q);
-  if (params.purpose) next.set("purpose", params.purpose);
-  if (params.type) next.set("type", params.type);
-  next.set("view", map ? "list" : "map");
   return (
     <main className="wrap section">
-      <h1>{shown.length} homes</h1>
       <form className="search-card" action="/listings">
         <input name="q" list="areas" defaultValue={params.q || ""} placeholder="Neighbourhood, city, or region" />
         <datalist id="areas">{areas.map((area) => <option key={area.slug} value={area.name} />)}</datalist>
@@ -28,8 +20,8 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         <select name="type" defaultValue={params.type || "House"}><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select>
         <button className="btn">Search</button>
       </form>
-      <p><Link className="btn ghost" href={`/listings?${next.toString()}`}>{map ? "List" : "Map"}</Link></p>
-      {map ? <MapView listings={shown} /> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}
+      <p className="sub">{shown.length} homes · GYD with a USD guide · a listing is not proof of title</p>
+      <div className="split">{shown.length === 0 ? <p>No listing matches.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}<MapView listings={shown} /></div>
     </main>
   );
 }
