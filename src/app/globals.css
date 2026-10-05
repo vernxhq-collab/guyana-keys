@@ -1,0 +1,4 @@
+body { margin: 0; font-family: Georgia, serif; color: #14241c; background: #f7f4ee; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.nav { display: flex; gap: 16px; align-items: center; }
+.nav a { color: #1f6b45; text-decoration: none; }
