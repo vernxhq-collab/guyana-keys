@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { money, usd, type Listing } from "../lib/data";
 export function ListingCard({ listing }: { listing: Listing }) {
+  const land = listing.type === "Land";
   return (
     <Link className="card" href={`/listings/${listing.id}`}>
       <img src={listing.image} alt="" />
@@ -10,7 +11,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <p className="meta">Guide USD {usd(listing.priceGyd).toLocaleString()}</p>
         <strong>{listing.area}</strong>
         <p className="meta">{listing.title}</p>
-        <div className="facts"><span>{listing.beds || "\u2014"} bed</span><span>{listing.baths || "\u2014"} bath</span><span>{listing.sqft.toLocaleString()} sqft</span></div>
+        <div className="facts">{land ? <span>{listing.sqft.toLocaleString()} sqft</span> : <><span>{listing.beds} bed</span><span>{listing.baths} bath</span><span>{listing.sqft.toLocaleString()} sqft</span></>}</div>
       </div>
     </Link>
   );

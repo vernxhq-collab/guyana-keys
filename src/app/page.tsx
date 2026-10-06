@@ -14,8 +14,9 @@ export default function HomePage() {
           <div className="row"><select name="purpose" defaultValue="Sale"><option>Sale</option><option>Rent</option></select><select name="type" defaultValue="House"><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select><button className="btn">Search</button></div>
         </form>
       </div></section>
-      <section className="section wrap"><div style={{display:"flex", justifyContent:"space-between", alignItems:"end"}}><h2>Latest homes</h2><Link href="/listings">Map view</Link></div><div className="grid">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div></section>
-      <section className="section wrap"><h2>Find an agent</h2><div className="grid">{agents.map((agent) => <Link className="card" key={agent.id} href={`/agents/${agent.id}`}><div className="card-body"><strong>{agent.name}</strong><p className="meta">{agent.company}</p><p className="meta">{agent.areas.join(", ")}</p></div></Link>)}</div></section>
+      <section className="section wrap"><div style={{display:"flex", justifyContent:"space-between"}}><h2>Latest homes</h2><Link href="/listings">Map view</Link></div><div className="grid">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div></section>
+      <section className="section wrap"><h2>Neighbourhoods</h2><div className="grid">{areas.slice(0, 6).map((area) => <Link className="card" key={area.slug} href={`/areas/${area.slug}`}><div className="card-body"><strong>{area.name}</strong><p className="meta">{area.region}</p></div></Link>)}</div></section>
+      <section className="section wrap"><h2>Find an agent</h2><div className="grid">{agents.map((agent) => <Link className="card" key={agent.id} href={`/agents/${agent.id}`}><img src={agent.image} alt="" style={{height:220, objectFit:"cover"}} /><div className="card-body"><strong>{agent.name}</strong><p className="meta">{agent.company}</p><p className="meta">{agent.areas.join(", ")}</p></div></Link>)}</div></section>
     </main>
   );
 }
