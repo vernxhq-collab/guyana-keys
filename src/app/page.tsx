@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <main>
       <section className="hero"><div className="wrap hero-inner">
-        <h1>Find a home in Guyana.</h1>
+        <h1>Your property search, taken seriously.</h1>
         <form className="search-panel" action="/listings">
           <div className="tabs"><span>Buy</span><span>Rent</span></div>
           <input name="q" list="areas" placeholder="Bel Air, Diamond, Ogle, New Amsterdam" />
