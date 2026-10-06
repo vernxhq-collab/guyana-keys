@@ -16,6 +16,7 @@ export default function HomePage() {
       </div></section>
       <section className="section wrap"><div style={{display:"flex", justifyContent:"space-between"}}><h2>Latest homes</h2><Link href="/listings">Map view</Link></div><div className="grid">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div></section>
       <section className="section wrap"><h2>Neighbourhoods</h2><div className="grid">{areas.slice(0, 6).map((area) => <Link className="card" key={area.slug} href={`/areas/${area.slug}`}><div className="card-body"><strong>{area.name}</strong><p className="meta">{area.region}</p></div></Link>)}</div></section>
+      <section className="section wrap"><div className="alert-band"><div><h2>Set up a property alert</h2><p>Get an email when a home is listed in the area you search.</p><Link className="btn" href="/alerts">Create alert</Link></div><div className="alert-panel"><strong>Bel Air, Ogle, Diamond</strong><p>New listing. GYD price, with a USD guide.</p></div></div></section>
     </main>
   );
 }
