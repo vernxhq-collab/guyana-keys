@@ -9,7 +9,7 @@ export default function HomePage() {
         <h1>Your property search just got serious.</h1>
         <form className="search-panel" action="/listings">
           <div className="tabs"><span>Buy</span><span>Rent</span></div>
-          <input name="q" list="areas" placeholder="Bel Air, Diamond, Ogle, New Amsterdam" />
+          <label className="ask"><span aria-hidden="true">✦</span><input name="q" list="areas" placeholder="3 bed house in Bel Air under 95 million" /></label>
           <datalist id="areas">{areas.map((area) => <option key={area.slug} value={area.name} />)}</datalist>
           <div className="row"><select name="purpose" defaultValue="Sale"><option>Sale</option><option>Rent</option></select><select name="type" defaultValue="House"><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select><button className="btn">Search</button></div>
         </form>
