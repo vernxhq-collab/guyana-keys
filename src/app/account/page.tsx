@@ -6,7 +6,6 @@ export default function AccountPage() {
         <label htmlFor="email"><strong>Enter your email address</strong></label>
         <input id="email" name="email" type="email" required style={{border:"1px solid #d5dbd8", borderRadius:12, padding:14}} />
         <button className="btn" type="button" style={{borderRadius:999, padding:14}}>Next</button>
-        <p className="meta">By continuing, you agree to the Guyana Keys privacy notice.</p>
       </form>
     </main>
   );
