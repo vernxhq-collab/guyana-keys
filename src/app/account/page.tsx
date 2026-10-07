@@ -24,7 +24,23 @@ export default function AccountPage() {
   const [homes, setHomes] = useState<Home[]>([]);
 
   useEffect(() => {
-    fetch("/api/auth").then((res) => res.json()).then((data) => setUser(data.user));
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const accessToken = hash.get("access_token");
+    if (!accessToken) {
+      fetch("/api/auth").then((res) => res.json()).then((data) => setUser(data.user));
+      return;
+    }
+    fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "session", accessToken }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) setUser(data.user);
+        else setError(data.error || "That sign-in link was not accepted.");
+        window.history.replaceState({}, "", "/account");
+      });
   }, []);
 
   useEffect(() => {
@@ -32,7 +48,7 @@ export default function AccountPage() {
     fetch("/api/listings").then((res) => res.json()).then((data) => setHomes(data.listings || []));
   }, [user]);
 
-  async function sendCode(event: React.FormEvent) {
+  async function sendLink(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError("");
@@ -44,7 +60,7 @@ export default function AccountPage() {
     const data = await response.json();
     setBusy(false);
     if (!response.ok) {
-      setError(data.error || "Could not send the code.");
+      setError(data.error || "Could not send the email.");
       return;
     }
     setSentTo(data.email);
@@ -101,16 +117,16 @@ export default function AccountPage() {
 
   return (
     <main className="wrap section" style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}>
-      <form className="card" style={{ width: "min(440px, 100%)", padding: 28, display: "grid", gap: 14 }} onSubmit={sentTo ? confirm : sendCode}>
-        <h1 style={{ margin: 0, fontSize: 28 }}>{sentTo ? "Enter your code" : "Sign in or register"}</h1>
+      <form className="card" style={{ width: "min(440px, 100%)", padding: 28, display: "grid", gap: 14 }} onSubmit={sentTo && code ? confirm : sendLink}>
+        <h1 style={{ margin: 0, fontSize: 28 }}>{sentTo ? "Check your email" : "Sign in or register"}</h1>
         {sentTo ? (
           <>
-            <p>We sent a code to {sentTo}. Check the inbox and spam. It is not shown on this page.</p>
-            <input value={code} onChange={(event) => setCode(event.target.value)} inputMode="numeric" required placeholder="6-digit code" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+            <p>Open the email and press the link. That signs you in. If the email also shows a 6-digit code, type it below.</p>
+            <input value={code} onChange={(event) => setCode(event.target.value)} inputMode="numeric" placeholder="6-digit code, if the email has one" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
           </>
         ) : (
           <>
-            <p>We email a code. Nothing is printed here.</p>
+            <p>We email a sign-in link. Nothing is printed here.</p>
             {mode === "signup" ? (
               <input value={name} onChange={(event) => setName(event.target.value)} required placeholder="Your name" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
             ) : null}
@@ -119,7 +135,7 @@ export default function AccountPage() {
           </>
         )}
         {error ? <p>{error}</p> : null}
-        <button className="btn" type="submit" disabled={busy} style={{ borderRadius: 999, padding: 14 }}>{busy ? "Please wait…" : sentTo ? "Confirm code" : "Next"}</button>
+        <button className="btn" type="submit" disabled={busy} style={{ borderRadius: 999, padding: 14 }}>{busy ? "Please wait…" : sentTo ? "Use code" : "Next"}</button>
         {!sentTo ? (
           <button className="btn ghost" type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
             {mode === "login" ? "Create an account" : "I already have an account"}
