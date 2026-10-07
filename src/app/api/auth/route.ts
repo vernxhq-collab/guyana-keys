@@ -4,6 +4,14 @@ import { authClient } from "../../../lib/supabase";
 
 const COOKIE = "gk_session";
 
+function plainError(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes("rate limit")) {
+    return "Too many codes were sent in the last hour. Check your inbox and spam for the last one, then wait before asking for another.";
+  }
+  return message;
+}
+
 async function currentUser(token: string | undefined) {
   if (!token) return null;
   const client = authClient();
@@ -36,13 +44,13 @@ export async function POST(request: Request) {
       email,
       options: { shouldCreateUser: true, data: body.name ? { name: String(body.name).trim() } : undefined },
     });
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) return NextResponse.json({ error: plainError(error.message) }, { status: 400 });
     return NextResponse.json({ step: "code", email });
   }
   if (body.action === "verify") {
     const { data, error } = await client.auth.verifyOtp({ email, token: String(body.code || "").trim(), type: "email" });
     if (error || !data.session || !data.user?.email) {
-      return NextResponse.json({ error: error?.message || "That code was not accepted." }, { status: 400 });
+      return NextResponse.json({ error: plainError(error?.message || "That code was not accepted.") }, { status: 400 });
     }
     const name = typeof data.user.user_metadata?.name === "string" && data.user.user_metadata.name ? data.user.user_metadata.name : data.user.email.split("@")[0];
     const response = NextResponse.json({ user: { id: data.user.id, name, email: data.user.email } });
