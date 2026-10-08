@@ -1,3 +1,8 @@
+export function areaByName(name: string) {
+  const key = name.trim().toLowerCase();
+  return areas.find((item) => item.name.toLowerCase() === key);
+}
+
 export const areas = [
   { slug: "bel-air-park", name: "Bel Air Park", region: "Georgetown", note: "Gated homes and the prices diaspora buyers ask for first." },
   { slug: "bel-air", name: "Bel Air", region: "Georgetown", note: "Residential streets beside the park." },

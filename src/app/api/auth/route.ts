@@ -1,53 +1,64 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { authClient } from "../../../lib/supabase";
-
-const COOKIE = "gk_session";
-const RETURN_TO = "https://guyana-keys.vercel.app/account";
+import { ensureProfile, isAdminEmail, loadProfile, readToken, redirectFor, SESSION_COOKIE, userFromToken, type Desk } from "../../../lib/session";
 
 function plainError(message: string) {
   const lower = message.toLowerCase();
-  if (lower.includes("rate limit")) {
-    return "Too many emails were sent in the last hour. Use the link already in your inbox, or wait before asking again.";
-  }
-  return message;
+  if (lower.includes("rate limit")) return "Too many emails were sent in the last hour. Use the link already in your inbox, or wait before asking again.";
+  if (lower.includes("redirect")) return "The sign-in email could not be sent. Try again.";
+  return "The sign-in email could not be sent. Try again.";
 }
 
-async function userFromToken(token: string) {
-  const client = authClient();
-  if (!client) return null;
-  const { data } = await client.auth.getUser(token);
-  const user = data.user;
-  if (!user?.email) return null;
-  const name = typeof user.user_metadata?.name === "string" && user.user_metadata.name ? user.user_metadata.name : user.email.split("@")[0];
-  return { id: user.id, name, email: user.email };
+function deskOf(value: unknown): Desk {
+  if (value === "agent" || value === "admin") return value;
+  return "buyer";
 }
 
-function signedIn(user: { id: string; name: string; email: string }, token: string) {
-  const response = NextResponse.json({ user });
-  response.cookies.set(COOKIE, token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30, secure: true });
+function signedIn(user: { id: string; name: string; email: string }, profile: unknown, token: string) {
+  const response = NextResponse.json({ user, profile });
+  response.cookies.set(SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30, secure: true });
   return response;
 }
 
 export async function GET() {
-  const token = (await cookies()).get(COOKIE)?.value;
-  return NextResponse.json({ user: token ? await userFromToken(token) : null });
+  const token = await readToken();
+  const user = token ? await userFromToken(token) : null;
+  if (!user) return NextResponse.json({ user: null, profile: null });
+  const profile = await loadProfile(user.id);
+  const safe = profile
+    ? { id: profile.id, name: profile.name, email: profile.email, role: profile.role, phone: profile.phone, abroad: profile.abroad, suspended: profile.suspended, plan: profile.plan, listingCap: profile.listingCap, company: profile.company, areas: profile.areas, photoUrl: profile.photoUrl }
+    : null;
+  return NextResponse.json({ user, profile: safe });
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const body = await request.json().catch(() => ({}));
   if (body.action === "logout") {
     const response = NextResponse.json({ user: null });
-    response.cookies.set(COOKIE, "", { path: "/", maxAge: 0 });
+    response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0, secure: true });
     return response;
   }
   const client = authClient();
-  if (!client) return NextResponse.json({ error: "Sign-in email is not connected on the server." }, { status: 503 });
+  if (!client) return NextResponse.json({ error: "Sign-in email is not connected." }, { status: 503 });
+  const desk = deskOf(body.desk);
   if (body.action === "session") {
     const token = String(body.accessToken || "");
     const user = token ? await userFromToken(token) : null;
     if (!user) return NextResponse.json({ error: "That sign-in link was not accepted." }, { status: 400 });
-    return signedIn(user, token);
+    if (desk === "admin" && !isAdminEmail(user.email)) {
+      return NextResponse.json({ error: "This desk is for the Guyana Keys admin." }, { status: 403 });
+    }
+    const profile = await ensureProfile(user, desk);
+    if (desk === "admin" && profile?.role !== "admin") {
+      return NextResponse.json({ error: "This desk is for the Guyana Keys admin." }, { status: 403 });
+    }
+    if (desk === "agent" && profile?.suspended) {
+      const response = NextResponse.json({ error: "This account is suspended." }, { status: 403 });
+      response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0, secure: true });
+      return response;
+    }
+    const safe = profile ? { role: profile.role, name: profile.name, suspended: profile.suspended } : null;
+    return signedIn(user, safe, token);
   }
   const email = String(body.email || "").trim().toLowerCase();
   if (body.action === "start") {
@@ -56,7 +67,7 @@ export async function POST(request: Request) {
       email,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: RETURN_TO,
+        emailRedirectTo: redirectFor(desk),
         data: body.name ? { name: String(body.name).trim() } : undefined,
       },
     });
@@ -65,11 +76,14 @@ export async function POST(request: Request) {
   }
   if (body.action === "verify") {
     const { data, error } = await client.auth.verifyOtp({ email, token: String(body.code || "").trim(), type: "email" });
-    if (error || !data.session || !data.user?.email) {
-      return NextResponse.json({ error: plainError(error?.message || "That code was not accepted.") }, { status: 400 });
-    }
-    const name = typeof data.user.user_metadata?.name === "string" && data.user.user_metadata.name ? data.user.user_metadata.name : data.user.email.split("@")[0];
-    return signedIn({ id: data.user.id, name, email: data.user.email }, data.session.access_token);
+    if (error || !data.session || !data.user?.email) return NextResponse.json({ error: "That sign-in link was not accepted." }, { status: 400 });
+    const meta = data.user.user_metadata?.name;
+    const name = typeof meta === "string" && meta ? meta : data.user.email.split("@")[0];
+    const user = { id: data.user.id, name, email: data.user.email };
+    if (desk === "admin" && !isAdminEmail(user.email)) return NextResponse.json({ error: "This desk is for the Guyana Keys admin." }, { status: 403 });
+    const profile = await ensureProfile(user, desk);
+    if (desk === "agent" && profile?.suspended) return NextResponse.json({ error: "This account is suspended." }, { status: 403 });
+    return signedIn(user, profile ? { role: profile.role, name: profile.name } : null, data.session.access_token);
   }
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });
 }

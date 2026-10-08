@@ -1,7 +1,10 @@
 "use client";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 export function LiveChat() {
+  const path = usePathname();
   const [open, setOpen] = useState(false);
+  if (path.startsWith("/account") || path.startsWith("/agent") || path.startsWith("/admin")) return null;
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<{ from: string; body: string }[]>([{ from: "Keys", body: "Ask about a neighbourhood, a sale, a rental, or the title check." }]);
   async function send(event: React.FormEvent) {

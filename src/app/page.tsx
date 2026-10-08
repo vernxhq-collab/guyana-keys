@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ListingCard } from "../components/ListingCard";
-import { listings } from "../lib/data";
+import { loadCatalog } from "../lib/catalog";
 import { areas } from "../lib/areas";
 const popular = ["bel-air-park", "ogle", "diamond", "providence", "kitty", "new-amsterdam"];
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+export default async function HomePage() {
+  const { listings } = await loadCatalog();
   const picks = popular.map((slug) => areas.find((area) => area.slug === slug)).filter((area) => area !== undefined);
   return (
     <main>

@@ -1,151 +1,78 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ListingCard } from "../../components/ListingCard";
-import { listings } from "../../lib/data";
-import { readMine, type Mine } from "../../lib/mine";
-
-type User = { id: string; name: string; email: string };
+import { BuyerDesk, type BuyerPayload } from "../../components/BuyerDesk";
+import { MagicLinkForm } from "../../components/MagicLinkForm";
 
 export default function AccountPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [mode, setMode] = useState<"signup" | "login">("login");
-  const [code, setCode] = useState("");
-  const [sentTo, setSentTo] = useState("");
+  const [phase, setPhase] = useState<"loading" | "out" | "in" | "refuse" | "error">("loading");
+  const [data, setData] = useState<BuyerPayload | null>(null);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [purpose, setPurpose] = useState<"Sale" | "Rent">("Sale");
-  const [mine, setMine] = useState<Mine>({ saved: [], enquired: [] });
+
+  async function load() {
+    const auth = await fetch("/api/auth").then((res) => res.json());
+    if (!auth.user) {
+      setPhase("out");
+      return;
+    }
+    if (auth.profile && auth.profile.role !== "buyer") {
+      setPhase("refuse");
+      return;
+    }
+    const key = "gk-mine-" + auth.user.id;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const mine = JSON.parse(raw) as { saved?: string[]; enquired?: string[] };
+        const moved = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "migrate", saved: mine.saved || [], enquired: mine.enquired || [] }) });
+        if (moved.ok) localStorage.removeItem(key);
+      } catch {
+        // Leave the browser copy in place so the next visit can try again.
+      }
+    }
+    const res = await fetch("/api/buyer");
+    const payload = await res.json();
+    if (!res.ok) {
+      setError(payload.error || "Could not load your homes.");
+      setPhase(res.status === 403 ? "refuse" : "error");
+      return;
+    }
+    setData(payload);
+    setPhase("in");
+  }
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const accessToken = hash.get("access_token");
     if (!accessToken) {
-      fetch("/api/auth").then((res) => res.json()).then((data) => setUser(data.user));
+      void load();
       return;
     }
-    fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "session", accessToken }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user) setUser(data.user);
-        else setError(data.error || "That sign-in link was not accepted.");
+    fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "session", accessToken, desk: "buyer" }) })
+      .then(async (res) => ({ ok: res.ok, data: await res.json() }))
+      .then(({ ok, data: body }) => {
         window.history.replaceState({}, "", "/account");
+        if (!ok) {
+          setError(body.error || "That sign-in link was not accepted.");
+          setPhase("out");
+          return;
+        }
+        return load();
+      })
+      .catch(() => {
+        setError("That sign-in link was not accepted.");
+        setPhase("out");
       });
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    setMine(readMine(user.id));
-  }, [user]);
-
-  async function sendLink(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    const response = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "start", email, name: mode === "signup" ? name : undefined }),
-    });
-    const data = await response.json();
-    setBusy(false);
-    if (!response.ok) {
-      setError(data.error || "Could not send the email.");
-      return;
-    }
-    setSentTo(data.email);
-  }
-
-  async function confirm(event: React.FormEvent) {
-    event.preventDefault();
-    if (!code.trim()) return;
-    setBusy(true);
-    setError("");
-    const response = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "verify", email: sentTo, code }),
-    });
-    const data = await response.json();
-    setBusy(false);
-    if (!response.ok) {
-      setError(data.error || "That code was not accepted.");
-      return;
-    }
-    setUser(data.user);
-  }
-
-  async function logOff() {
-    await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
-    setUser(null);
-    setSentTo("");
-    setCode("");
-  }
-
-  if (user) {
-    const ids = new Set([...mine.saved, ...mine.enquired]);
-    const mineHomes = listings.filter((home) => ids.has(home.id));
-    const shown = mineHomes.filter((home) => home.purpose === purpose);
-    const saleCount = mineHomes.filter((home) => home.purpose === "Sale").length;
-    const rentCount = mineHomes.filter((home) => home.purpose === "Rent").length;
-    return (
-      <main className="wrap section" style={{ display: "grid", gap: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-          <h1 style={{ margin: 0 }}>Your homes</h1>
-          <button className="btn ghost" type="button" onClick={() => void logOff()}>Log off</button>
-        </div>
-        <p>Signed in as {user.name} - {user.email}</p>
-        <p className="sub">Only homes you save, or send an enquiry about.</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className={purpose === "Sale" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Sale")}>For sale ({saleCount})</button>
-          <button className={purpose === "Rent" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Rent")}>To rent ({rentCount})</button>
-        </div>
-        {shown.length === 0 ? <p>Nothing in this list yet. Open a home and press Save, or send an enquiry.</p> : null}
-        <div className="grid">
-          {shown.map((home) => (
-            <div key={home.id}>
-              <p className="meta">{[mine.saved.includes(home.id) ? "Saved" : "", mine.enquired.includes(home.id) ? "Enquiry sent" : ""].filter(Boolean).join(" - ")}</p>
-              <ListingCard listing={home} />
-            </div>
-          ))}
-        </div>
-      </main>
-    );
-  }
-
+  if (phase === "loading") return <main className="wrap section desk"><p>Loading your homes...</p></main>;
+  if (phase === "refuse") return <main className="wrap section desk"><p>Your homes is for buyers.</p></main>;
+  if (phase === "error") return <main className="wrap section desk"><p>{error || "Could not load your homes."}</p><button className="btn" type="button" onClick={() => void load()}>Try again</button></main>;
+  if (phase === "in" && data) return <main className="wrap section desk"><BuyerDesk data={data} reload={async () => { await load(); }} /></main>;
   return (
-    <main className="wrap section" style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}>
-      <form className="card" style={{ width: "min(440px, 100%)", padding: 28, display: "grid", gap: 14 }} onSubmit={sentTo ? confirm : sendLink}>
-        <h1 style={{ margin: 0, fontSize: 28 }}>{sentTo ? "Check your email" : "Sign in or register"}</h1>
-        {sentTo ? (
-          <>
-            <p>Open the email and press the link. That signs you in. If the email also shows a 6-digit code, type it below.</p>
-            <input value={code} onChange={(event) => setCode(event.target.value)} inputMode="numeric" placeholder="6-digit code, if the email has one" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
-          </>
-        ) : (
-          <>
-            <p>We email a sign-in link. Nothing is printed here.</p>
-            {mode === "signup" ? (
-              <input value={name} onChange={(event) => setName(event.target.value)} required placeholder="Your name" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
-            ) : null}
-            <label htmlFor="email"><strong>Enter your email address</strong></label>
-            <input id="email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" required style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
-          </>
-        )}
-        {error ? <p>{error}</p> : null}
-        <button className="btn" type="submit" disabled={busy || Boolean(sentTo && !code)} style={{ borderRadius: 999, padding: 14 }}>{busy ? "Please wait..." : sentTo ? "Use code" : "Next"}</button>
-        {!sentTo ? (
-          <button className="btn ghost" type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
-            {mode === "login" ? "Create an account" : "I already have an account"}
-          </button>
-        ) : null}
-      </form>
+    <main className="wrap section desk">
+      {error ? <p>{error}</p> : null}
+      <MagicLinkForm desk="buyer" title="Sign in or register" blurb="We email a sign-in link. Nothing is printed here." showName />
     </main>
   );
 }
