@@ -3,12 +3,18 @@
 import { useEffect, useState } from "react";
 
 type User = { id: string; name: string; email: string };
-type Home = { id: string; title: string; area: string; purpose: string; priceGyd?: number; price_gyd?: number; beds?: number; baths?: number };
+type Home = { id: string; title: string; area: string; purpose?: string; priceGyd?: number; price_gyd?: number; beds?: number; baths?: number };
+
+function purposeOf(home: Home) {
+  const value = String(home.purpose || "").toLowerCase();
+  if (value.includes("rent")) return "Rent";
+  return "Sale";
+}
 
 function money(home: Home) {
   const price = home.priceGyd ?? home.price_gyd ?? 0;
   const formatted = new Intl.NumberFormat("en-GY").format(price);
-  return home.purpose === "Rent" ? `GYD ${formatted} / month` : `GYD ${formatted}`;
+  return purposeOf(home) === "Rent" ? `GYD ${formatted} / month` : `GYD ${formatted}`;
 }
 
 export default function AccountPage() {
@@ -93,23 +99,24 @@ export default function AccountPage() {
   }
 
   if (user) {
-    const shown = homes.filter((home) => !home.purpose || home.purpose === purpose);
+    const shown = homes.filter((home) => purposeOf(home) === purpose);
     return (
       <main className="wrap section" style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
           <h1 style={{ margin: 0 }}>Your homes</h1>
           <button className="btn ghost" type="button" onClick={() => void logOff()}>Log off</button>
         </div>
-        <p>Signed in as {user.name} \u00b7 {user.email}</p>
+        <p>Signed in as {user.name} - {user.email}</p>
         <div style={{ display: "flex", gap: 8 }}>
           <button className={purpose === "Sale" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Sale")}>For sale</button>
           <button className={purpose === "Rent" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Rent")}>To rent</button>
         </div>
+        {shown.length === 0 ? <p>No homes in this list yet.</p> : null}
         {shown.map((home) => (
           <article className="card" key={home.id} style={{ padding: 16 }}>
             <strong>{money(home)}</strong>
             <p>{home.title}</p>
-            <p>{home.area}</p>
+            <p>{home.area}{home.beds ? ` - ${home.beds} bed` : ""}</p>
           </article>
         ))}
       </main>
@@ -136,7 +143,7 @@ export default function AccountPage() {
           </>
         )}
         {error ? <p>{error}</p> : null}
-        <button className="btn" type="submit" disabled={busy || Boolean(sentTo && !code)} style={{ borderRadius: 999, padding: 14 }}>{busy ? "Please wait\u2026" : sentTo ? "Use code" : "Next"}</button>
+        <button className="btn" type="submit" disabled={busy || Boolean(sentTo && !code)} style={{ borderRadius: 999, padding: 14 }}>{busy ? "Please wait..." : sentTo ? "Use code" : "Next"}</button>
         {!sentTo ? (
           <button className="btn ghost" type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
             {mode === "login" ? "Create an account" : "I already have an account"}
