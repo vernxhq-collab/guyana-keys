@@ -1,21 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ListingCard } from "../../components/ListingCard";
+import { listings } from "../../lib/data";
 
 type User = { id: string; name: string; email: string };
-type Home = { id: string; title: string; area: string; purpose?: string; priceGyd?: number; price_gyd?: number; beds?: number; baths?: number };
-
-function purposeOf(home: Home) {
-  const value = String(home.purpose || "").toLowerCase();
-  if (value.includes("rent")) return "Rent";
-  return "Sale";
-}
-
-function money(home: Home) {
-  const price = home.priceGyd ?? home.price_gyd ?? 0;
-  const formatted = new Intl.NumberFormat("en-GY").format(price);
-  return purposeOf(home) === "Rent" ? `GYD ${formatted} / month` : `GYD ${formatted}`;
-}
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,8 +15,7 @@ export default function AccountPage() {
   const [sentTo, setSentTo] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [purpose, setPurpose] = useState("Sale");
-  const [homes, setHomes] = useState<Home[]>([]);
+  const [purpose, setPurpose] = useState<"Sale" | "Rent">("Sale");
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -48,11 +36,6 @@ export default function AccountPage() {
         window.history.replaceState({}, "", "/account");
       });
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    fetch("/api/listings").then((res) => res.json()).then((data) => setHomes(data.listings || []));
-  }, [user]);
 
   async function sendLink(event: React.FormEvent) {
     event.preventDefault();
@@ -99,7 +82,7 @@ export default function AccountPage() {
   }
 
   if (user) {
-    const shown = homes.filter((home) => purposeOf(home) === purpose);
+    const shown = listings.filter((home) => home.purpose === purpose);
     return (
       <main className="wrap section" style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
@@ -108,17 +91,10 @@ export default function AccountPage() {
         </div>
         <p>Signed in as {user.name} - {user.email}</p>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className={purpose === "Sale" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Sale")}>For sale</button>
-          <button className={purpose === "Rent" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Rent")}>To rent</button>
+          <button className={purpose === "Sale" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Sale")}>For sale ({listings.filter((home) => home.purpose === "Sale").length})</button>
+          <button className={purpose === "Rent" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Rent")}>To rent ({listings.filter((home) => home.purpose === "Rent").length})</button>
         </div>
-        {shown.length === 0 ? <p>No homes in this list yet.</p> : null}
-        {shown.map((home) => (
-          <article className="card" key={home.id} style={{ padding: 16 }}>
-            <strong>{money(home)}</strong>
-            <p>{home.title}</p>
-            <p>{home.area}{home.beds ? ` - ${home.beds} bed` : ""}</p>
-          </article>
-        ))}
+        <div className="grid">{shown.map((home) => <ListingCard key={home.id} listing={home} />)}</div>
       </main>
     );
   }
