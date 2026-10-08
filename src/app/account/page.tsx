@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ListingCard } from "../../components/ListingCard";
 import { listings } from "../../lib/data";
+import { readMine, type Mine } from "../../lib/mine";
 
 type User = { id: string; name: string; email: string };
 
@@ -16,6 +17,7 @@ export default function AccountPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [purpose, setPurpose] = useState<"Sale" | "Rent">("Sale");
+  const [mine, setMine] = useState<Mine>({ saved: [], enquired: [] });
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -36,6 +38,11 @@ export default function AccountPage() {
         window.history.replaceState({}, "", "/account");
       });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setMine(readMine(user.id));
+  }, [user]);
 
   async function sendLink(event: React.FormEvent) {
     event.preventDefault();
@@ -82,7 +89,11 @@ export default function AccountPage() {
   }
 
   if (user) {
-    const shown = listings.filter((home) => home.purpose === purpose);
+    const ids = new Set([...mine.saved, ...mine.enquired]);
+    const mineHomes = listings.filter((home) => ids.has(home.id));
+    const shown = mineHomes.filter((home) => home.purpose === purpose);
+    const saleCount = mineHomes.filter((home) => home.purpose === "Sale").length;
+    const rentCount = mineHomes.filter((home) => home.purpose === "Rent").length;
     return (
       <main className="wrap section" style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
@@ -90,11 +101,20 @@ export default function AccountPage() {
           <button className="btn ghost" type="button" onClick={() => void logOff()}>Log off</button>
         </div>
         <p>Signed in as {user.name} - {user.email}</p>
+        <p className="sub">Only homes you save, or send an enquiry about.</p>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className={purpose === "Sale" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Sale")}>For sale ({listings.filter((home) => home.purpose === "Sale").length})</button>
-          <button className={purpose === "Rent" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Rent")}>To rent ({listings.filter((home) => home.purpose === "Rent").length})</button>
+          <button className={purpose === "Sale" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Sale")}>For sale ({saleCount})</button>
+          <button className={purpose === "Rent" ? "btn" : "btn ghost"} type="button" onClick={() => setPurpose("Rent")}>To rent ({rentCount})</button>
         </div>
-        <div className="grid">{shown.map((home) => <ListingCard key={home.id} listing={home} />)}</div>
+        {shown.length === 0 ? <p>Nothing in this list yet. Open a home and press Save, or send an enquiry.</p> : null}
+        <div className="grid">
+          {shown.map((home) => (
+            <div key={home.id}>
+              <p className="meta">{[mine.saved.includes(home.id) ? "Saved" : "", mine.enquired.includes(home.id) ? "Enquiry sent" : ""].filter(Boolean).join(" - ")}</p>
+              <ListingCard listing={home} />
+            </div>
+          ))}
+        </div>
       </main>
     );
   }
