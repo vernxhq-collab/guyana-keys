@@ -23,14 +23,15 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
   }, [listing]);
 
   if (!listing) return <main className="wrap section"><h1>Listing not found</h1></main>;
+  const home = listing;
   const agent = agentById(listing.agentId);
   const wa = `https://wa.me/${agent.phone}?text=${encodeURIComponent("Hello " + agent.name + ", I saw " + listing.title + " on Guyana Keys.")}`;
-  const similar = listings.filter((item) => item.id !== listing.id && item.area === listing.area);
+  const similar = listings.filter((item) => item.id !== home.id && item.area === listing.area);
 
   function toggleSave() {
     if (!user) return;
     const mine = readMine(user.id);
-    const next = saved ? mine.saved.filter((item) => item !== listing.id) : [...mine.saved, listing.id];
+    const next = saved ? mine.saved.filter((item) => item !== home.id) : [...mine.saved, home.id];
     writeMine(user.id, { ...mine, saved: next });
     setSaved(!saved);
   }
@@ -45,10 +46,10 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
     const res = await fetch("/api/enquiries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: data.get("name"), phone: data.get("phone"), listingId: listing.id, note: data.get("note") }),
+      body: JSON.stringify({ name: data.get("name"), phone: data.get("phone"), listingId: home.id, note: data.get("note") }),
     });
     const mine = readMine(user.id);
-    if (!mine.enquired.includes(listing.id)) writeMine(user.id, { ...mine, enquired: [...mine.enquired, listing.id] });
+    if (!mine.enquired.includes(home.id)) writeMine(user.id, { ...mine, enquired: [...mine.enquired, home.id] });
     setSent(res.ok ? "Enquiry saved in Your homes, and sent for the agent." : "Saved in Your homes. The agent copy could not be sent yet.");
   }
 
