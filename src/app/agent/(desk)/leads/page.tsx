@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 
 type Lead = { id: string; name: string; home: string; stage: string; stageLabel: string; phone: string; viewingRequest: string; viewingAt: string; agentReply: string; createdAt: string };
 
@@ -17,7 +18,7 @@ export default function LeadsPage() {
   }, []);
 
   if (error) return <p>{error}</p>;
-  if (!leads) return <p>Loading leads...</p>;
+  if (!leads) return <DeskSkeleton count={3} />;
   const shown = leads.filter((lead) => {
     if (filter === "unanswered") return !lead.agentReply && lead.stage !== "closed";
     if (filter === "requested") return Boolean(lead.viewingRequest) && !lead.viewingAt;
