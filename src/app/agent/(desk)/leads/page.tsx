@@ -40,9 +40,9 @@ export default function LeadsPage() {
         </select>
       </label>
       {shown.length === 0 ? <p>No lead in this list.</p> : shown.map((lead) => (
-        <a className="panel" key={lead.id} href={`/agent/leads/${lead.id}`}>
-          <strong>{lead.name || "Lead"}</strong>
-          <p className="quiet">{lead.home} · {lead.stageLabel} · {lead.phone}</p>
+        <a className="quiet-row" key={lead.id} href={`/agent/leads/${lead.id}`}>
+          <span><strong>{lead.name || "Lead"}</strong> · {lead.home}</span>
+          <span className="quiet">{lead.stageLabel} · {lead.phone}</span>
         </a>
       ))}
     </div>

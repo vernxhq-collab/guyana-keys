@@ -7,7 +7,7 @@ const items: [string, string][] = [["Home", "/agent"], ["Listings", "/agent/list
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
   const session = await readSession();
   return (
-    <main className="wrap section desk">
+    <main className="wrap section desk agent-desk">
       <SessionCatcher desk="agent" />
       {!session ? (
         <>
