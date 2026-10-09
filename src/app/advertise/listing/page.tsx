@@ -16,7 +16,7 @@ export default function AdvertiseListingPage() {
         <input name="company" required placeholder="Agency or brand" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <input name="phone" required placeholder="WhatsApp number" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <input name="area" required placeholder="Listing or area to feature" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
-        <button className="btn" type="submit">Get started</button>
+        <button className="btn" type="submit">Contact us</button>
       </form>
       {sent && <p>{sent}</p>}
     </main>
