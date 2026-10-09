@@ -38,11 +38,13 @@ export default function AgentHomePage() {
 
   return (
     <div className="stack">
+      <p className="eyebrow">Agent desk</p>
       <h1>{home.plan}</h1>
+      <p className="quiet">{home.plan === "Agency" ? "Paid plan." : "Free plan. 3 live listings."}</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live listings</p><strong>{home.live} / {home.cap}</strong></article>
-        <article className={home.unanswered > 0 ? "stat attention" : "stat"}><p className="quiet">Unanswered enquiries</p><strong>{home.unanswered}</strong></article>
-        <article className="stat"><p className="quiet">Viewings in 7 days</p><strong>{home.viewings}</strong></article>
+        <article className="stat"><p className="quiet">Live listings</p><strong>{home.live} / {home.cap}</strong><p className="quiet">{home.live >= home.cap ? "Cap reached" : `${home.cap - home.live} still open`}</p></article>
+        <article className={home.unanswered > 0 ? "stat attention" : "stat"}><p className="quiet">Unanswered enquiries</p><strong>{home.unanswered}</strong><p className="quiet">{home.unanswered > 0 ? "Reply today" : "Clear"}</p></article>
+        <article className="stat"><p className="quiet">Viewings in 7 days</p><strong>{home.viewings}</strong><p className="quiet">{home.viewings > 0 ? "This week" : "None set"}</p></article>
       </div>
       <h2>Today</h2>
       {next ? (

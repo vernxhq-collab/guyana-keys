@@ -30,9 +30,9 @@ export default function AgentListingsPage() {
       <h1>Listings</h1>
       <p className="quiet">{meta.live} of {meta.cap} live. Hidden listings stay here and do not count toward the cap.</p>
       <a className="btn" href="/agent/listings/new">New listing</a>
-      {rows.length === 0 ? <p>No listing yet. Press New listing.</p> : <div className="list-row quiet" aria-hidden="true"><span></span><span>Title</span><span>Area</span><span>Sale or rent</span><span>Price</span><span>Status</span><span>Featured</span><span>Enquiries</span></div>}
+      {rows.length === 0 ? <p>No listing yet. Press New listing.</p> : <div className="list-row agent-list head quiet" aria-hidden="true"><span></span><span>Title</span><span>Area</span><span>Sale or rent</span><span>Price</span><span>Status</span><span>Featured</span><span>Enquiries</span></div>}
       {rows.map((row) => (
-        <a className="list-row" key={row.id} href={`/agent/listings/${row.id}`}>
+        <a className="list-row agent-list" key={row.id} href={`/agent/listings/${row.id}`}>
           <img src={row.image} alt="" />
           <strong>{row.title}</strong>
           <span>{row.area}</span>

@@ -67,4 +67,27 @@ body:has(.desk) .site-footer { display: none; }
   .desk .ai-bar input:not([type="checkbox"]):not([type="radio"]) { flex: 1 1 12rem; }
   .desk-nav { flex-wrap: nowrap; }
   .desk .stats { grid-template-columns: 1fr 1fr; }
+  .agent-desk .agent-list { grid-template-columns: 72px 1fr; }
+  .agent-desk .agent-list > span:nth-child(n+3) { grid-column: 2; }
+  .agent-desk .agent-list.head { display: none; }
 }
+
+body:has(.agent-desk) { background: #071410; color: #e7f3ec; }
+body:has(.agent-desk) .top { background: #071410; border-bottom-color: rgba(126, 214, 168, .18); }
+body:has(.agent-desk) .brand { color: #f4fff8; }
+body:has(.agent-desk) .brand span { color: #7ed6a8; }
+.agent-desk h1, .agent-desk h2 { color: #f4fff8; }
+.agent-desk .eyebrow { margin: 0; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #7ed6a8; }
+.agent-desk .quiet { color: #8fb3a3; }
+.agent-desk .desk-nav { border-bottom-color: rgba(126, 214, 168, .18); }
+.agent-desk .desk-name { color: #7ed6a8; }
+.agent-desk .desk-nav a { color: #b7d2c6; }
+.agent-desk .desk-nav a.on { background: #116b4a; color: #f4fff8; box-shadow: 0 0 18px rgba(17, 107, 74, .45); }
+.agent-desk .stat, .agent-desk .panel, .agent-desk .card { background: linear-gradient(180deg, rgba(16, 42, 34, .96), rgba(8, 24, 19, .96)); border-color: rgba(126, 214, 168, .22); box-shadow: 0 0 0 1px rgba(17, 107, 74, .2), 0 18px 40px rgba(0, 0, 0, .28); color: #e7f3ec; }
+.agent-desk .stat.attention strong { color: #7ed6a8; text-shadow: 0 0 18px rgba(126, 214, 168, .35); }
+.agent-desk .ai-bar { background: rgba(8, 28, 22, .9); border-color: rgba(126, 214, 168, .45); box-shadow: 0 0 24px rgba(17, 107, 74, .28); }
+.agent-desk .ai-bar.next > span:first-child, .agent-desk .ai-bar.next > a, .agent-desk .ai-bar label { color: #d9ffe9; }
+.agent-desk .quiet-row, .agent-desk .record, .agent-desk .list-row { border-bottom-color: rgba(126, 214, 168, .16); }
+.agent-desk input:not([type="checkbox"]):not([type="radio"]), .agent-desk select, .agent-desk textarea { background: #0c241c; color: #f4fff8; border-color: rgba(126, 214, 168, .28); }
+.agent-desk .btn.ghost, .agent-desk .text-btn { background: transparent; color: #d7efe4; border-color: rgba(126, 214, 168, .35); }
+.agent-desk .skeleton-line, .agent-desk .stat.skeleton { background: linear-gradient(90deg, #0e2420 0%, #16382e 50%, #0e2420 100%); }
