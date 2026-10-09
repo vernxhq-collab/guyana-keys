@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { Listing } from "../lib/data";
-export function MapView({ listings }: { listings: Listing[] }) {
+export function MapView({ listings, height = 520 }: { listings: Listing[]; height?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (document.getElementById("leaflet-css")) return;
@@ -31,5 +31,5 @@ export function MapView({ listings }: { listings: Listing[] }) {
     }
     return () => map?.remove();
   }, [listings]);
-  return <div ref={ref} style={{ height: 520, width: "100%", borderRadius: 12 }} />;
+  return <div ref={ref} style={{ height, width: "100%", borderRadius: 12 }} />;
 }

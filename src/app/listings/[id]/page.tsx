@@ -1,92 +1,51 @@
-"use client";
-import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { listingById, money, usd, agentById, listings } from "../../../lib/data";
+import { EnquiryPanel } from "../../../components/EnquiryPanel";
 import { ListingCard } from "../../../components/ListingCard";
-import { readMine, writeMine } from "../../../lib/mine";
+import { MapView } from "../../../components/MapView";
+import { loadCatalog, publicAgent } from "../../../lib/catalog";
+import { money, usd } from "../../../lib/data";
+import { readSession } from "../../../lib/session";
+import { serviceDb } from "../../../lib/supabase";
 
-type User = { id: string; name: string; email: string };
+export const dynamic = "force-dynamic";
 
-export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const listing = listingById(id);
-  const [sent, setSent] = useState("");
-  const [user, setUser] = useState<User | null>(null);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/auth").then((res) => res.json()).then((data) => {
-      setUser(data.user || null);
-      if (!data.user || !listing) return;
-      setSaved(readMine(data.user.id).saved.includes(listing.id));
-    });
-  }, [listing]);
-
+export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const catalog = await loadCatalog();
+  const listing = catalog.listings.find((item) => item.id === id);
   if (!listing) return <main className="wrap section"><h1>Listing not found</h1></main>;
-  const home = listing;
-  const agent = agentById(listing.agentId);
-  const wa = `https://wa.me/${agent.phone}?text=${encodeURIComponent("Hello " + agent.name + ", I saw " + listing.title + " on Guyana Keys.")}`;
-  const similar = listings.filter((item) => item.id !== home.id && item.area === listing.area);
-
-  function toggleSave() {
-    if (!user) return;
-    const mine = readMine(user.id);
-    const next = saved ? mine.saved.filter((item) => item !== home.id) : [...mine.saved, home.id];
-    writeMine(user.id, { ...mine, saved: next });
-    setSaved(!saved);
-  }
-
-  async function sendEnquiry(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!user) {
-      setSent("Sign in first, so this enquiry stays in Your homes.");
-      return;
+  const agent = await publicAgent(listing.agentId);
+  const session = await readSession();
+  const viewer = session?.profile?.role === "buyer" ? { name: session.profile.name, abroad: session.profile.abroad } : null;
+  let saved = false;
+  if (viewer && session) {
+    const db = serviceDb();
+    if (db) {
+      const { data } = await db.from("saved_homes").select("property_id").eq("user_id", session.user.id).eq("property_id", listing.id).maybeSingle();
+      saved = Boolean(data);
     }
-    const data = new FormData(event.currentTarget);
-    const res = await fetch("/api/enquiries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: data.get("name"), phone: data.get("phone"), listingId: home.id, note: data.get("note") }),
-    });
-    const mine = readMine(user.id);
-    if (!mine.enquired.includes(home.id)) writeMine(user.id, { ...mine, enquired: [...mine.enquired, home.id] });
-    setSent(res.ok ? "Enquiry saved in Your homes, and sent for the agent." : "Saved in Your homes. The agent copy could not be sent yet.");
   }
-
+  const photos = listing.photos?.length ? listing.photos : [listing.image];
+  const similar = catalog.listings.filter((item) => item.id !== listing.id && item.area === listing.area);
   return (
     <main className="wrap section">
-      <img src={listing.image} alt={listing.title} style={{width:"100%", maxHeight:480, objectFit:"cover", borderRadius:16}} />
+      <div className="gallery">{photos.map((src) => <img key={src} src={src} alt={listing.title} />)}</div>
       <div className="split">
         <div>
           <p className="chip">{listing.purpose === "Sale" ? "For sale" : "To rent"}</p>
+          {listing.featured ? <p className="chip">Featured</p> : null}
           <h1>{listing.title}</h1>
           <p className="price">{money(listing.priceGyd, listing.purpose)}</p>
-          <p className="meta">Guide USD {usd(listing.priceGyd).toLocaleString()} - {listing.area}, {listing.region}</p>
+          <p className="meta">Guide USD {usd(listing.priceGyd).toLocaleString()} · {listing.area}, {listing.region}</p>
           <p className="facts"><span>{listing.beds || "-"} bed</span><span>{listing.baths || "-"} bath</span><span>{listing.sqft.toLocaleString()} sqft</span></p>
           <p>{listing.description}</p>
-          <p className="meta">Ask for the transport or title reference before any deposit.</p>
-          {user ? (
-            <button className="btn ghost" type="button" onClick={toggleSave}>{saved ? "Saved" : "Save"}</button>
-          ) : (
-            <Link className="btn ghost" href="/account">Sign in to save</Link>
-          )}
+          <p className="meta">A listing is not proof of title. Ask for the transport or certificate of title before any deposit.</p>
+          <MapView listings={[listing]} height={280} />
         </div>
-        <aside className="card"><div className="card-body">
-          <p className="chip">Agent</p>
-          <h2><Link href={`/agents/${agent.id}`}>{agent.name}</Link></h2>
-          <p className="meta">{agent.company} - {agent.areas.join(", ")}</p>
-          <a className="btn" href={wa}>WhatsApp {agent.name.split(" ")[0]}</a>
-          <form className="search-card" style={{marginTop:12, gridTemplateColumns:"1fr"}} onSubmit={sendEnquiry}>
-            <input name="name" required placeholder="Your name" defaultValue={user?.name || ""} />
-            <input name="phone" required placeholder="WhatsApp number" />
-            <input name="note" placeholder="Buying from abroad?" />
-            <button className="btn" type="submit">Send enquiry</button>
-          </form>
-          {sent ? <p>{sent}</p> : null}
-          {!user ? <p className="meta"><Link href="/account">Sign in</Link> so the enquiry appears in Your homes.</p> : null}
-        </div></aside>
+        <EnquiryPanel listing={listing} agent={agent} viewer={viewer} initialSaved={saved} />
       </div>
       {similar.length > 0 && <section><h2>More in {listing.area}</h2><div className="grid">{similar.map((item) => <ListingCard key={item.id} listing={item} />)}</div></section>}
+      <p className="meta"><Link href="/listings">Back to search</Link></p>
     </main>
   );
 }

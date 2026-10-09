@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { ListingCard } from "../../../components/ListingCard";
 import { areas } from "../../../lib/areas";
-import { listings } from "../../../lib/data";
+import { loadCatalog } from "../../../lib/catalog";
+export const dynamic = "force-dynamic";
 export default async function AreaPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const area = areas.find((item) => item.slug === slug);
   if (!area) notFound();
+  const { listings } = await loadCatalog();
   const matched = listings.filter((item) => item.area === area.name);
   return (
     <main className="wrap section">

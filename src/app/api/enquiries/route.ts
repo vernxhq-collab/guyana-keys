@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../lib/supabase";
+import { newId } from "../../../lib/labels";
+import { serviceDb } from "../../../lib/supabase";
+
 export async function POST(request: Request) {
-  const body = await request.json();
-  if (!body.name || !body.phone || !body.listingId) return NextResponse.json({ error: "Name, WhatsApp number, and property are required." }, { status: 400 });
-  const client = db();
-  if (!client) return NextResponse.json({ error: "Database is not connected." }, { status: 503 });
-  const id = "enq-" + Math.random().toString(16).slice(2, 8);
-  const { error } = await client.from("enquiries").insert({ id, listing_id: body.listingId, name: body.name, phone: body.phone, note: body.note || "", stage: "new" });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const body = await request.json().catch(() => ({}));
+  if (!body.name || !body.phone) return NextResponse.json({ error: "Name and WhatsApp number are required." }, { status: 400 });
+  const client = serviceDb();
+  if (!client) return NextResponse.json({ error: "The enquiry could not be saved." }, { status: 503 });
+  const id = newId("enq");
+  const listingId = String(body.listingId || "");
+  const { error } = await client.from("enquiries").insert({
+    id,
+    property_id: listingId && listingId !== "featured" ? listingId : null,
+    name: String(body.name),
+    phone: String(body.phone),
+    note: String(body.note || ""),
+    stage: "new",
+  });
+  if (error) return NextResponse.json({ error: "The enquiry could not be saved." }, { status: 500 });
   return NextResponse.json({ id });
 }

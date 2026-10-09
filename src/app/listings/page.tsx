@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { ListingCard } from "../../components/ListingCard";
 import { MapView } from "../../components/MapView";
-import { listings } from "../../lib/data";
+import { loadCatalog } from "../../lib/catalog";
 import { areas } from "../../lib/areas";
+
+export const dynamic = "force-dynamic";
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string }> }) {
   const params = await searchParams;
+  const { listings } = await loadCatalog();
   const q = (params.q || "").toLowerCase();
   const beds = Number(params.beds || 0);
   const shown = listings.filter((item) => {
