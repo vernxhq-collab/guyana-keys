@@ -55,6 +55,8 @@ body:has(.desk) { background: #f3f6f4; }
   .list-row { grid-template-columns: 72px 1fr; }
   .desk .btn, .ai-bar .btn { min-height: 44px; }
   .ai-bar { flex-wrap: wrap; border-radius: 18px; }
+  .ai-bar label { flex: 1 0 100%; padding-top: 8px; }
+  .desk .ai-bar input:not([type="checkbox"]):not([type="radio"]) { flex: 1 1 12rem; }
   .desk-nav { flex-wrap: nowrap; }
   .desk .stats { grid-template-columns: 1fr 1fr; }
 }
