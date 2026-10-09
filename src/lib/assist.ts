@@ -174,11 +174,11 @@ export function leadScore(lead: LeadInput) {
 export function adminSummary(input: { agentName?: string; kind?: string; listingTitle?: string; status?: string }) {
   const who = (input.agentName || "An agent").trim() || "An agent";
   const kind = input.kind || "help";
-  const what = kind === "plan" ? "asked for a paid plan" : kind === "feature" ? `asked to feature ${input.listingTitle || "a listing"}` : "sent a help message";
+  const what = kind === "plan" ? "asked to upgrade their package" : kind === "feature" ? `asked to feature ${input.listingTitle || "a listing"}` : "sent a help message";
   let next = "Read the request";
   if (input.status === "submitted" && kind === "help") next = "Mark the help request done when it is handled";
-  else if (input.status === "submitted") next = "Write payment instructions";
-  else if (input.status === "instructions") next = "Mark paid when the payment is received";
+  else if (input.status === "submitted") next = "Send payment instructions";
+  else if (input.status === "instructions") next = "Mark paid when the payment arrives";
   else next = "Nothing else to do on this request";
   return { line: `${who} ${what}. Next: ${next}.` };
 }

@@ -53,6 +53,9 @@ export async function agentHome(profile: Profile) {
   }).length;
   const unanswered = leads.filter((lead) => !(String(lead.agent_reply || "").trim()) && String(lead.stage) !== "closed").length;
   const actions: { id: string; text: string; href: string }[] = [];
+  if ((requests.data || []).some((item) => item.status === "instructions")) {
+    actions.push({ id: "pay-admin", text: "Pay the admin. The instructions are on Plan.", href: "/agent/plan" });
+  }
   const push = (id: string, text: string, href: string) => {
     if (!actions.some((item) => item.id === id)) actions.push({ id, text, href });
   };
@@ -365,21 +368,30 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
   const kind = body.kind === "feature" || body.kind === "plan" || body.kind === "help" ? body.kind : "";
   if (!kind) return { error: "Choose a request." };
   if (kind === "plan") {
-    const { data } = await db.from("requests").select("id").eq("agent_id", profile.id).eq("kind", "plan");
-    if (data?.length) return { error: "A paid plan request is already in." };
-  }
-  let propertyId: string | null = null;
-  if (kind === "feature") {
-    propertyId = String(body.propertyId || "");
-    const { data } = await db.from("properties").select("id,status,title").eq("id", propertyId).eq("agent_id", profile.id).maybeSingle();
-    if (!data || data.status !== "live") return { error: "Pick a live listing." };
-    const open = await db.from("requests").select("id,status").eq("agent_id", profile.id).eq("kind", "feature").eq("property_id", propertyId);
-    if ((open.data || []).some((item) => item.status === "submitted" || item.status === "instructions" || item.status === "paid" || item.status === "on")) {
-      return { error: "That listing already has a feature request." };
+    if (profile.plan === "agency") return { error: "This account is already on a paid plan." };
+    const { data } = await db.from("requests").select("id,status").eq("agent_id", profile.id).eq("kind", "plan");
+    if ((data || []).some((item) => item.status === "submitted" || item.status === "instructions")) {
+      return { error: "A package request is already with the admin." };
     }
   }
-  const message = `${String(body.subject || "").trim()}${body.message ? `\n${String(body.message).trim()}` : ""}`.trim();
-  if (kind === "help" && message.length < 3) return { error: "Write a subject and a message." };
+  let propertyId: string | null = null;
+  let listingTitle = "a listing";
+  if (kind === "feature") {
+    propertyId = String(body.propertyId || "");
+    const { data } = await db.from("properties").select("id,status,title,featured").eq("id", propertyId).eq("agent_id", profile.id).maybeSingle();
+    if (!data || data.status !== "live") return { error: "Pick a live listing." };
+    if (data.featured) return { error: "This listing is already featured." };
+    listingTitle = String(data.title || "a listing");
+    const open = await db.from("requests").select("id,status").eq("agent_id", profile.id).eq("kind", "feature").eq("property_id", propertyId);
+    if ((open.data || []).some((item) => item.status === "submitted" || item.status === "instructions")) {
+      return { error: "That listing already has a feature request with the admin." };
+    }
+  }
+  const typed = `${String(body.subject || "").trim()}${body.message ? `\n${String(body.message).trim()}` : ""}`.trim();
+  if (kind === "help" && typed.length < 3) return { error: "Write a subject and a message." };
+  const message = typed || (kind === "plan"
+    ? "Asked to upgrade the package. Payment is with the admin."
+    : `Asked to feature ${listingTitle}. Payment is with the admin.`);
   const { error: insertError } = await db.from("requests").insert({
     id: newId("req"),
     agent_id: profile.id,
@@ -387,7 +399,7 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
     property_id: propertyId,
     status: "submitted",
     instructions: "",
-    message: message || (kind === "plan" ? "Paid plan" : "Feature this listing"),
+    message,
   });
   if (insertError) return { error: "The request could not be sent." };
   return { ok: true };
@@ -400,13 +412,17 @@ export async function agentPlan(profile: Profile) {
     db.from("requests").select("id,kind,property_id,status,instructions,message,created_at").eq("agent_id", profile.id).order("created_at", { ascending: false }),
     ownListings(profile.id),
   ]);
-  const listings = rows.map((row) => mapProperty(row as Record<string, unknown>)).filter((item) => item.status === "live");
+  const listings = rows.map((row) => mapProperty(row as Record<string, unknown>));
+  const liveListings = listings.filter((item) => item.status === "live");
   return {
     plan: planLabel(profile.plan),
     cap: profile.listingCap,
-    live: rows.filter((row) => (row as { status?: string }).status === "live").length,
-    requests: requests.data || [],
-    liveListings: listings.map((item) => ({ id: item.id, title: item.title, area: item.area })),
+    live: liveListings.length,
+    requests: (requests.data || []).map((row) => {
+      const listing = listings.find((item) => item.id === String(row.property_id || ""));
+      return { ...row, listing: listing?.title || "", featured: Boolean(listing?.featured) };
+    }),
+    liveListings: liveListings.map((item) => ({ id: item.id, title: item.title, area: item.area, featured: Boolean(item.featured) })),
   };
 }
 

@@ -29,7 +29,7 @@ export default function AgentListingsPage() {
   return (
     <div className="stack">
       <h1>Listings</h1>
-      <p className="quiet">{meta.live} of {meta.cap} live. Hidden listings stay here and do not count toward the cap.</p>
+      <p className="quiet">{meta.live} of {meta.cap} live. Hidden listings stay here and do not count toward the cap. Featuring is arranged with the admin on Plan.</p>
       <a className="btn" href="/agent/listings/new">New listing</a>
       {rows.length === 0 ? <p>No listing yet. Press New listing.</p> : <div className="list-row agent-list head quiet" aria-hidden="true"><span></span><span>Title</span><span>Area</span><span>Sale or rent</span><span>Price</span><span>Status</span><span>Featured</span><span>Enquiries</span></div>}
       {rows.map((row) => (

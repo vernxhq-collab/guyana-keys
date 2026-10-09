@@ -60,7 +60,7 @@ export default function AgentHomePage() {
         </div>
       ))}
       <a className="btn" href="/agent/listings/new">New listing</a>
-      {home.live >= home.cap ? <p>{home.live} of {home.cap} live listings are in use. <a href="/agent/plan">Request a paid plan</a></p> : null}
+      {home.live >= home.cap ? <p>{home.live} of {home.cap} live listings are in use. <a href="/agent/plan">Contact the admin to upgrade</a></p> : null}
     </div>
   );
 }
