@@ -7,7 +7,8 @@
 @media (max-width:900px) { .nav { height:auto; padding:12px 0; flex-wrap:wrap; } .nav-links { order:3; width:100%; overflow:auto; } .grid,.split,.search-panel .row,.alert-band { grid-template-columns:1fr; } .hero { min-height:0; padding:48px 0; } }
 body:has(.desk) { background: #f3f6f4; }
 body:has(.desk) .nav-links,
-body:has(.desk) .nav-actions { display: none; }
+body:has(.desk) .nav-actions,
+body:has(.desk) .site-footer { display: none; }
 .desk { overflow-x: clip; }
 .desk h1 { font-size: clamp(32px, 8vw, 48px); letter-spacing: -.04em; line-height: 1.05; margin: 0 0 8px; }
 .desk-nav { display: flex; align-items: center; gap: 6px; margin: 0 0 22px; padding-bottom: 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
