@@ -260,10 +260,13 @@ export function ListingEditor({ id }: { id: string }) {
       {message && !blocked ? <p>{message}</p> : null}
       <div className="actions">
         <button className={blocked ? "btn ghost" : "btn"} type="submit" disabled={busy}>{busy ? "Please wait..." : "Save listing"}</button>
-        {blocked ? <a className="btn" href="/agent/plan">Request a paid plan</a> : null}
+        {blocked ? <a className="btn" href="/agent/plan">Contact admin to upgrade</a> : null}
       </div>
+      {id !== "new" && draft.featured ? <p className="quiet">This listing is featured.</p> : null}
+      {id !== "new" && !draft.featured && draft.status !== "live" ? <p className="quiet">A hidden listing cannot be featured. Publish it live, then contact the admin.</p> : null}
       {id !== "new" ? (
         <div className="actions">
+          {draft.status === "live" && !draft.featured ? <a className="btn ghost" href={`/agent/plan?listing=${id}`}>Contact admin to feature</a> : null}
           <button className="btn ghost" type="button" onClick={async () => {
             const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "duplicate", id }) });
             const data = await res.json();

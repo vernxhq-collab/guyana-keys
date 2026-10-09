@@ -34,6 +34,13 @@ export function requestStatusLabel(status: string) {
   return requestNames[status] || "Submitted";
 }
 
+export function requestKindLabel(kind: string) {
+  if (kind === "plan") return "Package";
+  if (kind === "feature") return "Feature";
+  if (kind === "help") return "Help";
+  return "Request";
+}
+
 export function eventLabel(kind: string) {
   return eventNames[kind] || kind;
 }
