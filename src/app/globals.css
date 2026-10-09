@@ -70,6 +70,7 @@ body:has(.desk) .site-footer { display: none; }
   .agent-desk .agent-list { grid-template-columns: 72px 1fr; }
   .agent-desk .agent-list > span:nth-child(n+3) { grid-column: 2; }
   .agent-desk .agent-list.head { display: none; }
+  .agent-desk .ai-bar.next > span:first-child { flex: 1 0 100%; }
 }
 
 body:has(.agent-desk) { background: #071410; color: #e7f3ec; }
@@ -91,3 +92,5 @@ body:has(.agent-desk) .brand span { color: #7ed6a8; }
 .agent-desk input:not([type="checkbox"]):not([type="radio"]), .agent-desk select, .agent-desk textarea { background: #0c241c; color: #f4fff8; border-color: rgba(126, 214, 168, .28); }
 .agent-desk .btn.ghost, .agent-desk .text-btn { background: transparent; color: #d7efe4; border-color: rgba(126, 214, 168, .35); }
 .agent-desk .skeleton-line, .agent-desk .stat.skeleton { background: linear-gradient(90deg, #0e2420 0%, #16382e 50%, #0e2420 100%); }
+.agent-desk .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.agent-desk .actions .btn { min-height: 44px; }

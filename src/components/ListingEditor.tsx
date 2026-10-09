@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { areas } from "../lib/areas";
 import { compressImage } from "../lib/photos";
+import { DeskSkeleton } from "./DeskSkeleton";
 import { PinMap } from "./PinMap";
 
 type Draft = {
@@ -168,12 +169,17 @@ export function ListingEditor({ id }: { id: string }) {
     else setMessage("Saved.");
   }
 
-  if (loading) return <p>Loading the listing...</p>;
+  if (loading) return <DeskSkeleton count={3} />;
+  const missing = checks.find((check) => !check.ok);
+  const blocked = message.includes("blocked");
+  const nextLine = blocked ? message : missing ? `Still needed: ${missing.label.replace(/\.$/, "")}.` : "Listing check is complete.";
 
   return (
     <form className="stack" onSubmit={save}>
+      <p className="eyebrow">Listing</p>
       <h1>{id === "new" ? "New listing" : "Edit listing"}</h1>
       <p className="quiet">{live} of {cap} live listings. Hidden listings do not count.</p>
+      <p className="ai-bar next"><span>{nextLine}</span></p>
       <div className="panel">
         <p className="quiet">Rough notes</p>
         <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="3 bed house in Kitty, sale, 45 million, raised timber" />
@@ -251,12 +257,13 @@ export function ListingEditor({ id }: { id: string }) {
       <ul className="tick-list">
         {checks.map((check) => <li key={check.label} className={check.ok ? "ok" : ""}>{check.ok ? "Done. " : ""}{check.label}</li>)}
       </ul>
-      {checks.some((check) => !check.ok) ? <p>Still needed: {checks.filter((check) => !check.ok).map((check) => check.label.replace(/\.$/, "")).join(", ")}.</p> : <p className="quiet">Listing check is complete.</p>}
-      {message ? <p>{message}</p> : null}
-      <button className={message.includes("blocked") ? "btn ghost" : "btn"} type="submit" disabled={busy}>{busy ? "Please wait..." : "Save listing"}</button>
-      {message.includes("blocked") ? <a className="btn" href="/agent/plan">Request a paid plan</a> : null}
+      {message && !blocked ? <p>{message}</p> : null}
+      <div className="actions">
+        <button className={blocked ? "btn ghost" : "btn"} type="submit" disabled={busy}>{busy ? "Please wait..." : "Save listing"}</button>
+        {blocked ? <a className="btn" href="/agent/plan">Request a paid plan</a> : null}
+      </div>
       {id !== "new" ? (
-        <div className="stack">
+        <div className="actions">
           <button className="btn ghost" type="button" onClick={async () => {
             const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "duplicate", id }) });
             const data = await res.json();

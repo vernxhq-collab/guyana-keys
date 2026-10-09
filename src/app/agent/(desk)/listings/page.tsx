@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { money } from "../../../../lib/data";
 
 type Row = { id: string; title: string; area: string; purpose: string; priceGyd: number; status?: string; featured?: boolean; image: string; enquiries: number };
@@ -24,7 +25,7 @@ export default function AgentListingsPage() {
   }, []);
 
   if (error) return <p>{error}</p>;
-  if (!rows) return <p>Loading listings...</p>;
+  if (!rows) return <DeskSkeleton count={3} />;
   return (
     <div className="stack">
       <h1>Listings</h1>

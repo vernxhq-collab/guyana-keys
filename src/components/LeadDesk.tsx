@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { digits } from "../lib/labels";
-import { eventLabel, stageLabel } from "../lib/labels";
+import { DeskSkeleton } from "./DeskSkeleton";
+import { digits, eventLabel, stageLabel } from "../lib/labels";
 import { whenLabel } from "../lib/assist";
 
 type Lead = {
@@ -68,24 +68,41 @@ export function LeadDesk({ id }: { id: string }) {
   }
 
   if (error) return <p>{error}</p>;
-  if (!lead) return <p>Loading the lead...</p>;
+  if (!lead) return <DeskSkeleton count={3} />;
   const wa = `https://wa.me/${digits(lead.phone)}?text=${encodeURIComponent(reply)}`;
 
   return (
     <div className="stack">
+      <p className="eyebrow">Lead</p>
       <h1>{lead.name || "Lead"}</h1>
-      {lead.reminder ? <p>No reply for over 24 hours.</p> : null}
-      <p className="quiet">{lead.nextStep}</p>
+      <p className="quiet">{lead.home}{lead.area ? ` · ${lead.area}` : ""}</p>
+      <div className="stats">
+        <article className="stat">
+          <p className="quiet">Score</p>
+          <strong>{lead.score}</strong>
+          <p className="quiet">{lead.sentence}</p>
+        </article>
+        <article className="stat">
+          <p className="quiet">Stage</p>
+          <strong>{lead.stageLabel}</strong>
+          <p className="quiet">{lead.viewingAt ? "Viewing set" : lead.viewingRequest ? "Viewing requested" : "No viewing yet"}</p>
+        </article>
+        <article className={lead.reminder ? "stat attention" : "stat"}>
+          <p className="quiet">Reply</p>
+          <strong>{lead.reminder ? "Overdue" : "Clear"}</strong>
+          <p className="quiet">{lead.phone || "No WhatsApp"}</p>
+        </article>
+      </div>
+      <div className="ai-bar next">
+        <span>{lead.nextStep}</span>
+        {lead.reminder ? <span className="quiet">No reply for over 24 hours.</span> : null}
+      </div>
       <article className="panel">
-        <p><strong>{lead.home}</strong>{lead.area ? ` · ${lead.area}` : ""}</p>
-        <p>WhatsApp {lead.phone}</p>
+        <p>WhatsApp {lead.phone || "not given"}</p>
         <p>{lead.note || "No note."}</p>
         <p>Abroad: {lead.abroad ? "Yes" : "No"}</p>
         {lead.moveIn || lead.occupants ? <p>Move-in {lead.moveIn || "not set"} · Occupants {lead.occupants ?? "not set"}</p> : null}
         {lead.viewingRequest ? <p>Viewing requested: {lead.viewingRequest}</p> : null}
-        <p>Score: {lead.score}</p>
-        <p>{lead.sentence}</p>
-        <p>Next step: {lead.nextStep}</p>
       </article>
       <label>Stage
         <select value={stage} onChange={async (event) => { setStage(event.target.value); await save({ stage: event.target.value }); }}>
@@ -93,20 +110,27 @@ export function LeadDesk({ id }: { id: string }) {
         </select>
       </label>
       <label>Reply<textarea value={reply} onChange={(event) => setReply(event.target.value)} /></label>
-      <button className="btn ghost" type="button" onClick={async () => {
-        const res = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ task: "reply-draft", lead: { name: lead.name, listing: lead.home, viewingAt: lead.viewingAt || null } }) });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.message) setAiNote("AI is not available, continue manually.");
-        else { setReply(data.message); setAiNote(""); }
-      }}>Draft reply</button>
       {aiNote ? <p>{aiNote}</p> : null}
       <p className="quiet">Nothing is sent until you open WhatsApp yourself.</p>
-      <button className="btn ghost" type="button" onClick={async () => { await navigator.clipboard.writeText(reply); await save({ reply, saveDraft: true }); setMessage("Copied."); }}>Copy</button>
-      <a className="btn" href={wa} target="_blank" rel="noreferrer" onClick={() => void save({ reply, openWhatsapp: true })}>Open WhatsApp</a>
+      <div className="actions">
+        <button className="btn ghost" type="button" onClick={async () => {
+          const res = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ task: "reply-draft", lead: { name: lead.name, listing: lead.home, viewingAt: lead.viewingAt || null } }) });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.message) setAiNote("AI is not available, continue manually.");
+          else { setReply(data.message); setAiNote(""); }
+        }}>Draft reply</button>
+        <button className="btn ghost" type="button" onClick={async () => { await navigator.clipboard.writeText(reply); await save({ reply, saveDraft: true }); setMessage("Copied."); }}>Copy</button>
+        <a className="btn" href={wa} target="_blank" rel="noreferrer" onClick={() => void save({ reply, openWhatsapp: true })}>Open WhatsApp</a>
+      </div>
       <label>Viewing time<input type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} /></label>
-      <button className="btn ghost" type="button" onClick={() => void save({ viewingAt: when })}>Set viewing</button>
-      <button className="btn ghost" type="button" onClick={() => void save({ clearViewing: true })}>Clear viewing</button>
-      <label>Private note<textarea value={note} onChange={(event) => setNote(event.target.value)} onBlur={() => void save({ privateNote: note })} /></label>
+      <div className="actions">
+        <button className="btn ghost" type="button" onClick={() => void save({ viewingAt: when })}>Set viewing</button>
+        <button className="btn ghost" type="button" onClick={() => void save({ clearViewing: true })}>Clear viewing</button>
+      </div>
+      <label>Private note<textarea value={note} onChange={(event) => setNote(event.target.value)} /></label>
+      <div className="actions">
+        <button className="btn ghost" type="button" onClick={async () => { if (await save({ privateNote: note })) setMessage("Note saved."); }}>Save note</button>
+      </div>
       <p className="quiet">Only you can see the private note.</p>
       {lead.stage === "closed" ? (
         <button className="btn ghost" type="button" disabled={lead.reviewRequested} onClick={() => void save({ askReview: true })}>{lead.reviewRequested ? "Review requested" : "Ask for a review"}</button>
@@ -114,7 +138,10 @@ export function LeadDesk({ id }: { id: string }) {
       {message ? <p>{message}</p> : null}
       <h2>Timeline</h2>
       {lead.timeline.length === 0 ? <p className="quiet">No events yet.</p> : lead.timeline.map((event) => (
-        <p key={event.id}><strong>{eventLabel(event.kind)}</strong> · {whenLabel(event.createdAt)}{event.detail ? ` · ${event.detail}` : ""}</p>
+        <p className="quiet-row" key={event.id}>
+          <span><strong>{eventLabel(event.kind)}</strong>{event.detail ? ` · ${event.detail}` : ""}</span>
+          <span className="quiet">{whenLabel(event.createdAt)}</span>
+        </p>
       ))}
     </div>
   );
