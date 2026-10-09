@@ -560,3 +560,15 @@ create policy listing_photos_agent_delete on storage.objects
 for delete to authenticated using (
   bucket_id = 'listing-photos' and (storage.foldername(name))[1] = auth.uid()::text
 );
+
+-- one-line admin record; service role only
+create table if not exists public.admin_events (
+  id text primary key default gen_random_uuid()::text,
+  detail text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_events add column if not exists detail text not null default '';
+alter table public.admin_events add column if not exists created_at timestamptz not null default now();
+alter table public.admin_events enable row level security;
+revoke all on public.admin_events from anon, authenticated;

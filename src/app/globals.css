@@ -30,6 +30,11 @@ body:has(.desk) .site-footer { display: none; }
 .desk .stat .quiet { margin: 0; }
 .quiet-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 12px 2px; border-bottom: 1px solid var(--line); }
 .quiet-row a, a.quiet-row > span:first-child { flex: 1; min-width: 0; }
+.record { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.record-main { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.record-actions { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.record-actions label { display: inline-flex; align-items: center; gap: 8px; }
+.desk input.cap-input:not([type="checkbox"]):not([type="radio"]) { width: 88px; }
 .text-btn { border: 0; background: transparent; color: var(--muted); padding: 8px 0 8px 10px; cursor: pointer; font-size: 14px; white-space: nowrap; }
 .purpose-tabs { display: flex; gap: 8px; }
 .purpose-tabs button { border: 0; background: transparent; color: var(--muted); border-radius: 999px; padding: 8px 12px; min-height: 40px; cursor: pointer; }

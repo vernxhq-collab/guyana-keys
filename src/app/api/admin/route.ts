@@ -18,11 +18,12 @@ export async function GET(request: Request) {
   const part = url.searchParams.get("part") || "home";
   const id = url.searchParams.get("id") || "";
   if (part === "home") return NextResponse.json(await adminHome());
-  if (part === "people") return NextResponse.json(await adminPeople());
-  if (part === "listings") return NextResponse.json(await adminListings(url.searchParams.get("q") || ""));
+  const q = url.searchParams.get("q") || "";
+  if (part === "people") return NextResponse.json(await adminPeople(q));
+  if (part === "listings") return NextResponse.json(await adminListings(q));
   if (part === "requests") return NextResponse.json(await adminRequests());
   if (part === "request") return NextResponse.json(await adminRequest(id));
-  if (part === "inbox") return NextResponse.json(await adminInbox());
+  if (part === "inbox") return NextResponse.json(await adminInbox(q));
   if (part === "lead") return NextResponse.json(await adminLead(id));
   return NextResponse.json({ error: "Unknown view." }, { status: 400 });
 }

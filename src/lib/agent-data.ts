@@ -4,7 +4,7 @@ import { mapProperty } from "./catalog";
 import type { Listing } from "./data";
 import { hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { addEvent, leadFromEnquiry } from "./records";
-import type { Profile } from "./session";
+import { liveCap, type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
 
@@ -176,9 +176,10 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
   }
   const next = listingInput(profile, body, existing);
   if (next.status === "live" && existing?.status !== "live") {
+    const cap = liveCap(profile.plan, profile.listingCap);
     const { count } = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", profile.id).eq("status", "live");
-    if ((count || 0) >= profile.listingCap) {
-      return { error: "cap" as const, live: count || 0, cap: profile.listingCap };
+    if ((count || 0) >= cap) {
+      return { error: "cap" as const, live: count || 0, cap };
     }
   }
   if (!existing) {

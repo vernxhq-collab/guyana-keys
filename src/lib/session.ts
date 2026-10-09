@@ -46,8 +46,14 @@ function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
+export function liveCap(plan: string, listingCap: number) {
+  const cap = Number.isFinite(listingCap) && listingCap > 0 ? listingCap : 3;
+  return plan === "agency" ? cap : Math.min(cap, 3);
+}
+
 export function mapProfile(row: Record<string, unknown>): Profile {
   const role = text(row.role, "buyer");
+  const plan = text(row.plan, "starter") || "starter";
   return {
     id: text(row.id),
     email: text(row.email),
@@ -57,8 +63,8 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     company: text(row.company),
     photoUrl: text(row.photo_url),
     areas: Array.isArray(row.areas) ? row.areas.filter((item): item is string => typeof item === "string") : [],
-    plan: text(row.plan, "starter") || "starter",
-    listingCap: Number(row.listing_cap ?? 3) || 3,
+    plan,
+    listingCap: liveCap(plan, Number(row.listing_cap ?? 3)),
     abroad: Boolean(row.abroad),
     suspended: Boolean(row.suspended),
   };

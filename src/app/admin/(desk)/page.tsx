@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../components/DeskSkeleton";
 
-type Home = { agents: number; live: number; unanswered: number; openRequests: number; requests: { id: string; line: string; status: string; kind: string }[]; error?: string };
+type Home = { agents: number; live: number; unanswered: number; openRequests: number; requests: { id: string; line: string; status: string; kind: string }[]; record?: { id: string; detail: string }[]; error?: string };
 
 export default function AdminHomePage() {
   const [home, setHome] = useState<Home | null>(null);
@@ -32,6 +32,10 @@ export default function AdminHomePage() {
       ) : <p className="ai-bar next"><span>No open request.</span></p>}
       {rest.map((item) => (
         <a className="quiet-row" key={item.id} href={`/admin/requests/${item.id}`}><span>{item.line}</span><span className="quiet">{item.status}</span></a>
+      ))}
+      <h2>Record</h2>
+      {(home.record || []).length === 0 ? <p className="quiet">No record yet.</p> : (home.record || []).map((item) => (
+        <p className="quiet-row" key={item.id}><span>{item.detail}</span></p>
       ))}
     </div>
   );
