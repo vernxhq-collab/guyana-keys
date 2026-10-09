@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BuyerDesk, type BuyerPayload } from "../../components/BuyerDesk";
+import { DeskSkeleton } from "../../components/DeskSkeleton";
 import { MagicLinkForm } from "../../components/MagicLinkForm";
 
 export default function AccountPage() {
@@ -65,7 +66,7 @@ export default function AccountPage() {
       });
   }, []);
 
-  if (phase === "loading") return <main className="wrap section desk"><p>Loading your homes...</p></main>;
+  if (phase === "loading") return <main className="wrap section desk"><DeskSkeleton count={3} /></main>;
   if (phase === "refuse") return <main className="wrap section desk"><p>Your homes is for buyers.</p></main>;
   if (phase === "error") return <main className="wrap section desk"><p>{error || "Could not load your homes."}</p><button className="btn" type="button" onClick={() => void load()}>Try again</button></main>;
   if (phase === "in" && data) return <main className="wrap section desk"><BuyerDesk data={data} reload={async () => { await load(); }} /></main>;

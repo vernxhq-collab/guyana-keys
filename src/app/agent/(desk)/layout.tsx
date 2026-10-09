@@ -21,7 +21,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
         <p>This desk is for agents.</p>
       ) : (
         <>
-          <DeskNav label="Agent desk" items={items} />
+          <DeskNav label="Agent desk" name="Agent" items={items} />
           {children}
         </>
       )}

@@ -33,6 +33,16 @@ export type BuyerPayload = {
   recent: Listing[];
 };
 
+function buyerNext(data: BuyerPayload) {
+  const viewing = data.enquiries.find((enquiry) => enquiry.viewingAt && enquiry.listing);
+  if (viewing?.listing) return { href: `/listings/${viewing.listing.id}`, text: `Viewing set · ${whenLabel(viewing.viewingAt)} · ${viewing.listing.title}` };
+  const requested = data.enquiries.find((enquiry) => enquiry.viewingRequest && !enquiry.viewingAt && enquiry.listing);
+  if (requested?.listing) return { href: `/listings/${requested.listing.id}`, text: `Viewing requested · ${requested.listing.title}. The agent confirms the time.` };
+  const waiting = data.enquiries.find((enquiry) => !enquiry.agentReply && enquiry.listing);
+  if (waiting?.listing) return { href: `/listings/${waiting.listing.id}`, text: `Waiting on a reply · ${waiting.listing.title}` };
+  return null;
+}
+
 function statusOf(home: Home) {
   if (home.enquiry?.viewingAt) return "Viewing set";
   if (home.enquiry?.viewingRequest) return "Viewing requested";
@@ -126,19 +136,22 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
   }
 
   const compared = picked.map((id) => data.homes.find((home) => home.listing.id === id)?.listing).filter((item): item is Listing => Boolean(item));
+  const next = buyerNext(data);
 
   return (
     <div className="stack">
-      <div className="desk-nav" aria-label="Your homes">
+      <nav className="desk-nav" aria-label="Your homes">
+        <span className="desk-name">Your homes</span>
         {([["home", "Home"], ["enquiries", "Enquiries"], ["searches", "Searches"], ["profile", "Profile"]] as const).map(([id, label]) => (
-          <button key={id} className={tab === id ? "on" : ""} type="button" onClick={() => { setTab(id); setMessage(""); }} style={{ border: "1px solid #cfd6d2", borderRadius: 999, padding: "10px 14px", minHeight: 44, background: tab === id ? "#0c3d2c" : "#fff", color: tab === id ? "#fff" : "inherit" }}>{label}</button>
+          <button key={id} className={tab === id ? "on" : ""} type="button" onClick={() => { setTab(id); setMessage(""); }}>{label}</button>
         ))}
-      </div>
+      </nav>
 
       {tab === "home" ? (
         <div className="stack">
           <h1>Hello, {data.profile.name}.</h1>
           <p className="quiet">Only homes you saved or enquired about.</p>
+          {next ? <a className="ai-bar next" href={next.href}><span>{next.text}</span></a> : null}
           <form className="ai-bar" onSubmit={runSearch}>
             <label className="quiet" htmlFor="look">What home are you looking for?</label>
             <input id="look" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Sale, area, beds, max price" />
@@ -146,9 +159,9 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
           </form>
           {searchNote ? <p>{searchNote}</p> : <p className="quiet">Search your saved homes and enquiries.</p>}
           {parsed?.understood && !Object.keys(why).length ? <button className="btn" type="button" disabled={busy} onClick={() => void saveThisSearch()}>Save this search</button> : null}
-          <div className="desk-nav" aria-label="Your homes by purpose">
-            <button type="button" className={purpose === "Sale" ? "on" : ""} onClick={() => setPurpose("Sale")} style={{ border: "1px solid #cfd6d2", borderRadius: 999, padding: "10px 14px", minHeight: 44, background: purpose === "Sale" ? "#116b4a" : "#fff", color: purpose === "Sale" ? "#fff" : "inherit" }}>For sale ({saleCount})</button>
-            <button type="button" className={purpose === "Rent" ? "on" : ""} onClick={() => setPurpose("Rent")} style={{ border: "1px solid #cfd6d2", borderRadius: 999, padding: "10px 14px", minHeight: 44, background: purpose === "Rent" ? "#116b4a" : "#fff", color: purpose === "Rent" ? "#fff" : "inherit" }}>To rent ({rentCount})</button>
+          <div className="purpose-tabs" aria-label="Your homes by purpose">
+            <button type="button" className={purpose === "Sale" ? "on" : ""} onClick={() => setPurpose("Sale")}>For sale ({saleCount})</button>
+            <button type="button" className={purpose === "Rent" ? "on" : ""} onClick={() => setPurpose("Rent")}>To rent ({rentCount})</button>
           </div>
           {shown.length === 0 && !parsed?.understood ? <p>Nothing in this list yet. Open a home and press Save, or send an enquiry.</p> : null}
           <div className="grid">
