@@ -20,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <p>This desk is for the Guyana Keys admin.</p>
       ) : (
         <>
-          <DeskNav label="Admin desk" items={items} />
+          <DeskNav label="Admin desk" name="Admin" items={items} />
           {children}
         </>
       )}
