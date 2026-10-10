@@ -127,13 +127,22 @@ async function insertProfile(user: SessionUser, role: Role) {
   return mapProfile(row);
 }
 
+export async function grantAdmin(user: SessionUser) {
+  if (!isAdminEmail(user.email)) return loadProfile(user.id);
+  const existing = await loadProfile(user.id);
+  if (!existing) return insertProfile(user, "admin");
+  if (existing.role === "admin") return existing;
+  const db = serviceDb();
+  if (!db) return existing;
+  const { error } = await db.from("profiles").update({ role: "admin" }).eq("id", user.id);
+  if (error) return existing;
+  return { ...existing, role: "admin" as const };
+}
+
 export async function ensureProfile(user: SessionUser, desk: Desk) {
+  if (desk === "admin") return isAdminEmail(user.email) ? grantAdmin(user) : loadProfile(user.id);
   const existing = await loadProfile(user.id);
   if (existing) return existing;
-  if (desk === "admin") {
-    if (!isAdminEmail(user.email)) return null;
-    return insertProfile(user, "admin");
-  }
   if (desk === "agent") return insertProfile(user, "agent");
   return insertProfile(user, "buyer");
 }
