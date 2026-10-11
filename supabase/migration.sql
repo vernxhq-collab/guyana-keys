@@ -573,3 +573,53 @@ alter table public.admin_events add column if not exists detail text not null de
 alter table public.admin_events add column if not exists created_at timestamptz not null default now();
 alter table public.admin_events enable row level security;
 revoke all on public.admin_events from anon, authenticated;
+
+-- public area alerts, match notices, title reference, payment receipt
+create table if not exists public.alerts (
+  id text primary key,
+  email text not null default '',
+  area text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.alerts add column if not exists email text not null default '';
+alter table public.alerts add column if not exists area text not null default '';
+alter table public.alerts add column if not exists created_at timestamptz not null default now();
+alter table public.alerts enable row level security;
+revoke all on public.alerts from anon, authenticated;
+
+create table if not exists public.notices (
+  id text primary key,
+  user_id uuid,
+  email text not null default '',
+  phone text not null default '',
+  channel text not null default 'email',
+  kind text not null default 'search',
+  property_id text not null default '',
+  body text not null default '',
+  status text not null default 'queued',
+  dedupe text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.notices add column if not exists user_id uuid;
+alter table public.notices add column if not exists email text not null default '';
+alter table public.notices add column if not exists phone text not null default '';
+alter table public.notices add column if not exists channel text not null default 'email';
+alter table public.notices add column if not exists kind text not null default 'search';
+alter table public.notices add column if not exists property_id text not null default '';
+alter table public.notices add column if not exists body text not null default '';
+alter table public.notices add column if not exists status text not null default 'queued';
+alter table public.notices add column if not exists dedupe text not null default '';
+alter table public.notices add column if not exists created_at timestamptz not null default now();
+
+create unique index if not exists notices_dedupe_key on public.notices (dedupe);
+
+alter table public.notices enable row level security;
+revoke all on public.notices from anon, authenticated;
+
+alter table public.properties add column if not exists title_ref text not null default '';
+
+alter table public.requests add column if not exists amount_gyd bigint not null default 0;
+alter table public.requests add column if not exists paid_at timestamptz;
+alter table public.requests add column if not exists paid_by text not null default '';

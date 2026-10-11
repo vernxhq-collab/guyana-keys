@@ -24,6 +24,7 @@ type Enquiry = {
 
 type Home = { listing: Listing; saved: boolean; enquiry: Enquiry | null };
 type Search = { id: string; label: string; purpose: string; area: string; beds: number; maxPrice: number };
+type Notice = { id: string; kind: string; body: string; status: string; propertyId: string; createdAt: string };
 
 export type BuyerPayload = {
   profile: { name: string; email: string; phone: string; abroad: boolean };
@@ -31,7 +32,21 @@ export type BuyerPayload = {
   enquiries: Enquiry[];
   searches: Search[];
   recent: Listing[];
+  notices?: Notice[];
 };
+
+function noticeLabel(kind: string) {
+  if (kind === "search" || kind === "alert") return "Match";
+  if (kind === "viewing") return "Viewing";
+  if (kind === "reply") return "Reply";
+  return "Notice";
+}
+
+function noticeStatus(status: string) {
+  if (status === "sent") return "Sent";
+  if (status === "failed") return "Could not send";
+  return "Saved on this desk";
+}
 
 function buyerNext(data: BuyerPayload) {
   const viewing = data.enquiries.find((enquiry) => enquiry.viewingAt && enquiry.listing);
@@ -110,7 +125,7 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
     setBusy(true);
     try {
       await post({ action: "search", label: query || "Saved search", ...parsed });
-      setMessage("Saved. Email is not sending yet.");
+      setMessage("Saved. A match shows here, and email and WhatsApp go out when those senders are connected.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The search could not be saved.");
     } finally {
@@ -222,7 +237,14 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
       {tab === "searches" ? (
         <div className="stack">
           <h1>Searches</h1>
-          <p>Saved. Email is not sending yet.</p>
+          <p>Matches for a saved search show here. Email and WhatsApp go out when those senders are connected.</p>
+          {(data.notices || []).length ? (data.notices || []).map((notice) => (
+            <article className="panel" key={notice.id}>
+              <strong>{noticeLabel(notice.kind)}</strong>
+              <p>{notice.body}</p>
+              <p className="quiet">{noticeStatus(notice.status)}</p>
+            </article>
+          )) : null}
           {data.searches.length === 0 ? <p className="quiet">Save a search from Home when nothing matches.</p> : data.searches.map((search) => (
             <article className="panel" key={search.id}>
               <strong>{search.label}</strong>

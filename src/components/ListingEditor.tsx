@@ -20,6 +20,7 @@ type Draft = {
   baths: string;
   sqft: string;
   description: string;
+  titleRef: string;
   lat: number;
   lng: number;
   status: "live" | "hidden";
@@ -27,7 +28,7 @@ type Draft = {
   featured: boolean;
 };
 
-const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
+const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
 
 export function ListingEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -66,6 +67,7 @@ export function ListingEditor({ id }: { id: string }) {
             baths: String(listing.baths || ""),
             sqft: String(listing.sqft || ""),
             description: listing.description || "",
+            titleRef: listing.titleRef || "",
             lat: listing.lat || 6.8,
             lng: listing.lng || -58.16,
             status: listing.status === "live" ? "live" : "hidden",
@@ -215,6 +217,10 @@ export function ListingEditor({ id }: { id: string }) {
       <label>Baths<input value={draft.baths} onChange={(event) => setDraft({ ...draft, baths: event.target.value })} inputMode="numeric" /></label>
       <label>Sqft<input value={draft.sqft} onChange={(event) => setDraft({ ...draft, sqft: event.target.value })} inputMode="numeric" /></label>
       <label>Description<textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
+      <label>Title reference
+        <input value={draft.titleRef} onChange={(event) => setDraft({ ...draft, titleRef: event.target.value })} placeholder="Transport or certificate of title" />
+      </label>
+      <p className="quiet">A listing is not proof of title. This is the reference the agent has on file.</p>
       <label>Status
         <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value === "live" ? "live" : "hidden" })}>
           <option value="hidden">Hidden</option>

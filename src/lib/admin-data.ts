@@ -254,6 +254,9 @@ export async function adminRequest(id: string) {
       company: String(agent.data?.company || ""),
       listing: listing.data?.title ? `${listing.data.title}${listing.data.area ? " · " + listing.data.area : ""}` : "",
       line: summary.line,
+      amountGyd: Number(data.amount_gyd || 0),
+      paidAt: data.paid_at ? String(data.paid_at) : "",
+      paidBy: text(data.paid_by),
     },
   };
 }
@@ -272,7 +275,7 @@ export async function saveInstructions(id: string, instructions: string) {
   return { ok: true };
 }
 
-export async function markPaid(id: string) {
+export async function markPaid(id: string, receipt: { amountGyd?: number; paidBy?: string } = {}) {
   const db = serviceDb();
   if (!db) return { error: "The request could not be updated." };
   const { data } = await db.from("requests").select("*").eq("id", id).maybeSingle();
@@ -285,17 +288,24 @@ export async function markPaid(id: string) {
     await remember(db, `Marked ${agent.data?.name || "an agent"}'s help request done.`);
     return { ok: true };
   }
-  const { error } = await db.from("requests").update({ status: "paid" }).eq("id", id);
-  if (error) return { error: "The request could not be updated." };
+  const amount = Math.round(Number(receipt.amountGyd || 0));
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Enter the amount paid in GYD." };
+  const paidBy = String(receipt.paidBy || "").trim().slice(0, 120);
+  const paidAt = new Date().toISOString();
+  const { error } = await db.from("requests").update({ status: "paid", amount_gyd: amount, paid_at: paidAt, paid_by: paidBy }).eq("id", id);
+  if (error) {
+    if (String(error.message || "").toLowerCase().includes("amount_gyd")) return { error: "Payment receipt is not ready on this desk yet." };
+    return { error: "The request could not be updated." };
+  }
   if (data.kind === "plan" && data.agent_id) {
     await db.from("profiles").update({ plan: "agency", listing_cap: 20 }).eq("id", data.agent_id);
     const agent = await db.from("profiles").select("name").eq("id", data.agent_id).maybeSingle();
-    await remember(db, `Marked ${agent.data?.name || "an agent"}'s plan paid. The plan is agency and the cap is 20.`);
+    await remember(db, `Marked ${agent.data?.name || "an agent"}'s plan paid. GYD ${amount.toLocaleString("en-GY")}${paidBy ? `, marked by ${paidBy}` : ""}. The plan is agency and the cap is 20.`);
   }
   if (data.kind === "feature" && data.property_id) {
     await db.from("properties").update({ featured: true }).eq("id", data.property_id);
     const listing = await db.from("properties").select("title").eq("id", data.property_id).maybeSingle();
-    await remember(db, `Marked the feature request paid for ${listing.data?.title || "a listing"}.`);
+    await remember(db, `Marked the feature request paid for ${listing.data?.title || "a listing"}. GYD ${amount.toLocaleString("en-GY")}${paidBy ? `, marked by ${paidBy}` : ""}.`);
   }
   return { ok: true };
 }

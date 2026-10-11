@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
+import { whenLabel } from "../../../../lib/assist";
+import { money } from "../../../../lib/data";
 
-type RequestRow = { id: string; kind: string; property_id: string | null; status: string; instructions: string; message: string; listing?: string; featured?: boolean };
+type RequestRow = { id: string; kind: string; property_id: string | null; status: string; instructions: string; message: string; listing?: string; featured?: boolean; amountGyd?: number; paidAt?: string; paidBy?: string };
 type Live = { id: string; title: string; area: string; featured?: boolean };
+
+function receiptLine(item: RequestRow) {
+  if (!item.amountGyd || item.amountGyd <= 0) return "";
+  const when = item.paidAt ? whenLabel(item.paidAt) : "";
+  return `Receipt: ${money(item.amountGyd, "Sale")}${when ? ` · ${when}` : ""}${item.paidBy ? ` · marked by ${item.paidBy}` : ""}`;
+}
 
 function paymentLine(kind: string, status: string, stillFeatured = true) {
   if (status === "submitted") return "Sent to the admin. They will write payment instructions here. Nothing changes until they confirm payment.";
@@ -106,6 +114,7 @@ export default function PlanPage() {
         <article className="panel">
           <strong>Package</strong>
           <p>{paymentLine("plan", planRequest.status)}</p>
+          {receiptLine(planRequest) ? <p>{receiptLine(planRequest)}</p> : null}
           {planRequest.instructions ? <p>{planRequest.instructions}</p> : null}
         </article>
       ) : null}
@@ -129,6 +138,7 @@ export default function PlanPage() {
         <article className="panel" key={item.id}>
           <strong>{item.listing || "Listing"}</strong>
           <p>{paymentLine("feature", item.status, Boolean(item.featured))}</p>
+          {receiptLine(item) ? <p>{receiptLine(item)}</p> : null}
           {item.instructions ? <p>{item.instructions}</p> : null}
         </article>
       ))}

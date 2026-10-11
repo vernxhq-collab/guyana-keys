@@ -32,6 +32,7 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     agentId: text(row.agent_id),
     featured: Boolean(row.featured),
     status,
+    titleRef: text(row.title_ref),
   };
 }
 

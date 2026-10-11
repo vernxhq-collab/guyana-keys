@@ -39,6 +39,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           <p className="meta">Guide USD {usd(listing.priceGyd).toLocaleString()} · {listing.area}, {listing.region}</p>
           <p className="facts"><span>{listing.beds || "-"} bed</span><span>{listing.baths || "-"} bath</span><span>{listing.sqft.toLocaleString()} sqft</span></p>
           <p>{listing.description}</p>
+          {listing.titleRef ? <p>Title reference: {listing.titleRef}</p> : null}
           <p className="meta">A listing is not proof of title. Ask for the transport or certificate of title before any deposit.</p>
           <MapView listings={[listing]} height={280} />
         </div>
