@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminRequest, adminRequests, markPaid, saveInstructions, setCap, setPlan, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
+import { adminAgent, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminRequest, adminRequests, markPaid, saveInstructions, setCap, setPlan, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { isAdminEmail, readSession } from "../../../lib/session";
 
 async function admin() {
@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   if (part === "home") return NextResponse.json(await adminHome());
   const q = url.searchParams.get("q") || "";
   if (part === "people") return NextResponse.json(await adminPeople(q));
+  if (part === "agent") return NextResponse.json(await adminAgent(id));
   if (part === "listings") return NextResponse.json(await adminListings(q));
   if (part === "requests") return NextResponse.json(await adminRequests());
   if (part === "request") return NextResponse.json(await adminRequest(id));

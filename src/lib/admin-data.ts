@@ -26,7 +26,7 @@ export async function adminHome() {
     db.from("properties").select("id", { count: "exact", head: true }).eq("status", "live"),
     db.from("enquiries").select("id,agent_reply,stage,created_at"),
     db.from("requests").select("id,agent_id,kind,property_id,status,message,created_at").in("status", ["submitted", "instructions"]).order("created_at", { ascending: false }),
-    db.from("profiles").select("id,name"),
+    db.from("profiles").select("id,name,email,phone,company,role"),
     db.from("admin_events").select("id,detail,created_at").order("created_at", { ascending: false }).limit(20),
   ]);
   const names = new Map((profiles.data || []).map((row) => [String(row.id), String(row.name || "Agent")]));
@@ -61,6 +61,13 @@ export async function adminHome() {
       };
     }),
     record: events.error ? [] : (events.data || []).map((row) => ({ id: String(row.id), detail: String(row.detail || ""), createdAt: String(row.created_at || "") })),
+    agentList: (profiles.data || []).filter((row) => row.role === "agent").map((row) => ({
+      id: String(row.id),
+      name: String(row.name || ""),
+      email: String(row.email || ""),
+      phone: String(row.phone || ""),
+      company: String(row.company || ""),
+    })),
   };
 }
 
@@ -68,7 +75,7 @@ export async function adminPeople(query = "") {
   const db = serviceDb();
   if (!db) return { error: "The desk is not connected." as const };
   const [profiles, listings, saves, enquiries] = await Promise.all([
-    db.from("profiles").select("id,name,email,company,role,plan,listing_cap,suspended").order("created_at", { ascending: false }),
+    db.from("profiles").select("id,name,email,phone,company,role,plan,listing_cap,suspended,areas").order("created_at", { ascending: false }),
     db.from("properties").select("agent_id,status"),
     db.from("saved_homes").select("user_id"),
     db.from("enquiries").select("buyer_id"),
@@ -98,6 +105,8 @@ export async function adminPeople(query = "") {
       name: String(row.name || ""),
       company: String(row.company || ""),
       email: String(row.email || ""),
+      phone: String(row.phone || ""),
+      areas: Array.isArray(row.areas) ? row.areas.map(String) : [],
       plan: planLabel(String(row.plan || "starter")),
       planKey: String(row.plan || "starter"),
       live: live.get(String(row.id)) || 0,
@@ -114,8 +123,65 @@ export async function adminPeople(query = "") {
   };
   if (!q) return result;
   return {
-    agents: result.agents.filter((agent) => `${agent.name} ${agent.company} ${agent.email}`.toLowerCase().includes(q)),
+    agents: result.agents.filter((agent) => `${agent.name} ${agent.company} ${agent.email} ${agent.phone}`.toLowerCase().includes(q)),
     buyers: result.buyers.filter((buyer) => `${buyer.name} ${buyer.email}`.toLowerCase().includes(q)),
+  };
+}
+
+export async function adminAgent(id: string) {
+  const db = serviceDb();
+  if (!db) return { error: "The desk is not connected." as const };
+  const { data } = await db.from("profiles").select("*").eq("id", id).eq("role", "agent").maybeSingle();
+  if (!data) return { error: "That agent was not found." as const };
+  const [props, enquiries, requests] = await Promise.all([
+    db.from("properties").select("id,title,area,purpose,price_gyd,status,featured").eq("agent_id", id).order("created_at", { ascending: false }),
+    db.from("enquiries").select("id,name,phone,stage,property_id,created_at,agent_reply").eq("agent_id", id).order("created_at", { ascending: false }).limit(40),
+    db.from("requests").select("id,kind,status,property_id,message,instructions,created_at").eq("agent_id", id).order("created_at", { ascending: false }).limit(20),
+  ]);
+  const listings = props.data || [];
+  const titles = new Map(listings.map((row) => [String(row.id), String(row.title || "")]));
+  return {
+    agent: {
+      id: String(data.id),
+      name: String(data.name || ""),
+      email: String(data.email || ""),
+      phone: String(data.phone || ""),
+      company: String(data.company || ""),
+      photoUrl: String(data.photo_url || ""),
+      areas: Array.isArray(data.areas) ? data.areas.map(String) : [],
+      plan: planLabel(String(data.plan || "starter")),
+      planKey: String(data.plan || "starter"),
+      cap: shownCap(String(data.plan || "starter"), Number(data.listing_cap || 3)),
+      live: listings.filter((row) => row.status === "live").length,
+      suspended: Boolean(data.suspended),
+      createdAt: String(data.created_at || ""),
+    },
+    listings: listings.map((row) => ({
+      id: String(row.id),
+      title: String(row.title || "Untitled home"),
+      area: String(row.area || ""),
+      purpose: String(row.purpose || "Sale") === "Rent" ? "Rent" : "Sale",
+      priceGyd: Number(row.price_gyd || 0) || 0,
+      status: row.status === "live" ? "live" : "hidden",
+      featured: Boolean(row.featured),
+    })),
+    leads: (enquiries.data || []).map((row) => ({
+      id: String(row.id),
+      name: String(row.name || ""),
+      phone: String(row.phone || ""),
+      stage: String(row.stage || "new"),
+      home: titles.get(String(row.property_id || "")) || "",
+      createdAt: String(row.created_at || ""),
+      answered: Boolean(String(row.agent_reply || "").trim()),
+    })),
+    requests: (requests.data || []).map((row) => ({
+      id: String(row.id),
+      kind: String(row.kind || ""),
+      status: String(row.status || ""),
+      listing: titles.get(String(row.property_id || "")) || "",
+      message: String(row.message || ""),
+      createdAt: String(row.created_at || ""),
+    })),
   };
 }
 

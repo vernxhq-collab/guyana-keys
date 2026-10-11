@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Agent = { id: string; name: string; company: string; email: string; plan: string; planKey: string; live: number; cap: number; suspended: boolean };
+type Agent = { id: string; name: string; company: string; email: string; phone: string; areas: string[]; plan: string; planKey: string; live: number; cap: number; suspended: boolean };
 type Buyer = { id: string; name: string; email: string; saved: number; enquiries: number };
 
 export default function PeoplePage() {
@@ -41,8 +41,8 @@ export default function PeoplePage() {
       {agents.length === 0 ? <p>No agent yet.</p> : agents.map((agent) => (
         <article className="record" key={agent.id}>
           <div className="record-main">
-            <strong>{agent.name}</strong>
-            <span className="quiet">{agent.company || "No company"} · {agent.plan} · {agent.live} of {agent.cap} live{agent.suspended ? " · Suspended" : ""}</span>
+            <a href={`/admin/people/${agent.id}`}><strong>{agent.name || "Agent"}</strong></a>
+            <span className="quiet">{[agent.email, agent.phone || "No WhatsApp", agent.company || "No company", agent.areas.length ? agent.areas.join(", ") : "No areas", agent.plan, `${agent.live} of ${agent.cap} live`, agent.suspended ? "Suspended" : ""].filter(Boolean).join(" · ")}</span>
           </div>
           <div className="record-actions">
             <label className="quiet">Cap

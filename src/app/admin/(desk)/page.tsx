@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../components/DeskSkeleton";
 
-type Home = { agents: number; live: number; unanswered: number; openRequests: number; requests: { id: string; line: string; status: string; kind: string }[]; record?: { id: string; detail: string }[]; error?: string };
+type AgentRow = { id: string; name: string; email: string; phone: string; company: string };
+type Home = { agents: number; live: number; unanswered: number; openRequests: number; requests: { id: string; line: string; status: string; kind: string }[]; agentList?: AgentRow[]; record?: { id: string; detail: string }[]; error?: string };
 
 export default function AdminHomePage() {
   const [home, setHome] = useState<Home | null>(null);
@@ -21,11 +22,18 @@ export default function AdminHomePage() {
     <div className="stack">
       <h1>Admin</h1>
       <div className="stats">
-        <article className="stat"><p className="quiet">Agents</p><strong>{home.agents}</strong></article>
-        <article className="stat"><p className="quiet">Live listings</p><strong>{home.live}</strong></article>
-        <article className={home.unanswered > 0 ? "stat attention" : "stat"}><p className="quiet">Unanswered over 24 hours</p><strong>{home.unanswered}</strong></article>
-        <article className="stat"><p className="quiet">Open requests</p><strong>{home.openRequests}</strong></article>
+        <a className="stat" href="/admin/people"><p className="quiet">Agents</p><strong>{home.agents}</strong><p className="quiet">Open People</p></a>
+        <a className="stat" href="/admin/listings"><p className="quiet">Live listings</p><strong>{home.live}</strong><p className="quiet">Open Listings</p></a>
+        <a className={home.unanswered > 0 ? "stat attention" : "stat"} href="/admin/inbox"><p className="quiet">Unanswered over 24 hours</p><strong>{home.unanswered}</strong><p className="quiet">Open Inbox</p></a>
+        <a className="stat" href="/admin/requests"><p className="quiet">Open requests</p><strong>{home.openRequests}</strong><p className="quiet">Open Requests</p></a>
       </div>
+      <h2>Agents</h2>
+      {(home.agentList || []).length === 0 ? <p className="quiet">No agent yet.</p> : (home.agentList || []).map((agent) => (
+        <a className="quiet-row" key={agent.id} href={`/admin/people/${agent.id}`}>
+          <span><strong>{agent.name || "Agent"}</strong>{agent.company ? ` · ${agent.company}` : ""}</span>
+          <span className="quiet">{[agent.email, agent.phone].filter(Boolean).join(" · ") || "No email yet"}</span>
+        </a>
+      ))}
       <h2>Open requests</h2>
       {next ? (
         <a className="ai-bar next" href={`/admin/requests/${next.id}`}><span>{next.line}</span><span className="quiet">{next.status}</span></a>
