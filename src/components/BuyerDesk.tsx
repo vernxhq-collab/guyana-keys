@@ -145,6 +145,16 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
         {([["home", "Home"], ["enquiries", "Enquiries"], ["searches", "Searches"], ["profile", "Profile"]] as const).map(([id, label]) => (
           <button key={id} className={tab === id ? "on" : ""} type="button" onClick={() => { setTab(id); setMessage(""); }}>{label}</button>
         ))}
+        <button
+          type="button"
+          style={{ marginLeft: "auto" }}
+          onClick={async () => {
+            await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
+            window.location.href = "/account";
+          }}
+        >
+          Log out
+        </button>
       </nav>
 
       {tab === "home" ? (
@@ -253,7 +263,6 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
           <label>Email<input value={profile.email} readOnly /></label>
           <label className="quiet"><input type="checkbox" checked={profile.abroad} onChange={(event) => setProfile({ ...profile, abroad: event.target.checked })} /> Buying from abroad, as the default for the next enquiry</label>
           <button className="btn" type="submit" disabled={busy}>Save</button>
-          <button className="btn ghost" type="button" onClick={async () => { await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) }); window.location.href = "/account"; }}>Log off</button>
         </form>
       ) : null}
       {message ? <p>{message}</p> : null}

@@ -14,7 +14,7 @@ export default async function AgentLoginPage() {
       {blocked ? (
         <div className="stack" style={{ width: "min(440px, 100%)", margin: "0 auto 16px" }}>
           <p>You are signed in as {email}. {isAdminEmail(email) ? "That address opens the admin desk. The agent desk needs a different email." : "That account cannot open the agent desk. Sign out, then use the agent email."}</p>
-          <SignOut next="/agent/login" />
+          <SignOut next="/agent/login" label="Log out" />
         </div>
       ) : null}
       <MagicLinkForm desk="agent" title="Agent sign in" blurb="We email a sign-in link. Nothing is printed here." />
