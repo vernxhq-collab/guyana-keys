@@ -1,5 +1,5 @@
 export type Listing = { id: string; title: string; area: string; region: string; type: string; purpose: string; priceGyd: number; beds: number; baths: number; sqft: number; lat: number; lng: number; image: string; description: string; agentId: string; photos?: string[]; featured?: boolean; status?: "live" | "hidden"; };
-export type Agent = { id: string; name: string; company: string; phone: string; areas: string[]; image: string; };
+export type Agent = { id: string; name: string; company: string; phone: string; areas: string[]; image: string; address?: string; };
 const house = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80";
 const house2 = "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80";
 const apt = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80";

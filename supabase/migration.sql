@@ -33,6 +33,7 @@ alter table public.profiles add column if not exists plan text not null default 
 alter table public.profiles add column if not exists listing_cap int not null default 3;
 alter table public.profiles add column if not exists abroad boolean not null default false;
 alter table public.profiles add column if not exists suspended boolean not null default false;
+alter table public.profiles add column if not exists address text not null default '';
 alter table public.profiles add column if not exists created_at timestamptz not null default now();
 
 update public.profiles

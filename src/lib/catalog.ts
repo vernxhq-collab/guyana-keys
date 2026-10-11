@@ -91,13 +91,14 @@ export async function publicAgent(agentId: string): Promise<Agent | null> {
   try {
     const db = serviceDb();
     if (!db) return null;
-    const { data } = await db.from("profiles").select("id,name,company,phone,areas,photo_url,role,suspended").eq("id", agentId).maybeSingle();
+    const { data } = await db.from("profiles").select("*").eq("id", agentId).maybeSingle();
     if (!data || data.role !== "agent" || data.suspended) return null;
     return {
       id: String(data.id),
       name: String(data.name || "Agent"),
       company: String(data.company || ""),
       phone: String(data.phone || ""),
+      address: String(data.address || ""),
       areas: Array.isArray(data.areas) ? data.areas.map(String) : [],
       image: String(data.photo_url || ""),
     };

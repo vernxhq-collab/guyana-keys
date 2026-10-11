@@ -2,7 +2,7 @@ import { areas } from "./areas";
 import { leadScore, replyDraft } from "./assist";
 import { mapProperty } from "./catalog";
 import type { Listing } from "./data";
-import { hoursSince, newId, planLabel, stageLabel } from "./labels";
+import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { addEvent, leadFromEnquiry } from "./records";
 import { liveCap, type Profile } from "./session";
 import { serviceDb } from "./supabase";
@@ -53,6 +53,9 @@ export async function agentHome(profile: Profile) {
   }).length;
   const unanswered = leads.filter((lead) => !(String(lead.agent_reply || "").trim()) && String(lead.stage) !== "closed").length;
   const actions: { id: string; text: string; href: string }[] = [];
+  if (!profile.name.trim() || digits(profile.phone).length < 7 || !profile.company.trim() || profile.address.trim().length < 5 || profile.areas.length === 0) {
+    actions.push({ id: "profile", text: "Finish your profile. Name, company, WhatsApp, address, and areas are required.", href: "/agent/profile" });
+  }
   if ((requests.data || []).some((item) => item.status === "instructions")) {
     actions.push({ id: "pay-admin", text: "Pay the admin. The instructions are on Plan.", href: "/agent/plan" });
   }
@@ -429,10 +432,17 @@ export async function agentPlan(profile: Profile) {
 export async function saveAgentProfile(profile: Profile, body: Record<string, unknown>) {
   const { db, error } = dbOrError();
   if (!db) return { error };
-  const name = String(body.name || "").trim();
-  if (!name) return { error: "Enter your name." };
+  const name = String(body.name || "").trim().slice(0, 80);
+  if (name.length < 2) return { error: "Enter your name." };
+  const phone = String(body.phone || "").trim().slice(0, 40);
+  if (digits(phone).length < 7) return { error: "Enter a WhatsApp number." };
+  const company = String(body.company || "").trim().slice(0, 120);
+  if (company.length < 2) return { error: "Enter your company." };
+  const address = String(body.address || "").trim().slice(0, 180);
+  if (address.length < 5) return { error: "Enter your address." };
   const allowed = new Set(areas.map((item) => item.name));
   const picked = Array.isArray(body.areas) ? body.areas.map(String).filter((item) => allowed.has(item)) : [];
+  if (!picked.length) return { error: "Choose at least one area." };
   let photo = profile.photoUrl;
   if (typeof body.photoUrl === "string" && body.photoUrl) {
     const host = supabaseUrl();
@@ -440,11 +450,15 @@ export async function saveAgentProfile(profile: Profile, body: Record<string, un
   }
   const { error: updateError } = await db.from("profiles").update({
     name,
-    company: String(body.company || "").trim().slice(0, 120),
-    phone: String(body.phone || "").trim().slice(0, 40),
+    company,
+    phone,
+    address,
     areas: picked,
     photo_url: photo,
   }).eq("id", profile.id);
-  if (updateError) return { error: "The profile could not be saved." };
+  if (updateError) {
+    if (String(updateError.message || "").toLowerCase().includes("address")) return { error: "Address is not ready on this desk yet." };
+    return { error: "The profile could not be saved." };
+  }
   return { ok: true };
 }

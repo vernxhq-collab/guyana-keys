@@ -12,6 +12,7 @@ export type Profile = {
   phone: string;
   role: Role;
   company: string;
+  address: string;
   photoUrl: string;
   areas: string[];
   plan: string;
@@ -61,6 +62,7 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     phone: text(row.phone),
     role: role === "agent" || role === "admin" ? role : "buyer",
     company: text(row.company),
+    address: text(row.address),
     photoUrl: text(row.photo_url),
     areas: Array.isArray(row.areas) ? row.areas.filter((item): item is string => typeof item === "string") : [],
     plan,

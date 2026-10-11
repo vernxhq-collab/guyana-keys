@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { areas } from "../../../../lib/areas";
+import { digits } from "../../../../lib/labels";
 import { compressImage } from "../../../../lib/photos";
 
 export default function AgentProfilePage() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
@@ -23,6 +26,7 @@ export default function AgentProfilePage() {
         setName(profile.name || "");
         setCompany(profile.company || "");
         setPhone(profile.phone || "");
+        setAddress(profile.address || "");
         setEmail(profile.email || "");
         setPhotoUrl(profile.photoUrl || "");
         setPicked(profile.areas || []);
@@ -31,18 +35,32 @@ export default function AgentProfilePage() {
       .catch(() => { setNote("Could not load the profile."); setLoading(false); });
   }, []);
 
-  if (loading) return <p>Loading profile...</p>;
+  if (loading) return <DeskSkeleton count={3} />;
+  const checks = [
+    { ok: name.trim().length >= 2, label: "Enter your name." },
+    { ok: company.trim().length >= 2, label: "Enter your company." },
+    { ok: digits(phone).length >= 7, label: "Enter your WhatsApp number." },
+    { ok: address.trim().length >= 5, label: "Enter your address." },
+    { ok: picked.length > 0, label: "Choose at least one area." },
+    { ok: Boolean(photoUrl), label: "Add a photo." },
+  ];
+  const missing = checks.find((check) => !check.ok);
+
   return (
     <form className="stack" onSubmit={async (event) => {
       event.preventDefault();
-      const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "profile", name, company, phone, areas: picked, photoUrl }) });
+      const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "profile", name, company, phone, address, areas: picked, photoUrl }) });
       const data = await res.json();
       setNote(res.ok ? "Saved." : data.error || "The profile could not be saved.");
     }}>
+      <p className="eyebrow">Profile</p>
       <h1>Profile</h1>
+      <p className="quiet">Name, company, WhatsApp, address, and areas are required. Email comes from sign-in.</p>
+      <p className="ai-bar next"><span>{missing ? missing.label : "Profile is complete."}</span></p>
       <label>Name<input value={name} onChange={(event) => setName(event.target.value)} required /></label>
-      <label>Company<input value={company} onChange={(event) => setCompany(event.target.value)} /></label>
-      <label>WhatsApp<input value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
+      <label>Company<input value={company} onChange={(event) => setCompany(event.target.value)} required /></label>
+      <label>WhatsApp<input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" required /></label>
+      <label>Address<input value={address} onChange={(event) => setAddress(event.target.value)} required placeholder="Office address" /></label>
       <label>Email<input value={email} readOnly /></label>
       {photoUrl ? <img src={photoUrl} alt="" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12 }} /> : null}
       <label>Photo
