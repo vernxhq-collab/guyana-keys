@@ -25,11 +25,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p>This desk is for the Guyana Keys admin.</p>
           {session?.user.email ? <p className="quiet">Signed in as {session.user.email}.</p> : null}
           <a className="btn" href="/admin/login">Admin sign in</a>
-          {session ? <SignOut next="/admin/login" /> : null}
+          <SignOut next="/admin/login" label="Log out" />
         </div>
       ) : (
         <>
-          <DeskNav label="Admin desk" name="Admin" items={items} />
+          <DeskNav label="Admin desk" name="Admin" items={items} signOut="/admin/login" />
           {children}
         </>
       )}
