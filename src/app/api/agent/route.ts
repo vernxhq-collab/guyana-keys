@@ -5,7 +5,7 @@ import { canUseAgentDesk, readSession } from "../../../lib/session";
 async function agent() {
   const session = await readSession();
   if (!session) return { error: NextResponse.json({ error: "Sign in required." }, { status: 401 }) };
-  if (!session.profile || !canUseAgentDesk(session.profile)) {
+  if (!session.profile || !canUseAgentDesk(session.profile, session.user.email)) {
     return { error: NextResponse.json({ error: session?.profile?.suspended ? "This account is suspended." : "This desk is for agents." }, { status: 403 }) };
   }
   return { profile: session.profile };

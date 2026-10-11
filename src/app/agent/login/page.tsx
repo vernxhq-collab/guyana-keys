@@ -5,9 +5,9 @@ import { canUseAgentDesk, readSession } from "../../../lib/session";
 
 export default async function AgentLoginPage() {
   const session = await readSession();
-  if (canUseAgentDesk(session?.profile)) redirect("/agent");
+  if (canUseAgentDesk(session?.profile, session?.user.email)) redirect("/agent");
   const email = session?.user.email || "";
-  const blocked = Boolean(email && session?.profile && !canUseAgentDesk(session.profile));
+  const blocked = Boolean(email && session?.profile && !canUseAgentDesk(session.profile, session.user.email));
   return (
     <main className="wrap section desk agent-desk">
       {session?.profile?.suspended ? <p>This account is suspended.</p> : null}

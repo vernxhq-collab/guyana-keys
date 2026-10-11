@@ -1,5 +1,4 @@
 import { DeskNav } from "../../../components/DeskNav";
-import { SessionCatcher } from "../../../components/SessionCatcher";
 import { SignOut } from "../../../components/SignOut";
 import { canUseAgentDesk, readSession } from "../../../lib/session";
 
@@ -9,7 +8,6 @@ export default async function AgentLayout({ children }: { children: React.ReactN
   const session = await readSession();
   return (
     <main className="wrap section desk agent-desk">
-      <SessionCatcher desk="agent" />
       {!session ? (
         <>
           <h1>Agent desk</h1>
@@ -21,7 +19,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
           <p>This account is suspended.</p>
           <SignOut next="/agent/login" />
         </div>
-      ) : !canUseAgentDesk(session.profile) ? (
+      ) : !canUseAgentDesk(session.profile, session.user.email) ? (
         <div className="stack">
           <p>This desk is for agents.</p>
           <p className="quiet">Signed in as {session.user.email}. Sign out, then use the agent email.</p>

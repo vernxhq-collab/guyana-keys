@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     if (desk === "admin" && profile?.role !== "admin") {
       return NextResponse.json({ error: "This desk is for the Guyana Keys admin." }, { status: 403 });
     }
-    if (desk === "agent" && profile && !canUseAgentDesk(profile)) {
+    if (desk === "agent" && profile && !canUseAgentDesk(profile, user.email)) {
       const response = NextResponse.json({ error: profile.suspended ? "This account is suspended." : "This desk is for agents. Use the agent email." }, { status: 403 });
       if (profile.suspended) response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0, secure: true });
       return response;
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     const user = { id: data.user.id, name, email: data.user.email };
     if (desk === "admin" && !isAdminEmail(user.email)) return NextResponse.json({ error: "This desk is for the Guyana Keys admin." }, { status: 403 });
     const profile = await ensureProfile(user, desk);
-    if (desk === "agent" && profile && !canUseAgentDesk(profile)) {
+    if (desk === "agent" && profile && !canUseAgentDesk(profile, user.email)) {
       return NextResponse.json({ error: profile.suspended ? "This account is suspended." : "This desk is for agents. Use the agent email." }, { status: 403 });
     }
     return signedIn(user, profile ? { role: profile.role, name: profile.name } : null, data.session.access_token);

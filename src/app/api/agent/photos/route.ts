@@ -5,7 +5,7 @@ import { serviceDb, supabaseUrl } from "../../../../lib/supabase";
 
 export async function POST(request: Request) {
   const session = await readSession();
-  if (!session?.profile || !canUseAgentDesk(session.profile)) {
+  if (!session?.profile || !canUseAgentDesk(session.profile, session.user.email)) {
     return NextResponse.json({ error: "This desk is for agents." }, { status: 403 });
   }
   const db = serviceDb();

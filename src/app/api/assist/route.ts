@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const role = session.profile.role;
   const allowed =
     (task === "buyer-search" && role === "buyer") ||
-    ((task === "listing-draft" || task === "price-hint" || task === "reply-draft" || task === "lead-score") && canUseAgentDesk(session.profile)) ||
+    ((task === "listing-draft" || task === "price-hint" || task === "reply-draft" || task === "lead-score") && canUseAgentDesk(session.profile, session.user.email)) ||
     (task === "admin-summary" && role === "admin" && isAdminEmail(session.user.email));
   if (!allowed) return NextResponse.json({ error: "AI is not available, continue manually." }, { status: 403 });
   try {

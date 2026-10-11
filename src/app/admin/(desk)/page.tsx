@@ -21,6 +21,7 @@ export default function AdminHomePage() {
   return (
     <div className="stack">
       <h1>Admin</h1>
+      <p className="quiet">This sign-in also opens the <a href="/agent">agent desk</a>.</p>
       <div className="stats">
         <a className="stat" href="/admin/people"><p className="quiet">Agents</p><strong>{home.agents}</strong><p className="quiet">Open People</p></a>
         <a className="stat" href="/admin/listings"><p className="quiet">Live listings</p><strong>{home.live}</strong><p className="quiet">Open Listings</p></a>
