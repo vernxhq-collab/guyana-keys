@@ -13,6 +13,7 @@ type Agent = {
   email: string;
   phone: string;
   company: string;
+  address: string;
   photoUrl: string;
   areas: string[];
   plan: string;
@@ -59,16 +60,26 @@ export default function AdminAgentPage() {
 
   if (error) return <p>{error}</p>;
   if (!agent) return <DeskSkeleton count={3} />;
+  const missing = [
+    !agent.name ? "Name" : "",
+    !agent.phone ? "WhatsApp" : "",
+    !agent.company ? "Company" : "",
+    !agent.address ? "Address" : "",
+    agent.areas.length === 0 ? "Areas" : "",
+    !agent.photoUrl ? "Photo" : "",
+  ].filter(Boolean);
   return (
     <div className="stack">
       <p className="quiet"><a href="/admin/people">People</a></p>
       <h1>{agent.name || "Agent"}</h1>
       <p className="quiet">{agent.suspended ? "Suspended." : agent.plan} · {agent.live} of {agent.cap} live listings.</p>
+      <p className="ai-bar next"><span>{missing.length ? `Still needed: ${missing.join(", ")}.` : "Profile is complete."}</span></p>
       <article className="panel">
-        {agent.photoUrl ? <img src={agent.photoUrl} alt="" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12 }} /> : null}
+        {agent.photoUrl ? <img src={agent.photoUrl} alt="" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12 }} /> : <p>Photo not set</p>}
         <p>Email {agent.email || "not set"}</p>
         <p>WhatsApp {agent.phone || "not set"}</p>
         <p>Company {agent.company || "not set"}</p>
+        <p>Address {agent.address || "not set"}</p>
         <p>Areas {agent.areas.length ? agent.areas.join(", ") : "not set"}</p>
         <p>Joined {whenLabel(agent.createdAt) || "not set"}</p>
       </article>

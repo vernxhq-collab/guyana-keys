@@ -26,7 +26,7 @@ export async function adminHome() {
     db.from("properties").select("id", { count: "exact", head: true }).eq("status", "live"),
     db.from("enquiries").select("id,agent_reply,stage,created_at"),
     db.from("requests").select("id,agent_id,kind,property_id,status,message,created_at").in("status", ["submitted", "instructions"]).order("created_at", { ascending: false }),
-    db.from("profiles").select("id,name,email,phone,company,role"),
+    db.from("profiles").select("*"),
     db.from("admin_events").select("id,detail,created_at").order("created_at", { ascending: false }).limit(20),
   ]);
   const names = new Map((profiles.data || []).map((row) => [String(row.id), String(row.name || "Agent")]));
@@ -67,6 +67,7 @@ export async function adminHome() {
       email: String(row.email || ""),
       phone: String(row.phone || ""),
       company: String(row.company || ""),
+      address: String(row.address || ""),
     })),
   };
 }
@@ -75,7 +76,7 @@ export async function adminPeople(query = "") {
   const db = serviceDb();
   if (!db) return { error: "The desk is not connected." as const };
   const [profiles, listings, saves, enquiries] = await Promise.all([
-    db.from("profiles").select("id,name,email,phone,company,role,plan,listing_cap,suspended,areas").order("created_at", { ascending: false }),
+    db.from("profiles").select("*").order("created_at", { ascending: false }),
     db.from("properties").select("agent_id,status"),
     db.from("saved_homes").select("user_id"),
     db.from("enquiries").select("buyer_id"),
@@ -106,6 +107,7 @@ export async function adminPeople(query = "") {
       company: String(row.company || ""),
       email: String(row.email || ""),
       phone: String(row.phone || ""),
+      address: String(row.address || ""),
       areas: Array.isArray(row.areas) ? row.areas.map(String) : [],
       plan: planLabel(String(row.plan || "starter")),
       planKey: String(row.plan || "starter"),
@@ -123,7 +125,7 @@ export async function adminPeople(query = "") {
   };
   if (!q) return result;
   return {
-    agents: result.agents.filter((agent) => `${agent.name} ${agent.company} ${agent.email} ${agent.phone}`.toLowerCase().includes(q)),
+    agents: result.agents.filter((agent) => `${agent.name} ${agent.company} ${agent.email} ${agent.phone} ${agent.address}`.toLowerCase().includes(q)),
     buyers: result.buyers.filter((buyer) => `${buyer.name} ${buyer.email}`.toLowerCase().includes(q)),
   };
 }
@@ -147,6 +149,7 @@ export async function adminAgent(id: string) {
       email: String(data.email || ""),
       phone: String(data.phone || ""),
       company: String(data.company || ""),
+      address: String(data.address || ""),
       photoUrl: String(data.photo_url || ""),
       areas: Array.isArray(data.areas) ? data.areas.map(String) : [],
       plan: planLabel(String(data.plan || "starter")),

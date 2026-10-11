@@ -14,7 +14,7 @@ export default async function AgentPage({ params }: { params: Promise<{ id: stri
   return (
     <main className="wrap">
       <h1>{agent.name}</h1>
-      <p>{agent.company}{agent.areas.length ? ` · ${agent.areas.join(", ")}` : ""}</p>
+      <p>{[agent.company, agent.address, agent.areas.join(", ")].filter(Boolean).join(" · ")}</p>
       {wa ? <a href={wa}>WhatsApp {agent.name}</a> : null}
       {own.map((item) => <p key={item.id}><Link href={`/listings/${item.id}`}>{item.title}</Link></p>)}
     </main>

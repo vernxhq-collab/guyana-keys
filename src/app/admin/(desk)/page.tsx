@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../components/DeskSkeleton";
 
-type AgentRow = { id: string; name: string; email: string; phone: string; company: string };
+type AgentRow = { id: string; name: string; email: string; phone: string; company: string; address: string };
 type Home = { agents: number; live: number; unanswered: number; openRequests: number; requests: { id: string; line: string; status: string; kind: string }[]; agentList?: AgentRow[]; record?: { id: string; detail: string }[]; error?: string };
 
 export default function AdminHomePage() {
@@ -31,7 +31,7 @@ export default function AdminHomePage() {
       {(home.agentList || []).length === 0 ? <p className="quiet">No agent yet.</p> : (home.agentList || []).map((agent) => (
         <a className="quiet-row" key={agent.id} href={`/admin/people/${agent.id}`}>
           <span><strong>{agent.name || "Agent"}</strong>{agent.company ? ` · ${agent.company}` : ""}</span>
-          <span className="quiet">{[agent.email, agent.phone].filter(Boolean).join(" · ") || "No email yet"}</span>
+          <span className="quiet">{[agent.email, agent.phone, agent.address].filter(Boolean).join(" · ") || "No contact details yet"}</span>
         </a>
       ))}
       <h2>Open requests</h2>
