@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
-import { readSession } from "../../../lib/session";
+import { canUseAgentDesk, readSession } from "../../../lib/session";
 
 async function agent() {
   const session = await readSession();
   if (!session) return { error: NextResponse.json({ error: "Sign in required." }, { status: 401 }) };
-  if (!session.profile || session.profile.role !== "agent") return { error: NextResponse.json({ error: "This desk is for agents." }, { status: 403 }) };
-  if (session.profile.suspended) return { error: NextResponse.json({ error: "This account is suspended." }, { status: 403 }) };
+  if (!session.profile || !canUseAgentDesk(session.profile)) {
+    return { error: NextResponse.json({ error: session?.profile?.suspended ? "This account is suspended." : "This desk is for agents." }, { status: 403 }) };
+  }
   return { profile: session.profile };
 }
 

@@ -43,6 +43,12 @@ export function isAdminEmail(email: string) {
   return list.includes(email.trim().toLowerCase());
 }
 
+export function canUseAgentDesk(profile: Profile | null | undefined) {
+  if (!profile || profile.suspended) return false;
+  if (profile.role === "agent") return true;
+  return profile.role === "admin" && isAdminEmail(profile.email);
+}
+
 function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }

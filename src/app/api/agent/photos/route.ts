@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { newId } from "../../../../lib/labels";
-import { readSession } from "../../../../lib/session";
+import { canUseAgentDesk, readSession } from "../../../../lib/session";
 import { serviceDb, supabaseUrl } from "../../../../lib/supabase";
 
 export async function POST(request: Request) {
   const session = await readSession();
-  if (!session?.profile || session.profile.role !== "agent" || session.profile.suspended) {
+  if (!session?.profile || !canUseAgentDesk(session.profile)) {
     return NextResponse.json({ error: "This desk is for agents." }, { status: 403 });
   }
   const db = serviceDb();

@@ -1,7 +1,7 @@
 import { DeskNav } from "../../../components/DeskNav";
 import { SessionCatcher } from "../../../components/SessionCatcher";
 import { SignOut } from "../../../components/SignOut";
-import { isAdminEmail, readSession } from "../../../lib/session";
+import { canUseAgentDesk, readSession } from "../../../lib/session";
 
 const items: [string, string][] = [["Home", "/agent"], ["Listings", "/agent/listings"], ["Leads", "/agent/leads"], ["Plan", "/agent/plan"], ["Help", "/agent/help"], ["Profile", "/agent/profile"]];
 
@@ -21,10 +21,10 @@ export default async function AgentLayout({ children }: { children: React.ReactN
           <p>This account is suspended.</p>
           <SignOut next="/agent/login" />
         </div>
-      ) : session.profile?.role !== "agent" ? (
+      ) : !canUseAgentDesk(session.profile) ? (
         <div className="stack">
           <p>This desk is for agents.</p>
-          <p className="quiet">Signed in as {session.user.email}. {isAdminEmail(session.user.email) ? "That address opens the admin desk. Use a different email for this desk." : "Sign out, then use the agent email."}</p>
+          <p className="quiet">Signed in as {session.user.email}. Sign out, then use the agent email.</p>
           <a className="btn" href="/agent/login">Agent sign in</a>
           <SignOut next="/agent/login" />
         </div>
