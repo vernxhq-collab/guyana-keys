@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import { deskEmail } from "../../lib/contact";
 export default function AlertsPage() {
   const [sent, setSent] = useState("");
   return (
     <main className="wrap section">
       <h1>Create alert</h1>
+      <p className="quiet">A match is emailed from {deskEmail}.</p>
       <form className="card" style={{maxWidth:520, padding:22, display:"grid", gap:12}} onSubmit={async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);

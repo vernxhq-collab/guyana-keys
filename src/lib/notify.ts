@@ -1,4 +1,5 @@
 import { whenLabel } from "./assist";
+import { deskFrom } from "./contact";
 import { digits, newId } from "./labels";
 import { serviceDb } from "./supabase";
 
@@ -65,7 +66,7 @@ export async function sendWhatsApp(phone: string, text: string): Promise<SendSta
 
 export async function sendEmail(to: string, subject: string, text: string): Promise<SendStatus> {
   const key = process.env.RESEND_API_KEY || "";
-  const from = process.env.ALERT_FROM_EMAIL || "";
+  const from = process.env.ALERT_FROM_EMAIL || deskFrom;
   if (!key || !from || !to.includes("@") || !subject.trim() || !text.trim()) return "skipped";
   try {
     const res = await fetch("https://api.resend.com/emails", {

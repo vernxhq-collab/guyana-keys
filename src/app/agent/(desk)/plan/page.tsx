@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { whenLabel } from "../../../../lib/assist";
+import { deskEmail } from "../../../../lib/contact";
 import { money } from "../../../../lib/data";
 
 type RequestRow = { id: string; kind: string; property_id: string | null; status: string; instructions: string; message: string; listing?: string; featured?: boolean; amountGyd?: number; paidAt?: string; paidBy?: string };
@@ -100,7 +101,7 @@ export default function PlanPage() {
     <div className="stack">
       <p className="eyebrow">Plan</p>
       <h1>{plan}</h1>
-      <p className="quiet">{paidPlan ? "Paid plan." : "Free plan. 3 live listings."} Featuring, advertising, and a larger package are arranged with the admin. This desk does not take payment.</p>
+      <p className="quiet">{paidPlan ? "Paid plan." : "Free plan. 3 live listings."} Featuring, advertising, and a larger package are arranged by email at {deskEmail}. This desk does not take payment.</p>
       <div className="stats">
         <article className="stat"><p className="quiet">Live listings</p><strong>{live} / {cap}</strong><p className="quiet">{live >= cap ? "Cap reached" : `${cap - live} still open`}</p></article>
         <article className="stat"><p className="quiet">Package</p><strong>{paidPlan ? "Paid" : "Free"}</strong><p className="quiet">{paidPlan ? "Upgraded" : "Contact the admin to upgrade"}</p></article>
