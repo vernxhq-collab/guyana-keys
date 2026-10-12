@@ -11,6 +11,7 @@ export default function LeadsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setFilter(new URLSearchParams(window.location.search).get("filter") || "");
     fetch("/api/agent?part=leads")
       .then(async (res) => ({ ok: res.ok, data: await res.json() }))
       .then(({ ok, data }) => { if (!ok) setError(data.error || "Could not load leads."); else setLeads(data.leads || []); })

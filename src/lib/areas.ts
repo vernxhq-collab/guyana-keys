@@ -3,6 +3,20 @@ export function areaByName(name: string) {
   return areas.find((item) => item.name.toLowerCase() === key);
 }
 
+export function areaFits(listingArea: string, wanted: string) {
+  const listing = listingArea.trim().toLowerCase();
+  const want = wanted.trim().toLowerCase();
+  if (!want) return true;
+  if (!listing) return false;
+  return listing === want || listing.startsWith(`${want} `);
+}
+
+export function regionIn(text: string) {
+  const q = text.toLowerCase();
+  const names = [...new Set(areas.map((item) => item.region))].sort((a, b) => b.length - a.length);
+  return names.find((name) => q.includes(name.toLowerCase())) || "";
+}
+
 export const areas = [
   { slug: "bel-air-park", name: "Bel Air Park", region: "Georgetown", note: "Gated homes and the prices diaspora buyers ask for first." },
   { slug: "bel-air", name: "Bel Air", region: "Georgetown", note: "Residential streets beside the park." },

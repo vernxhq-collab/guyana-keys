@@ -18,7 +18,7 @@ export default async function HomePage() {
           </div>
           <label className="ask"><span aria-hidden="true">✦</span><input name="q" list="areas" placeholder="3 bed house in Bel Air under 95 million" /></label>
           <datalist id="areas">{areas.map((area) => <option key={area.slug} value={area.name} />)}</datalist>
-          <div className="row"><select name="type" defaultValue="House"><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select><button className="btn">Search</button></div>
+          <div className="row"><select name="type" defaultValue=""><option value="">Any type</option><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select><button className="btn">Search</button></div>
         </form>
       </div></section>
       <section className="section wrap"><div style={{display:"flex", justifyContent:"space-between"}}><h2>Latest homes</h2><Link href="/listings">Map view</Link></div><div className="grid">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div></section>
