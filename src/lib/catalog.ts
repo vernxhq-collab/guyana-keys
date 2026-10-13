@@ -93,7 +93,7 @@ export async function publicAgent(agentId: string): Promise<Agent | null> {
     const db = serviceDb();
     if (!db) return null;
     const { data } = await db.from("profiles").select("*").eq("id", agentId).maybeSingle();
-    if (!data || data.role !== "agent" || data.suspended) return null;
+    if (!data || data.suspended || (data.role !== "agent" && data.role !== "admin")) return null;
     return {
       id: String(data.id),
       name: String(data.name || "Agent"),
