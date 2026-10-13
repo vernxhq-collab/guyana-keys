@@ -86,10 +86,14 @@ body:has(.agent-desk) .brand span { color: #7ed6a8; }
 .agent-desk .desk-nav a { color: #d7efe4; background: transparent; border-color: rgba(126, 214, 168, .35); }
 .agent-desk .desk-nav a.on { background: #116b4a; color: #f4fff8; border-color: #116b4a; box-shadow: 0 0 18px rgba(17, 107, 74, .45); }
 .agent-desk .stat, .agent-desk .panel, .agent-desk .card { background: linear-gradient(180deg, rgba(16, 42, 34, .96), rgba(8, 24, 19, .96)); border-color: rgba(126, 214, 168, .22); box-shadow: 0 0 0 1px rgba(17, 107, 74, .2), 0 18px 40px rgba(0, 0, 0, .28); color: #e7f3ec; }
+.agent-desk .panel > strong:first-child { font-size: 18px; letter-spacing: -.02em; }
 .agent-desk .stat.attention strong { color: #7ed6a8; text-shadow: 0 0 18px rgba(126, 214, 168, .35); }
 .agent-desk .ai-bar { background: rgba(8, 28, 22, .9); border-color: rgba(126, 214, 168, .45); box-shadow: 0 0 24px rgba(17, 107, 74, .28); }
 .agent-desk .ai-bar.next > span:first-child, .agent-desk .ai-bar.next > a, .agent-desk .ai-bar label { color: #d9ffe9; }
 .agent-desk .quiet-row, .agent-desk .record, .agent-desk .list-row { border-bottom-color: rgba(126, 214, 168, .16); }
+.agent-desk a.agent-listing { justify-content: flex-start; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+.agent-desk a.agent-listing img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 72px; }
+.agent-desk a.agent-listing > span { display: grid; gap: 2px; flex: 1; min-width: 0; }
 .agent-desk input:not([type="checkbox"]):not([type="radio"]), .agent-desk select, .agent-desk textarea { background: #0c241c; color: #f4fff8; border-color: rgba(126, 214, 168, .28); }
 .agent-desk .btn.ghost, .agent-desk .text-btn { background: transparent; color: #d7efe4; border-color: rgba(126, 214, 168, .35); }
 .agent-desk .skeleton-line, .agent-desk .stat.skeleton { background: linear-gradient(90deg, #0e2420 0%, #16382e 50%, #0e2420 100%); }

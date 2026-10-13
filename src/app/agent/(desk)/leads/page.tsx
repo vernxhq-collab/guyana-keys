@@ -26,9 +26,26 @@ export default function LeadsPage() {
     if (filter) return lead.stage === filter;
     return true;
   });
+  const unanswered = leads.filter((lead) => !lead.agentReply && lead.stage !== "closed").length;
+  const requested = leads.filter((lead) => Boolean(lead.viewingRequest) && !lead.viewingAt).length;
+  const viewing = leads.filter((lead) => lead.stage === "viewing").length;
+  const nextLine = unanswered
+    ? "Reply to unanswered enquiries."
+    : requested
+      ? "A viewing was requested."
+      : "No lead is waiting.";
+
   return (
     <div className="stack">
+      <p className="eyebrow">Leads</p>
       <h1>Leads</h1>
+      <p className="quiet">Each row is one enquiry. Filter by stage, or open a lead.</p>
+      <div className="stats">
+        <a className={unanswered > 0 ? "stat attention" : "stat"} href="/agent/leads?filter=unanswered"><p className="quiet">Unanswered</p><strong>{unanswered}</strong><p className="quiet">{unanswered ? "Reply today" : "Clear"}</p></a>
+        <a className="stat" href="/agent/leads?filter=requested"><p className="quiet">Viewing requested</p><strong>{requested}</strong><p className="quiet">{requested ? "Needs a time" : "None waiting"}</p></a>
+        <a className="stat" href="/agent/leads?filter=viewing"><p className="quiet">Viewing</p><strong>{viewing}</strong><p className="quiet">{viewing ? "On the calendar" : "None set"}</p></a>
+      </div>
+      <p className="ai-bar next"><span>{nextLine}</span></p>
       <label>Filter
         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
           <option value="">All</option>

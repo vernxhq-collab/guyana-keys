@@ -100,49 +100,52 @@ export default function PlanPage() {
   return (
     <div className="stack">
       <p className="eyebrow">Plan</p>
-      <h1>{plan}</h1>
-      <p className="quiet">{paidPlan ? "Paid plan." : "Free plan. 3 live listings."} Featuring, advertising, and a larger package are arranged by email at {deskEmail}. This desk does not take payment.</p>
+      <h1>Plan</h1>
+      <p className="quiet">Featuring and a larger package are arranged with the admin at {deskEmail}. This desk does not take payment.</p>
       <div className="stats">
         <article className="stat"><p className="quiet">Live listings</p><strong>{live} / {cap}</strong><p className="quiet">{live >= cap ? "Cap reached" : `${cap - live} still open`}</p></article>
-        <article className="stat"><p className="quiet">Package</p><strong>{paidPlan ? "Paid" : "Free"}</strong><p className="quiet">{paidPlan ? "Upgraded" : "Contact the admin to upgrade"}</p></article>
+        <article className="stat"><p className="quiet">Package</p><strong>{plan}</strong><p className="quiet">{paidPlan ? "Paid" : "Free · 3 live listings"}</p></article>
         <article className={withAdmin > 0 ? "stat attention" : "stat"}><p className="quiet">With the admin</p><strong>{withAdmin}</strong><p className="quiet">{withAdmin > 0 ? "Payment in progress" : "None open"}</p></article>
       </div>
       <p className="ai-bar next"><span>{nextLine}</span></p>
 
-      <h2>Upgrade</h2>
-      <p className="quiet">Advertising and a larger package are the same conversation. Contact the admin, pay them, and wait. A free plan stays at 3 live listings until they confirm payment.</p>
-      {planRequest && (upgradeOpen || (paidPlan && (planRequest.status === "paid" || planRequest.status === "on"))) ? (
-        <article className="panel">
-          <strong>Package</strong>
-          <p>{paymentLine("plan", planRequest.status)}</p>
-          {receiptLine(planRequest) ? <p>{receiptLine(planRequest)}</p> : null}
-          {planRequest.instructions ? <p>{planRequest.instructions}</p> : null}
-        </article>
-      ) : null}
-      {!paidPlan && !upgradeOpen ? (
-        <button className={upgradePrimary ? "btn" : "btn ghost"} type="button" onClick={() => void send({ kind: "plan" })}>Contact admin to upgrade</button>
-      ) : null}
+      <article className="panel">
+        <strong>Upgrade</strong>
+        <p className="quiet">{paidPlan ? "This package is Agency." : "A Starter plan stays at 3 live listings until the admin confirms payment."}</p>
+        {planRequest && (upgradeOpen || (paidPlan && (planRequest.status === "paid" || planRequest.status === "on"))) ? (
+          <div className="record">
+            <p>{paymentLine("plan", planRequest.status)}</p>
+            {receiptLine(planRequest) ? <p>{receiptLine(planRequest)}</p> : null}
+            {planRequest.instructions ? <p>{planRequest.instructions}</p> : null}
+          </div>
+        ) : null}
+        {!paidPlan && !upgradeOpen ? (
+          <button className={upgradePrimary ? "btn" : "btn ghost"} type="button" onClick={() => void send({ kind: "plan" })}>Contact admin to upgrade</button>
+        ) : null}
+      </article>
 
-      <h2>Feature a listing</h2>
-      <p className="quiet">Contact the admin and pay before a listing is featured. A hidden listing cannot be featured.</p>
-      {featureable.length === 0 ? <p>{listings.length === 0 ? "Publish a live listing before you ask for it to be featured." : "Every live listing is featured, or already with the admin."}</p> : (
-        <>
-          <label>Listing
-            <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)}>
-              {featureable.map((item) => <option key={item.id} value={item.id}>{item.title} · {item.area}</option>)}
-            </select>
-          </label>
-          <button className={featurePrimary ? "btn" : "btn ghost"} type="button" disabled={!propertyId} onClick={() => void send({ kind: "feature", propertyId })}>Contact admin to feature</button>
-        </>
-      )}
-      {featureRequests.map((item) => (
-        <article className="panel" key={item.id}>
-          <strong>{item.listing || "Listing"}</strong>
-          <p>{paymentLine("feature", item.status, Boolean(item.featured))}</p>
-          {receiptLine(item) ? <p>{receiptLine(item)}</p> : null}
-          {item.instructions ? <p>{item.instructions}</p> : null}
-        </article>
-      ))}
+      <article className="panel">
+        <strong>Feature a listing</strong>
+        <p className="quiet">Contact the admin and pay before a listing is featured. A hidden listing cannot be featured.</p>
+        {featureable.length === 0 ? <p>{listings.length === 0 ? "Publish a live listing before you ask for it to be featured." : "Every live listing is featured, or already with the admin."}</p> : (
+          <>
+            <label>Listing
+              <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)}>
+                {featureable.map((item) => <option key={item.id} value={item.id}>{item.title} · {item.area}</option>)}
+              </select>
+            </label>
+            <button className={featurePrimary ? "btn" : "btn ghost"} type="button" disabled={!propertyId} onClick={() => void send({ kind: "feature", propertyId })}>Contact admin to feature</button>
+          </>
+        )}
+        {featureRequests.map((item) => (
+          <div className="record" key={item.id}>
+            <strong>{item.listing || "Listing"}</strong>
+            <p>{paymentLine("feature", item.status, Boolean(item.featured))}</p>
+            {receiptLine(item) ? <p>{receiptLine(item)}</p> : null}
+            {item.instructions ? <p>{item.instructions}</p> : null}
+          </div>
+        ))}
+      </article>
       {message ? <p>{message}</p> : null}
     </div>
   );
