@@ -17,18 +17,18 @@ export default async function AgentLayout({ children }: { children: React.ReactN
       ) : session.profile?.suspended ? (
         <div className="stack">
           <p>This account is suspended.</p>
-          <SignOut next="/agent/login" />
+          <SignOut next="/agent/login" label="Log out" />
         </div>
       ) : !canUseAgentDesk(session.profile, session.user.email) ? (
         <div className="stack">
           <p>This desk is for agents.</p>
           <p className="quiet">Signed in as {session.user.email}. Sign out, then use the agent email.</p>
           <a className="btn" href="/agent/login">Agent sign in</a>
-          <SignOut next="/agent/login" />
+          <SignOut next="/agent/login" label="Log out" />
         </div>
       ) : (
         <>
-          <DeskNav label="Agent desk" name="Agent" items={items} />
+          <DeskNav label="Agent desk" name="Agent" items={items} signOut="/agent/login" />
           {children}
         </>
       )}
