@@ -3,12 +3,26 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+type Role = "buyer" | "agent" | "admin" | "";
+
+function deskLink(role: Role): [string, string] {
+  if (role === "admin") return ["Admin desk", "/admin"];
+  if (role === "agent") return ["Agent desk", "/agent"];
+  return ["Your homes", "/account"];
+}
+
 export function Header() {
   const [signedIn, setSignedIn] = useState(false);
+  const [role, setRole] = useState<Role>("");
 
   useEffect(() => {
-    fetch("/api/auth").then((res) => res.json()).then((data) => setSignedIn(Boolean(data.user)));
+    fetch("/api/auth").then((res) => res.json()).then((data) => {
+      setSignedIn(Boolean(data.user));
+      setRole(data.profile?.role || "");
+    }).catch(() => setSignedIn(false));
   }, []);
+
+  const [deskName, deskHref] = deskLink(role);
 
   return (
     <header className="top">
@@ -27,7 +41,15 @@ export function Header() {
             <Link href="/advertise">Advertise</Link>
           </div>
           <div className="nav-actions">
-            <Link className="btn ghost" href="/account">{signedIn ? "Your homes" : "Sign in or register"}</Link>
+            {signedIn ? (
+              <>
+                <Link className="btn ghost" href={deskHref}>{deskName}</Link>
+                <button className="btn ghost" type="button" onClick={async () => {
+                  await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
+                  window.location.href = "/";
+                }}>Log out</button>
+              </>
+            ) : <Link className="btn ghost" href="/account">Sign in or register</Link>}
           </div>
         </nav>
       </div>
