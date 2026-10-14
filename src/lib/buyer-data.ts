@@ -2,7 +2,7 @@ import { leadScore } from "./assist";
 import { loadCatalog, resolveTouched } from "./catalog";
 import type { Listing } from "./data";
 import { newId, stageLabel } from "./labels";
-import { notifyAgentEnquiry } from "./notify";
+import { leadIntent, notifyAgentEnquiry } from "./notify";
 import { addEvent, leadFromEnquiry, openEnquiry } from "./records";
 import type { Profile } from "./session";
 import { serviceDb } from "./supabase";
@@ -126,7 +126,7 @@ async function publicHome(propertyId: string) {
   if (!listing) return null;
   const home = await agentForProperty(propertyId);
   const agentId = home?.agentId && /^[0-9a-f-]{36}$/i.test(home.agentId) ? home.agentId : null;
-  return { agentId, title: listing.title, purpose: listing.purpose };
+  return { agentId, title: listing.title, purpose: listing.purpose, area: listing.area };
 }
 
 export async function saveHome(profile: Profile, propertyId: string) {
@@ -153,6 +153,7 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
   if (!home) return { error: "That home was not found." };
   const purpose = home.purpose || "Sale";
   const title = home.title || "this home";
+  const intent = await leadIntent(profile.id, input.propertyId, home.area || "");
   const opened = await openEnquiry({
     buyerId: profile.id,
     propertyId: input.propertyId,
@@ -165,6 +166,7 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
     occupants: purpose === "Rent" ? input.occupants : null,
     viewingRequest: input.viewingRequest,
     title,
+    intent,
   });
   if ("error" in opened && opened.error) return { error: opened.error };
   const row = opened.row;
@@ -195,6 +197,7 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
       phone: input.phone.trim(),
       title,
       note: input.note.trim(),
+      intent,
       propertyId: input.propertyId,
       enquiryId: text(row.id),
     });

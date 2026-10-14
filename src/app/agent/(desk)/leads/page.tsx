@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
+import { whenLabel } from "../../../../lib/assist";
 
-type Lead = { id: string; name: string; home: string; stage: string; stageLabel: string; phone: string; viewingRequest: string; viewingAt: string; agentReply: string; createdAt: string };
+type Lead = { id: string; name: string; home: string; stage: string; stageLabel: string; phone: string; note: string; source: string; intent: string; viewingRequest: string; viewingAt: string; agentReply: string; createdAt: string };
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[] | null>(null);
@@ -39,7 +40,7 @@ export default function LeadsPage() {
     <div className="stack">
       <p className="eyebrow">Leads</p>
       <h1>Leads</h1>
-      <p className="quiet">Each row is one enquiry. Filter by stage, or open a lead.</p>
+      <p className="quiet">Every lead here came from Guyana Keys.</p>
       <div className="stats">
         <a className={unanswered > 0 ? "stat attention" : "stat"} href="/agent/leads?filter=unanswered"><p className="quiet">Unanswered</p><strong>{unanswered}</strong><p className="quiet">{unanswered ? "Reply today" : "Clear"}</p></a>
         <a className="stat" href="/agent/leads?filter=requested"><p className="quiet">Viewing requested</p><strong>{requested}</strong><p className="quiet">{requested ? "Needs a time" : "None waiting"}</p></a>
@@ -60,8 +61,11 @@ export default function LeadsPage() {
       </label>
       {shown.length === 0 ? <p>No lead in this list.</p> : shown.map((lead) => (
         <a className="quiet-row" key={lead.id} href={`/agent/leads/${lead.id}`}>
-          <span><strong>{lead.name || "Lead"}</strong> · {lead.home}</span>
-          <span className="quiet">{lead.stageLabel} · {lead.phone}</span>
+          <span>
+            <strong>{lead.name || "Lead"}</strong> · {lead.home}
+            <span className="quiet">{lead.source || "Guyana Keys"}{lead.note ? ` · ${lead.note}` : ""}{lead.intent ? ` · ${lead.intent}` : ""}</span>
+          </span>
+          <span className="quiet">{whenLabel(lead.createdAt) || "New"} · {lead.stageLabel} · {lead.phone}</span>
         </a>
       ))}
     </div>

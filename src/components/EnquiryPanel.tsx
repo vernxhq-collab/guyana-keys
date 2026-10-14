@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { digits } from "../lib/labels";
 import type { Agent, Listing } from "../lib/data";
 
 export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing: Listing; agent: Agent | null; viewer: { name: string; abroad: boolean } | null; initialSaved: boolean }) {
@@ -53,14 +52,32 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
     setSent(res.ok ? (viewing ? "Viewing requested." : "Enquiry sent.") : body.error || "The enquiry could not be saved.");
   }
 
-  const wa = agent?.phone ? `https://wa.me/${digits(agent.phone)}?text=${encodeURIComponent("Hello " + agent.name + ", I saw " + listing.title + " on Guyana Keys.")}` : "";
+  async function contactAgent(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setBusy(true);
+    const res = await fetch("/api/enquiries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ propertyId: listing.id, name: data.get("name"), phone: data.get("phone"), note: data.get("note") }),
+    });
+    const body = await res.json().catch(() => ({}));
+    setBusy(false);
+    setSent(res.ok ? "Sent. The agent gets this as a Guyana Keys lead." : body.error || "The enquiry could not be saved.");
+  }
 
   return (
     <aside className="card"><div className="card-body" style={{ display: "grid", gap: 12 }}>
-      <p className="chip">Agent</p>
+      <p className="chip">Listed on Guyana Keys</p>
       {agent ? <h2><Link href={`/agents/${agent.id}`}>{agent.name}</Link></h2> : <h2>The agent has not added a name yet.</h2>}
       {agent ? <p className="meta">{[agent.company, agent.areas.join(", ")].filter(Boolean).join(" · ")}</p> : null}
-      {wa ? <a className="btn ghost" href={wa}>WhatsApp {agent?.name.split(" ")[0]}</a> : null}
+      <form style={{ display: "grid", gap: 10 }} onSubmit={(event) => void contactAgent(event)}>
+        <strong>Contact agent</strong>
+        <input name="name" required placeholder="Your name" defaultValue={viewer?.name || ""} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+        <input name="phone" required placeholder="WhatsApp number" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+        <input name="note" placeholder="Message (optional)" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+        <button className="btn" type="submit" disabled={busy}>Request info</button>
+      </form>
       {viewer ? (
         <>
           <button className="btn ghost" type="button" onClick={() => void toggleSave()}>{saved ? "Saved" : "Save"}</button>
@@ -78,7 +95,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
               </>
             ) : null}
             <label className="meta"><input name="abroad" type="checkbox" defaultChecked={viewer.abroad} /> Buying from abroad</label>
-            <button className="btn" type="submit" value="enquiry" disabled={busy}>Send enquiry</button>
+            <button className="btn ghost" type="submit" value="enquiry" disabled={busy}>Save this enquiry on Your homes</button>
             <label className="meta">Preferred day<input type="date" value={day} onChange={(event) => setDay(event.target.value)} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14, width: "100%" }} /></label>
             <label className="meta">Time of day
               <select value={timeOfDay} onChange={(event) => setTimeOfDay(event.target.value)} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14, width: "100%" }}>
@@ -89,7 +106,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
           </form>
         </>
       ) : (
-        <Link className="btn" href="/account">Sign in to save or send an enquiry</Link>
+        <Link className="btn ghost" href="/account">Sign in to save this home or request a viewing</Link>
       )}
       {sent ? <p>{sent}</p> : null}
     </div></aside>

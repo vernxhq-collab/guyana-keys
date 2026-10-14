@@ -16,13 +16,17 @@ export default function AgentProfilePage() {
   const [picked, setPicked] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
+  const [profileId, setProfileId] = useState("");
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     fetch("/api/agent?part=profile")
       .then((res) => res.json())
       .then((data) => {
         const profile = data.profile;
         if (!profile) { setNote(data.error || "Could not load the profile."); setLoading(false); return; }
+        setProfileId(profile.id || "");
         setName(profile.name || "");
         setCompany(profile.company || "");
         setPhone(profile.phone || "");
@@ -56,6 +60,7 @@ export default function AgentProfilePage() {
       <p className="eyebrow">Profile</p>
       <h1>Profile</h1>
       <p className="quiet">Name, company, WhatsApp, address, and areas are required. Email comes from sign-in.</p>
+      {profileId && origin ? <p className="quiet">Your Guyana Keys link: {origin}/a/{profileId}</p> : null}
       <p className="ai-bar next"><span>{missing ? missing.label : "Profile is complete."}</span></p>
       <label>Name<input value={name} onChange={(event) => setName(event.target.value)} required /></label>
       <label>Company<input value={company} onChange={(event) => setCompany(event.target.value)} required /></label>

@@ -23,6 +23,8 @@ type Lead = {
   viewingRequest: string;
   home: string;
   area: string;
+  source: string;
+  intent: string;
   privateNote: string;
   reviewRequested: boolean;
   draft: string;
@@ -75,7 +77,7 @@ export function LeadDesk({ id }: { id: string }) {
     <div className="stack">
       <p className="eyebrow">Lead</p>
       <h1>{lead.name || "Lead"}</h1>
-      <p className="quiet">{lead.home}{lead.area ? ` · ${lead.area}` : ""}</p>
+      <p className="quiet">{lead.source || "Guyana Keys"} · {lead.home}{lead.area ? ` · ${lead.area}` : ""}</p>
       <div className="stats">
         <article className="stat">
           <p className="quiet">Score</p>
@@ -98,8 +100,10 @@ export function LeadDesk({ id }: { id: string }) {
         {lead.reminder ? <span className="quiet">No reply for over 24 hours.</span> : null}
       </div>
       <article className="panel">
+        <p>Source: {lead.source || "Guyana Keys"}</p>
         <p>WhatsApp {lead.phone || "not given"}</p>
-        <p>{lead.note || "No note."}</p>
+        <p>{lead.note || "No message"}</p>
+        {lead.intent ? <p>{lead.intent}</p> : null}
         <p>Abroad: {lead.abroad ? "Yes" : "No"}</p>
         {lead.moveIn || lead.occupants ? <p>Move-in {lead.moveIn || "not set"} · Occupants {lead.occupants ?? "not set"}</p> : null}
         {lead.viewingRequest ? <p>Viewing requested: {lead.viewingRequest}</p> : null}

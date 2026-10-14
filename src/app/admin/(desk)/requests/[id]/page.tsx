@@ -36,7 +36,7 @@ export default function RequestPage() {
   if (error) return <p>{error}</p>;
   if (!item) return <DeskSkeleton count={2} />;
   const finished = item.status === "paid" || item.status === "on" || item.status === "done";
-  const paidLabel = item.kind === "plan" ? "Mark paid and upgrade" : "Mark paid and feature";
+  const paidLabel = item.kind === "feature" ? "Mark paid and feature" : item.kind === "advertise" ? "Mark paid" : "Mark paid";
   return (
     <div className="stack">
       <h1>{item.agent}</h1>
@@ -63,7 +63,7 @@ export default function RequestPage() {
               </div>
             </div>
           )}
-          {finished ? null : <p className="quiet">{item.kind === "plan" ? "Mark paid only after the payment arrives. The plan becomes agency and the cap becomes 20." : "Mark paid only after the payment arrives. The listing is then featured."}</p>}
+          {finished ? null : <p className="quiet">{item.kind === "feature" ? "Mark paid only after the payment arrives. The listing is then featured." : "Mark paid only after the payment arrives. Listings stay free."}</p>}
         </>
       )}
       {note ? <p>{note}</p> : null}

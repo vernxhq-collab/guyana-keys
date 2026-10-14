@@ -18,7 +18,7 @@ export default function RequestsPage() {
   return (
     <div className="stack">
       <h1>Requests</h1>
-      <p className="quiet">Package upgrades and featured listings wait here until you send payment instructions and mark them paid.</p>
+      <p className="quiet">Featuring and advertising wait here until you send payment instructions and mark them paid. Listings stay free.</p>
       {rows.length === 0 ? <p>No request yet.</p> : rows.map((row) => (
         <a className="quiet-row" key={row.id} href={`/admin/requests/${row.id}`}>
           <span><strong>{row.agent}</strong> · {requestKindLabel(row.kind)}</span>

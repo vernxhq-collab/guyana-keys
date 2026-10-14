@@ -172,12 +172,56 @@ export async function notifyMatches(listing: MatchListing) {
   }
 }
 
+export async function leadIntent(buyerId: string, propertyId: string, area: string) {
+  const db = serviceDb();
+  if (!db || !buyerId) return "";
+  const notes: string[] = [];
+  try {
+    const saved = await db.from("saved_homes").select("property_id").eq("user_id", buyerId).eq("property_id", propertyId).maybeSingle();
+    if (saved.data) notes.push("Saved this home.");
+    const searches = await db.from("saved_searches").select("area").eq("user_id", buyerId);
+    const wanted = area.trim().toLowerCase();
+    if (wanted && (searches.data || []).some((row) => String(row.area || "").trim().toLowerCase() === wanted)) notes.push("Has a saved search for this area.");
+    const profile = await db.from("profiles").select("email").eq("id", buyerId).maybeSingle();
+    const email = String(profile.data?.email || "").trim().toLowerCase();
+    if (email && wanted) {
+      const alerts = await db.from("alerts").select("area,email").eq("email", email);
+      if ((alerts.data || []).some((row) => String(row.area || "").trim().toLowerCase() === wanted)) notes.push("Has an alert for this area.");
+    }
+  } catch {
+    return notes.join(" ");
+  }
+  return notes.join(" ");
+}
+
+export function guyanaKeysLeadMessage(input: {
+  title: string;
+  buyerName: string;
+  phone: string;
+  note: string;
+  intent?: string;
+  propertyId: string;
+}) {
+  const lines = [
+    "🔑 Guyana Keys Lead",
+    "",
+    `Property: ${input.title || "a home"}`,
+    `Buyer: ${input.buyerName || "A buyer"}`,
+    `Phone: ${input.phone || "No phone"}`,
+    `Message: ${input.note.trim() || "No message"}`,
+  ];
+  if (input.intent?.trim()) lines.push(input.intent.trim());
+  lines.push("", "Source: Guyana Keys", `View listing: ${siteOrigin()}/listings/${input.propertyId}`);
+  return lines.join("\n");
+}
+
 export async function notifyAgentEnquiry(input: {
   agentId: string | null;
   buyerName: string;
   phone: string;
   title: string;
   note: string;
+  intent?: string;
   propertyId: string;
   enquiryId: string;
 }) {
@@ -185,19 +229,29 @@ export async function notifyAgentEnquiry(input: {
     if (!input.agentId || !input.enquiryId) return;
     const db = serviceDb();
     if (!db) return;
-    const agent = await db.from("profiles").select("phone").eq("id", input.agentId).maybeSingle();
+    const agent = await db.from("profiles").select("phone,email").eq("id", input.agentId).maybeSingle();
     const phone = String(agent.data?.phone || "");
-    const note = input.note.trim();
-    const text = `${input.buyerName || "A buyer"} enquired about ${input.title || "a home"}. WhatsApp ${input.phone || "them"}.${note ? ` ${note}` : ""}`;
-    const status = await sendWhatsApp(phone, text);
+    const email = String(agent.data?.email || "");
+    const text = guyanaKeysLeadMessage(input);
+    const whatsapp = await sendWhatsApp(phone, text);
     await recordNotice({
       phone,
       channel: "whatsapp",
       kind: "enquiry",
       propertyId: input.propertyId,
       body: text,
-      status,
+      status: whatsapp,
       dedupe: `enquiry:${input.enquiryId}`,
+    });
+    const mailed = await sendEmail(email, "Guyana Keys Lead", text);
+    await recordNotice({
+      email,
+      channel: "email",
+      kind: "enquiry",
+      propertyId: input.propertyId,
+      body: text,
+      status: mailed,
+      dedupe: `enquiry:${input.enquiryId}:email`,
     });
   } catch {
     // The enquiry is already saved.

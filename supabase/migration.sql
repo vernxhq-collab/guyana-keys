@@ -623,3 +623,17 @@ alter table public.properties add column if not exists title_ref text not null d
 alter table public.requests add column if not exists amount_gyd bigint not null default 0;
 alter table public.requests add column if not exists paid_at timestamptz;
 alter table public.requests add column if not exists paid_by text not null default '';
+
+alter table public.enquiries add column if not exists source text not null default 'guyana_keys';
+alter table public.enquiries add column if not exists intent text not null default '';
+
+alter table public.requests drop constraint if exists requests_kind_check;
+alter table public.requests add constraint requests_kind_check check (kind in ('feature', 'plan', 'help', 'advertise'));
+
+drop policy if exists requests_agent_insert on public.requests;
+create policy requests_agent_insert on public.requests
+for insert to authenticated with check (
+  agent_id = auth.uid()
+  and status = 'submitted'
+  and kind in ('feature', 'plan', 'help', 'advertise')
+);

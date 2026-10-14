@@ -29,7 +29,7 @@ export default function HelpPage() {
     }}>
       <p className="eyebrow">Help</p>
       <h1>Help</h1>
-      <p className="quiet">Questions come here. To feature a listing, advertise, or upgrade the free plan, use <a href="/agent/plan">Plan</a>. Payment is with the admin.</p>
+      <p className="quiet">Questions come here. To feature a listing or advertise, use <a href="/agent/plan">Plan</a>. Listings are free. Payment is with the admin.</p>
       <label>Subject<input value={subject} onChange={(event) => setSubject(event.target.value)} required /></label>
       <label>Message<textarea value={message} onChange={(event) => setMessage(event.target.value)} required /></label>
       <button className="btn" type="submit">Send</button>

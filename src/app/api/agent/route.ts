@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   if (part === "plan") return NextResponse.json(await agentPlan(gate.profile));
   if (part === "profile") {
     return NextResponse.json({
-      profile: { name: gate.profile.name, email: gate.profile.email, phone: gate.profile.phone, company: gate.profile.company, address: gate.profile.address, areas: gate.profile.areas, photoUrl: gate.profile.photoUrl },
+      profile: { id: gate.profile.id, name: gate.profile.name, email: gate.profile.email, phone: gate.profile.phone, company: gate.profile.company, address: gate.profile.address, areas: gate.profile.areas, photoUrl: gate.profile.photoUrl },
     });
   }
   return NextResponse.json({ error: "Unknown view." }, { status: 400 });

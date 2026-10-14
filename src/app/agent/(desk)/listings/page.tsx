@@ -29,20 +29,17 @@ export default function AgentListingsPage() {
 
   const hidden = rows.filter((row) => row.status !== "live").length;
   const featured = rows.filter((row) => row.featured).length;
-  const full = meta.live >= meta.cap;
-  const nextLine = full
-    ? "The live cap is full. Upgrade on Plan, or hide a listing."
-    : rows.length === 0
-      ? "Add the first listing."
-      : "Open a listing, or add another.";
+  const nextLine = rows.length === 0
+    ? "Add the first listing."
+    : "Open a listing, or add another. Listings are free.";
 
   return (
     <div className="stack">
       <p className="eyebrow">Listings</p>
       <h1>Listings</h1>
-      <p className="quiet">Hidden listings stay here and do not count toward the cap. Featuring is arranged on Plan.</p>
+      <p className="quiet">Listings are free. Hidden listings stay off the public site. Featuring is arranged on Plan.</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live</p><strong>{meta.live} / {meta.cap}</strong><p className="quiet">{full ? "Cap reached" : `${meta.cap - meta.live} still open`}</p></article>
+        <article className="stat"><p className="quiet">Live</p><strong>{meta.live}</strong><p className="quiet">Free to publish</p></article>
         <article className="stat"><p className="quiet">Hidden</p><strong>{hidden}</strong><p className="quiet">{hidden ? "Off the public site" : "None hidden"}</p></article>
         <article className="stat"><p className="quiet">Featured</p><strong>{featured}</strong><p className="quiet">{featured ? "Arranged with the admin" : "None featured"}</p></article>
       </div>

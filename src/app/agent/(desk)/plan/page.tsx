@@ -19,9 +19,12 @@ function paymentLine(kind: string, status: string, stillFeatured = true) {
   if (status === "submitted") return "Sent to the admin. They will write payment instructions here. Nothing changes until they confirm payment.";
   if (status === "instructions") return kind === "feature"
     ? "Pay the admin using these instructions. The listing is not featured until they confirm payment."
-    : "Pay the admin using these instructions. The package stays as it is until they confirm payment.";
+    : kind === "advertise"
+      ? "Pay the admin using these instructions. Advertising stays off until they confirm payment. Listings stay free."
+      : "Pay the admin using these instructions. The package stays as it is until they confirm payment.";
   if (status === "paid" || status === "on") {
     if (kind === "feature" && !stillFeatured) return "Payment was confirmed before. This listing is not featured now. Contact the admin again if you want it featured.";
+    if (kind === "advertise") return "Paid. Advertising is confirmed. Listings stay free.";
     return kind === "feature" ? "Paid. This listing is featured." : "Paid. Your package is upgraded.";
   }
   if (status === "done") return "Done.";
@@ -78,40 +81,46 @@ export default function PlanPage() {
   if (!plan) return <DeskSkeleton count={3} />;
 
   const planRequest = requests.find((item) => item.kind === "plan");
+  const advertiseRequest = requests.find((item) => item.kind === "advertise");
   const featureRequests = requests.filter((item) => item.kind === "feature");
   const pendingIds = new Set(featureRequests.filter((item) => item.status === "submitted" || item.status === "instructions").map((item) => item.property_id));
   const featureable = listings.filter((item) => !item.featured && !pendingIds.has(item.id));
   const waiting = requests.some((item) => (item.kind === "plan" || item.kind === "feature") && (item.status === "submitted" || item.status === "instructions"));
   const paidPlan = plan === "Agency";
   const upgradeOpen = Boolean(planRequest && planRequest.status !== "done" && planRequest.status !== "paid" && planRequest.status !== "on");
-  const upgradePrimary = !waiting && !paidPlan && (live >= cap || featureable.length === 0);
-  const featurePrimary = !waiting && featureable.length > 0 && !upgradePrimary;
-  const withAdmin = requests.filter((item) => (item.kind === "plan" || item.kind === "feature") && (item.status === "submitted" || item.status === "instructions")).length;
+  const advertiseOpen = Boolean(advertiseRequest && advertiseRequest.status !== "done" && advertiseRequest.status !== "paid" && advertiseRequest.status !== "on");
+  const featurePrimary = !waiting && featureable.length > 0;
+  const withAdmin = requests.filter((item) => (item.kind === "plan" || item.kind === "feature" || item.kind === "advertise") && (item.status === "submitted" || item.status === "instructions")).length;
   const nextLine = requests.some((item) => item.status === "instructions" && item.kind !== "help")
     ? "Pay the admin using the instructions below."
     : requests.some((item) => item.status === "submitted" && item.kind !== "help")
       ? "Waiting on the admin for payment instructions."
-      : !paidPlan && live >= cap
-        ? "Contact the admin to upgrade your package."
-        : featureable.length
-          ? "Contact the admin to feature a listing."
-          : "Your plan is in place.";
+      : featureable.length
+        ? "Listings are free. Contact the admin to feature one."
+        : "Listings are free. Feature or advertise when you want more reach.";
 
   return (
     <div className="stack">
       <p className="eyebrow">Plan</p>
       <h1>Plan</h1>
-      <p className="quiet">Featuring and a larger package are arranged with the admin at {deskEmail}. This desk does not take payment.</p>
+      <p className="quiet">Listings are free. Featuring and advertising are arranged with the admin at {deskEmail}. This desk does not take payment.</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live listings</p><strong>{live} / {cap}</strong><p className="quiet">{live >= cap ? "Cap reached" : `${cap - live} still open`}</p></article>
-        <article className="stat"><p className="quiet">Package</p><strong>{plan}</strong><p className="quiet">{paidPlan ? "Paid" : "Free · 3 live listings"}</p></article>
+        <article className="stat"><p className="quiet">Live listings</p><strong>{live}</strong><p className="quiet">Free to publish</p></article>
+        <article className="stat"><p className="quiet">Package</p><strong>{plan}</strong><p className="quiet">{paidPlan ? "Paid extras" : "Listings stay free"}</p></article>
         <article className={withAdmin > 0 ? "stat attention" : "stat"}><p className="quiet">With the admin</p><strong>{withAdmin}</strong><p className="quiet">{withAdmin > 0 ? "Payment in progress" : "None open"}</p></article>
       </div>
       <p className="ai-bar next"><span>{nextLine}</span></p>
 
       <article className="panel">
-        <strong>Upgrade</strong>
-        <p className="quiet">{paidPlan ? "This package is Agency." : "A Starter plan stays at 3 live listings until the admin confirms payment."}</p>
+        <strong>Advertise</strong>
+        <p className="quiet">Listings stay free. Advertising on the site is paid, and it starts after the admin confirms payment.</p>
+        {advertiseRequest && (advertiseOpen || advertiseRequest.status === "paid" || advertiseRequest.status === "on") ? (
+          <div className="record">
+            <p>{paymentLine("advertise", advertiseRequest.status)}</p>
+            {receiptLine(advertiseRequest) ? <p>{receiptLine(advertiseRequest)}</p> : null}
+            {advertiseRequest.instructions ? <p>{advertiseRequest.instructions}</p> : null}
+          </div>
+        ) : null}
         {planRequest && (upgradeOpen || (paidPlan && (planRequest.status === "paid" || planRequest.status === "on"))) ? (
           <div className="record">
             <p>{paymentLine("plan", planRequest.status)}</p>
@@ -119,8 +128,8 @@ export default function PlanPage() {
             {planRequest.instructions ? <p>{planRequest.instructions}</p> : null}
           </div>
         ) : null}
-        {!paidPlan && !upgradeOpen ? (
-          <button className={upgradePrimary ? "btn" : "btn ghost"} type="button" onClick={() => void send({ kind: "plan" })}>Contact admin to upgrade</button>
+        {!advertiseOpen ? (
+          <button className={featurePrimary ? "btn ghost" : "btn"} type="button" onClick={() => void send({ kind: "advertise" })}>Contact admin to advertise</button>
         ) : null}
       </article>
 

@@ -33,7 +33,6 @@ export default function AdminAgentPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [requests, setRequests] = useState<RequestRow[]>([]);
-  const [cap, setCap] = useState("");
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
 
@@ -45,7 +44,6 @@ export default function AdminAgentPage() {
         setListings(data.listings || []);
         setLeads(data.leads || []);
         setRequests(data.requests || []);
-        setCap(String(data.agent?.cap ?? ""));
       }
     }).catch(() => setError("Could not load this agent."));
   }
@@ -72,7 +70,7 @@ export default function AdminAgentPage() {
     <div className="stack">
       <p className="quiet"><a href="/admin/people">People</a></p>
       <h1>{agent.name || "Agent"}</h1>
-      <p className="quiet">{agent.suspended ? "Suspended." : agent.plan} · {agent.live} of {agent.cap} live listings.</p>
+      <p className="quiet">{agent.suspended ? "Suspended." : agent.plan} · {agent.live} live listings. Listings are free.</p>
       <p className="ai-bar next"><span>{missing.length ? `Still needed: ${missing.join(", ")}.` : "Profile is complete."}</span></p>
       <article className="panel">
         {agent.photoUrl ? <img src={agent.photoUrl} alt="" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12 }} /> : <p>Photo not set</p>}
@@ -84,10 +82,6 @@ export default function AdminAgentPage() {
         <p>Joined {whenLabel(agent.createdAt) || "not set"}</p>
       </article>
       <div className="actions">
-        <label className="quiet">Cap
-          <input className="cap-input" inputMode="numeric" value={cap} onChange={(event) => setCap(event.target.value)} />
-        </label>
-        <button className="btn" type="button" onClick={() => void act({ action: "cap", agentId: agent.id, cap: Number(cap) })}>Save cap</button>
         <button className="btn ghost" type="button" onClick={() => void act({ action: "plan", agentId: agent.id, plan: agent.planKey === "agency" ? "starter" : "agency" })}>Set plan to {agent.planKey === "agency" ? "starter" : "agency"}</button>
         <button className="btn ghost" type="button" onClick={() => {
           const message = agent.suspended ? "Restore this agent? Listings that were live will show again." : "Suspend this agent? Their live listings will be hidden.";

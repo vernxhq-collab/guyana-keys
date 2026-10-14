@@ -8,7 +8,6 @@ type Buyer = { id: string; name: string; email: string; saved: number; enquiries
 export default function PeoplePage() {
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
-  const [caps, setCaps] = useState<Record<string, string>>({});
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
@@ -42,13 +41,9 @@ export default function PeoplePage() {
         <article className="record" key={agent.id}>
           <div className="record-main">
             <a href={`/admin/people/${agent.id}`}><strong>{agent.name || "Agent"}</strong></a>
-            <span className="quiet">{[agent.email, agent.phone || "No WhatsApp", agent.address || "No address", agent.company || "No company", agent.areas.length ? agent.areas.join(", ") : "No areas", agent.plan, `${agent.live} of ${agent.cap} live`, agent.suspended ? "Suspended" : ""].filter(Boolean).join(" · ")}</span>
+            <span className="quiet">{[agent.email, agent.phone || "No WhatsApp", agent.address || "No address", agent.company || "No company", agent.areas.length ? agent.areas.join(", ") : "No areas", agent.plan, `${agent.live} live`, "Listings are free", agent.suspended ? "Suspended" : ""].filter(Boolean).join(" · ")}</span>
           </div>
           <div className="record-actions">
-            <label className="quiet">Cap
-              <input className="cap-input" inputMode="numeric" value={caps[agent.id] ?? String(agent.cap)} onChange={(event) => setCaps({ ...caps, [agent.id]: event.target.value })} />
-            </label>
-            <button className="text-btn" type="button" onClick={() => void act({ action: "cap", agentId: agent.id, cap: Number(caps[agent.id] ?? agent.cap) })}>Save cap</button>
             <button className="btn ghost" type="button" onClick={() => void act({ action: "plan", agentId: agent.id, plan: agent.planKey === "agency" ? "starter" : "agency" })}>Set plan to {agent.planKey === "agency" ? "starter" : "agency"}</button>
             <button className="btn ghost" type="button" onClick={() => {
               const message = agent.suspended ? "Restore this agent? Listings that were live will show again." : "Suspend this agent? Their live listings will be hidden.";

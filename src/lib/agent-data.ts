@@ -5,7 +5,7 @@ import type { Listing } from "./data";
 import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
-import { liveCap, type Profile } from "./session";
+import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
 
@@ -183,13 +183,6 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     existing = data as Record<string, unknown>;
   }
   const next = listingInput(profile, body, existing);
-  if (next.status === "live" && existing?.status !== "live") {
-    const cap = liveCap(profile.plan, profile.listingCap);
-    const { count } = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", profile.id).eq("status", "live");
-    if ((count || 0) >= cap) {
-      return { error: "cap" as const, live: count || 0, cap };
-    }
-  }
   const savedId = existing ? id : newId("gy");
   const payload = existing ? next : { id: savedId, ...next, held_live: false };
   const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
@@ -302,6 +295,8 @@ function publicLead(row: Record<string, unknown>, listing: Listing | undefined) 
     home: listing ? listing.title : "Home removed",
     area: listing?.area || "",
     purpose: listing?.purpose || "",
+    source: "Guyana Keys",
+    intent: String(row.intent || ""),
   };
 }
 
@@ -432,7 +427,7 @@ function replyStamp(reply: string) {
 export async function createRequest(profile: Profile, body: Record<string, unknown>) {
   const { db, error } = dbOrError();
   if (!db) return { error };
-  const kind = body.kind === "feature" || body.kind === "plan" || body.kind === "help" ? body.kind : "";
+  const kind = body.kind === "feature" || body.kind === "plan" || body.kind === "help" || body.kind === "advertise" ? body.kind : "";
   if (!kind) return { error: "Choose a request." };
   if (kind === "plan") {
     if (profile.plan === "agency") return { error: "This account is already on a paid plan." };
@@ -456,7 +451,15 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
   }
   const typed = `${String(body.subject || "").trim()}${body.message ? `\n${String(body.message).trim()}` : ""}`.trim();
   if (kind === "help" && typed.length < 3) return { error: "Write a subject and a message." };
-  const message = typed || (kind === "plan"
+  if (kind === "advertise") {
+    const { data } = await db.from("requests").select("id,status").eq("agent_id", profile.id).eq("kind", "advertise");
+    if ((data || []).some((item) => item.status === "submitted" || item.status === "instructions")) {
+      return { error: "An advertise request is already with the admin." };
+    }
+  }
+  const message = typed || (kind === "advertise"
+    ? "Asked to advertise. Listings stay free. Payment is with the admin."
+    : kind === "plan"
     ? "Asked to upgrade the package. Payment is with the admin."
     : `Asked to feature ${listingTitle}. Payment is with the admin.`);
   const { error: insertError } = await db.from("requests").insert({
@@ -468,7 +471,10 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
     instructions: "",
     message,
   });
-  if (insertError) return { error: "The request could not be sent." };
+  if (insertError) {
+    if (String(insertError.message || "").toLowerCase().includes("kind")) return { error: "That request is not ready on this desk yet." };
+    return { error: "The request could not be sent." };
+  }
   return { ok: true };
 }
 
