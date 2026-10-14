@@ -155,14 +155,16 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
 
   return (
     <div className="stack">
-      <nav className="desk-nav" aria-label="Your homes">
-        <span className="desk-name">Your homes</span>
-        {([["home", "Home"], ["enquiries", "Enquiries"], ["searches", "Searches"], ["profile", "Profile"]] as const).map(([id, label]) => (
-          <button key={id} className={tab === id ? "on" : ""} type="button" onClick={() => { setTab(id); setMessage(""); }}>{label}</button>
-        ))}
+      <div className="desk-bar">
+        <nav className="desk-nav" aria-label="Your homes">
+          <span className="desk-name">Your homes</span>
+          {([["home", "Home"], ["enquiries", "Enquiries"], ["searches", "Searches"], ["profile", "Profile"]] as const).map(([id, label]) => (
+            <button key={id} className={tab === id ? "on" : ""} type="button" onClick={() => { setTab(id); setMessage(""); }}>{label}</button>
+          ))}
+        </nav>
         <button
+          className="desk-logout"
           type="button"
-          style={{ marginLeft: "auto" }}
           onClick={async () => {
             await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
             window.location.href = "/account";
@@ -170,7 +172,7 @@ export function BuyerDesk({ data, reload }: { data: BuyerPayload; reload: () => 
         >
           Log out
         </button>
-      </nav>
+      </div>
 
       {tab === "home" ? (
         <div className="stack">

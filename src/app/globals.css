@@ -11,7 +11,9 @@ body:has(.desk) .nav-actions,
 body:has(.desk) .site-footer { display: none; }
 .desk { overflow-x: clip; }
 .desk h1 { font-size: clamp(32px, 8vw, 48px); letter-spacing: -.04em; line-height: 1.05; margin: 0 0 8px; }
-.desk-nav { display: flex; align-items: center; gap: 6px; margin: 0 0 22px; padding-bottom: 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.desk-bar { display: flex; align-items: center; gap: 8px; margin: 0 0 22px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.desk-nav { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; margin: 0; overflow-x: auto; }
+.desk-logout { flex: none; border: 1px solid #d5dbd8; background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 14px; min-height: 40px; cursor: pointer; font-weight: 650; white-space: nowrap; }
 .desk-name { font-weight: 720; letter-spacing: -.03em; color: var(--deep); margin-right: 8px; white-space: nowrap; }
 .desk-nav a, .desk-nav button { border: 1px solid #d5dbd8; background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 12px; min-height: 40px; display: inline-flex; align-items: center; cursor: pointer; white-space: nowrap; }
 .desk-nav a.on, .desk-nav button.on { background: var(--deep); color: #fff; border-color: var(--deep); }
@@ -81,7 +83,8 @@ body:has(.agent-desk) .brand span { color: #7ed6a8; }
 .agent-desk h1, .agent-desk h2 { color: #f4fff8; }
 .agent-desk .eyebrow { margin: 0; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #7ed6a8; }
 .agent-desk .quiet { color: #8fb3a3; }
-.agent-desk .desk-nav { border-bottom-color: rgba(126, 214, 168, .18); }
+.agent-desk .desk-bar { border-bottom-color: rgba(126, 214, 168, .18); }
+.agent-desk .desk-logout { color: #f4fff8; background: #116b4a; border-color: #116b4a; }
 .agent-desk .desk-name { color: #7ed6a8; }
 .agent-desk .desk-nav a, .agent-desk .desk-nav button { color: #d7efe4; background: transparent; border-color: rgba(126, 214, 168, .35); }
 .agent-desk .desk-nav a.on { background: #116b4a; color: #f4fff8; border-color: #116b4a; box-shadow: 0 0 18px rgba(17, 107, 74, .45); }
