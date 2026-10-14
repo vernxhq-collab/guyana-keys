@@ -16,7 +16,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <p className="meta">Guide USD {usd(listing.priceGyd).toLocaleString()}</p>
         <strong>{listing.title}</strong>
         <p className="meta">{listing.area}</p>
-        <p className="facts">{land ? <span>{listing.sqft.toLocaleString()} sqft</span> : <><span>{listing.beds} bed</span><span>{listing.baths} bath</span></>}</p>
+        <p className="facts">{[land && listing.sqft ? `${listing.sqft.toLocaleString()} sqft` : "", !land && listing.beds > 0 ? `${listing.beds} bed` : "", listing.baths > 0 ? `${listing.baths} bath` : ""].filter(Boolean).map((item) => <span key={item}>{item}</span>)}</p>
       </div>
     </Link>
   );
