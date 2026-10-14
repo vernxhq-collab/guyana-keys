@@ -10,12 +10,19 @@ export default async function AgentsPage() {
   return (
     <main className="wrap section">
       <h1>Agents</h1>
-      {people.length === 0 ? <p>No agent with a live listing yet.</p> : people.map((agent) => (
-        <p key={agent.id}>
-          <Link href={`/agents/${agent.id}`}>{agent.name}</Link>
-          {" · "}{[agent.company, agent.areas.join(", ")].filter(Boolean).join(" · ")}
-        </p>
-      ))}
+      {people.length === 0 ? <p>No agent with a live listing yet.</p> : (
+        <div className="grid">
+          {people.map((agent) => (
+            <Link className="card" key={agent.id} href={`/agents/${agent.id}`}>
+              <div className="card-body">
+                <strong>{agent.name}</strong>
+                <p className="meta">{[agent.company, agent.areas.join(", ")].filter(Boolean).join(" · ")}</p>
+                <span className="btn ghost">View agent</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
