@@ -3,7 +3,7 @@ import { ListingCard } from "../../components/ListingCard";
 import { MapView } from "../../components/MapView";
 import { parseBuyerSearch } from "../../lib/assist";
 import { loadCatalog } from "../../lib/catalog";
-import { areaFits, areas, regionIn } from "../../lib/areas";
+import { areaFits, areas, regionIn, regionSlug } from "../../lib/areas";
 
 function typeFromQuery(text: string) {
   if (/\bland|lot\b/i.test(text)) return "Land";
@@ -15,7 +15,7 @@ function typeFromQuery(text: string) {
 
 export const dynamic = "force-dynamic";
 
-export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string }> }) {
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string; region?: string }> }) {
   const params = await searchParams;
   const { listings } = await loadCatalog();
   const text = (params.q || "").trim();
@@ -23,7 +23,9 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   const purpose = params.purpose || parsed.purpose;
   const type = params.type || typeFromQuery(text);
   const beds = params.beds && params.beds !== "0" ? Number(params.beds) : parsed.beds;
-  const region = parsed.area ? "" : regionIn(text);
+  const regions = Array.from(new Set(areas.map((area) => area.region)));
+  const regionName = regions.find((item) => regionSlug(item) === params.region) || "";
+  const region = regionName || (parsed.area ? "" : regionIn(text));
   const shown = listings.filter((item) => {
     if (purpose && item.purpose !== purpose) return false;
     if (type && item.type !== type) return false;
@@ -44,11 +46,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           <select name="purpose" defaultValue={params.purpose || ""} aria-label="Buy or rent"><option value="">Buy or rent</option><option value="Sale">Buy</option><option value="Rent">Rent</option></select>
           <select name="type" defaultValue={params.type || ""} aria-label="Type"><option value="">Any type</option><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select>
           <select name="beds" defaultValue={params.beds || "0"} aria-label="Beds"><option value="0">Any beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option></select>
+          <select name="region" defaultValue={params.region || ""} aria-label="Region"><option value="">Any region</option>{regions.map((item) => <option key={item} value={regionSlug(item)}>{item}</option>)}</select>
           <select name="sort" defaultValue={params.sort || "price-desc"} aria-label="Sort"><option value="price-desc">Highest price</option><option value="price-asc">Lowest price</option></select>
           <button className="btn">Search</button>
         </div>
       </form>
-      <p className="sub">{shown.length} homes · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
+      <p className="sub">{shown.length} homes · Listed on Guyana Keys · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
       <div className="split">{shown.length === 0 ? <p>No home matches. Try a neighbourhood, or clear the beds filter.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}<MapView listings={shown} /></div>
     </main>
   );

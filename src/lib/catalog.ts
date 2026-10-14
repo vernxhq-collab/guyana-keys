@@ -33,6 +33,7 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     featured: Boolean(row.featured),
     status,
     titleRef: text(row.title_ref),
+    titleStatus: text(row.title_status),
   };
 }
 
@@ -102,6 +103,8 @@ export async function publicAgent(agentId: string): Promise<Agent | null> {
       address: String(data.address || ""),
       areas: Array.isArray(data.areas) ? data.areas.map(String) : [],
       image: String(data.photo_url || ""),
+      graLicence: String(data.gra_licence || ""),
+      verified: Boolean(data.verified),
     };
   } catch {
     return null;

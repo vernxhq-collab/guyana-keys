@@ -21,6 +21,8 @@ type Agent = {
   cap: number;
   live: number;
   suspended: boolean;
+  graLicence: string;
+  verified: boolean;
   createdAt: string;
 };
 type Listing = { id: string; title: string; area: string; purpose: string; priceGyd: number; status: string; featured: boolean };
@@ -79,10 +81,13 @@ export default function AdminAgentPage() {
         <p>Company {agent.company || "not set"}</p>
         <p>Address {agent.address || "not set"}</p>
         <p>Areas {agent.areas.length ? agent.areas.join(", ") : "not set"}</p>
+        <p>GRA licence {agent.graLicence || "not set"}</p>
+        <p>{agent.verified ? "Verified on Guyana Keys" : "Not verified"}</p>
         <p>Joined {whenLabel(agent.createdAt) || "not set"}</p>
       </article>
       <div className="actions">
         <button className="btn ghost" type="button" onClick={() => void act({ action: "plan", agentId: agent.id, plan: agent.planKey === "agency" ? "starter" : "agency" })}>Set plan to {agent.planKey === "agency" ? "starter" : "agency"}</button>
+        <button className="btn ghost" type="button" onClick={() => void act({ action: "verified", agentId: agent.id, verified: !agent.verified })}>{agent.verified ? "Remove verified badge" : "Mark verified on Guyana Keys"}</button>
         <button className="btn ghost" type="button" onClick={() => {
           const message = agent.suspended ? "Restore this agent? Listings that were live will show again." : "Suspend this agent? Their live listings will be hidden.";
           if (!window.confirm(message)) return;

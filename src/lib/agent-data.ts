@@ -1,4 +1,5 @@
 import { areas } from "./areas";
+import { cleanTitleStatus } from "./trust";
 import { leadScore, replyDraft } from "./assist";
 import { mapProperty } from "./catalog";
 import type { Listing } from "./data";
@@ -155,6 +156,7 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     lng: Number.isFinite(Number(body.lng)) ? Number(body.lng) : -58.16,
     description: String(body.description || "").slice(0, 8000),
     title_ref: String(body.titleRef || "").trim().slice(0, 160),
+    title_status: cleanTitleStatus(body.titleStatus),
     status,
     featured: Boolean(existing?.featured),
     photo_urls: cleanPhotos(body.photos, profile.id),
@@ -214,13 +216,16 @@ async function writeProperty(
   const run = (row: Record<string, unknown>) => mode === "insert"
     ? db.from("properties").insert(row)
     : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
-  const first = await run(payload);
-  if (first.error && columnMissing(first.error, "title_ref")) {
-    const { title_ref: _drop, ...rest } = payload;
-    const second = await run(rest);
-    return second.error;
+  let row = { ...payload };
+  let result = await run(row);
+  const optional = ["title_status", "title_ref"];
+  while (result.error) {
+    const missing = optional.find((column) => column in row && columnMissing(result.error, column));
+    if (!missing) return result.error;
+    delete row[missing];
+    result = await run(row);
   }
-  return first.error;
+  return null;
 }
 
 export async function duplicateListing(profile: Profile, id: string) {
@@ -249,6 +254,7 @@ export async function duplicateListing(profile: Profile, id: string) {
     photo_urls: [],
     held_live: false,
     ...(typeof (data as { title_ref?: unknown }).title_ref === "string" ? { title_ref: (data as { title_ref: string }).title_ref } : {}),
+    ...(typeof (data as { title_status?: unknown }).title_status === "string" ? { title_status: (data as { title_status: string }).title_status } : {}),
   });
   if (insertError) return { error: "The copy could not be made." };
   return { id: copyId };
@@ -531,14 +537,22 @@ export async function saveAgentProfile(profile: Profile, body: Record<string, un
     const host = supabaseUrl();
     if (body.photoUrl.startsWith(`${host}/storage/v1/object/public/listing-photos/${profile.id}/`)) photo = body.photoUrl;
   }
-  const { error: updateError } = await db.from("profiles").update({
+  const gra = String(body.graLicence || "").trim().slice(0, 40);
+  const payload: Record<string, unknown> = {
     name,
     company,
     phone,
     address,
     areas: picked,
     photo_url: photo,
-  }).eq("id", profile.id);
+    gra_licence: gra,
+  };
+  let { error: updateError } = await db.from("profiles").update(payload).eq("id", profile.id);
+  if (updateError && String(updateError.message || "").toLowerCase().includes("gra_licence")) {
+    if (gra) return { error: "GRA licence is not ready on this desk yet." };
+    delete payload.gra_licence;
+    ({ error: updateError } = await db.from("profiles").update(payload).eq("id", profile.id));
+  }
   if (updateError) {
     if (String(updateError.message || "").toLowerCase().includes("address")) return { error: "Address is not ready on this desk yet." };
     return { error: "The profile could not be saved." };

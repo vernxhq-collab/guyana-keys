@@ -637,3 +637,11 @@ for insert to authenticated with check (
   and status = 'submitted'
   and kind in ('feature', 'plan', 'help', 'advertise')
 );
+
+alter table public.properties add column if not exists title_status text not null default '';
+alter table public.properties drop constraint if exists properties_title_status_check;
+alter table public.properties add constraint properties_title_status_check
+  check (title_status in ('', 'transport', 'certificate', 'lease', 'unknown'));
+
+alter table public.profiles add column if not exists gra_licence text not null default '';
+alter table public.profiles add column if not exists verified boolean not null default false;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { areas } from "../lib/areas";
+import { titleStatuses } from "../lib/trust";
 import { compressImage } from "../lib/photos";
 import { DeskSkeleton } from "./DeskSkeleton";
 import { PinMap } from "./PinMap";
@@ -21,6 +22,7 @@ type Draft = {
   sqft: string;
   description: string;
   titleRef: string;
+  titleStatus: string;
   lat: number;
   lng: number;
   status: "live" | "hidden";
@@ -28,7 +30,7 @@ type Draft = {
   featured: boolean;
 };
 
-const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
+const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
 
 export function ListingEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -68,6 +70,7 @@ export function ListingEditor({ id }: { id: string }) {
             sqft: String(listing.sqft || ""),
             description: listing.description || "",
             titleRef: listing.titleRef || "",
+            titleStatus: listing.titleStatus || "",
             lat: listing.lat || 6.8,
             lng: listing.lng || -58.16,
             status: listing.status === "live" ? "live" : "hidden",
@@ -220,7 +223,13 @@ export function ListingEditor({ id }: { id: string }) {
       <label>Title reference
         <input value={draft.titleRef} onChange={(event) => setDraft({ ...draft, titleRef: event.target.value })} placeholder="Transport or certificate of title" />
       </label>
-      <p className="quiet">A listing is not proof of title. This is the reference the agent has on file.</p>
+      <label>Title status
+        <select value={draft.titleStatus} onChange={(event) => setDraft({ ...draft, titleStatus: event.target.value })}>
+          <option value="">Not set</option>
+          {titleStatuses.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+        </select>
+      </label>
+      <p className="quiet">A listing is not proof of title. Status is what the agent has on file. Buyers can request a title check.</p>
       <label>Status
         <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value === "live" ? "live" : "hidden" })}>
           <option value="hidden">Hidden</option>

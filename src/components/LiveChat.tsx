@@ -10,7 +10,7 @@ export function LiveChat() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [messages, setMessages] = useState<{ from: string; body: string }[]>([{ from: "Keys", body: "Ask about a neighbourhood, a sale, a rental, or the title check." }]);
+  const [messages, setMessages] = useState<{ from: string; body: string }[]>([{ from: "Keys", body: "Ask about a neighbourhood, a price, a sale, a rental, or the title check." }]);
   if (isDesk(path)) return null;
   async function send(event: React.FormEvent) {
     event.preventDefault();

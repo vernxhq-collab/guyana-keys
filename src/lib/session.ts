@@ -14,6 +14,8 @@ export type Profile = {
   company: string;
   address: string;
   photoUrl: string;
+  graLicence: string;
+  verified: boolean;
   areas: string[];
   plan: string;
   listingCap: number;
@@ -70,6 +72,8 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     company: text(row.company),
     address: text(row.address),
     photoUrl: text(row.photo_url),
+    graLicence: text(row.gra_licence),
+    verified: Boolean(row.verified),
     areas: Array.isArray(row.areas) ? row.areas.filter((item): item is string => typeof item === "string") : [],
     plan,
     listingCap: liveCap(plan, Number(row.listing_cap ?? 3)),

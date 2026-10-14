@@ -157,6 +157,8 @@ export async function adminAgent(id: string) {
       cap: shownCap(String(data.plan || "starter"), Number(data.listing_cap || 3)),
       live: listings.filter((row) => row.status === "live").length,
       suspended: Boolean(data.suspended),
+      graLicence: String(data.gra_licence || ""),
+      verified: Boolean(data.verified),
       createdAt: String(data.created_at || ""),
     },
     listings: listings.map((row) => ({
@@ -324,6 +326,18 @@ export async function setCap(agentId: string, cap: number) {
   const { error } = await db.from("profiles").update({ listing_cap: rounded }).eq("id", agentId).eq("role", "agent");
   if (error) return { error: "The cap could not be saved." };
   await remember(db, `Set ${data.name || "an agent"}'s cap to ${rounded}.`);
+  return { ok: true };
+}
+
+export async function setVerified(agentId: string, verified: boolean) {
+  const db = serviceDb();
+  if (!db) return { error: "Verification could not be saved." };
+  const { data } = await db.from("profiles").select("name").eq("id", agentId).eq("role", "agent").maybeSingle();
+  if (!data) return { error: "That agent was not found." };
+  const { error } = await db.from("profiles").update({ verified }).eq("id", agentId).eq("role", "agent");
+  if (error && String(error.message || "").toLowerCase().includes("verified")) return { error: "Verification is not ready on this desk yet." };
+  if (error) return { error: "Verification could not be saved." };
+  await remember(db, verified ? `Marked ${data.name || "an agent"} verified on Guyana Keys.` : `Removed the verified badge for ${data.name || "an agent"}.`);
   return { ok: true };
 }
 
