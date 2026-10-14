@@ -33,12 +33,10 @@ export function Header() {
             Guyana <span>Keys</span>
           </Link>
           <div className="nav-links">
-            <Link href="/listings?purpose=Sale">For sale</Link>
-            <Link href="/listings?purpose=Rent">To rent</Link>
+            <Link href="/listings?purpose=Sale">Buy</Link>
+            <Link href="/listings?purpose=Rent">Rent</Link>
             <Link href="/listings?type=Land">Land</Link>
-            <Link href="/areas">Neighbourhoods</Link>
             <Link href="/agents">Find an agent</Link>
-            <Link href="/advertise">Advertise</Link>
           </div>
           <div className="nav-actions">
             {signedIn ? (
@@ -49,7 +47,7 @@ export function Header() {
                   window.location.href = "/";
                 }}>Log out</button>
               </>
-            ) : <Link className="btn ghost" href="/account">Sign in or register</Link>}
+            ) : <><Link href="/account">Sign in</Link><Link className="btn" href="/advertise">For agents</Link></>}
           </div>
         </nav>
       </div>

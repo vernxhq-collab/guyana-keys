@@ -37,14 +37,16 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   }).sort((a, b) => params.sort === "price-asc" ? a.priceGyd - b.priceGyd : b.priceGyd - a.priceGyd);
   return (
     <main className="wrap section">
-      <form className="search-card" action="/listings">
-        <input name="q" list="areas" defaultValue={params.q || ""} placeholder="Neighbourhood, city, or region" />
+      <form className="search-panel plain" action="/listings">
+        <label className="ask"><input name="q" list="areas" defaultValue={params.q || ""} placeholder="Bel Air, or 3 bed house under 95 million" /></label>
         <datalist id="areas">{areas.map((area) => <option key={area.slug} value={area.name} />)}</datalist>
-        <select name="purpose" defaultValue={params.purpose || ""}><option value="">Any</option><option>Sale</option><option>Rent</option></select>
-        <select name="type" defaultValue={params.type || ""}><option value="">Any type</option><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select>
-        <select name="beds" defaultValue={params.beds || "0"}><option value="0">Any beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option></select>
-        <select name="sort" defaultValue={params.sort || "price-desc"}><option value="price-desc">Highest price</option><option value="price-asc">Lowest price</option></select>
-        <button className="btn">Search</button>
+        <div className="filter-row">
+          <select name="purpose" defaultValue={params.purpose || ""} aria-label="Buy or rent"><option value="">Buy or rent</option><option value="Sale">Buy</option><option value="Rent">Rent</option></select>
+          <select name="type" defaultValue={params.type || ""} aria-label="Type"><option value="">Any type</option><option>House</option><option>Apartment</option><option>Land</option><option>Commercial</option></select>
+          <select name="beds" defaultValue={params.beds || "0"} aria-label="Beds"><option value="0">Any beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option></select>
+          <select name="sort" defaultValue={params.sort || "price-desc"} aria-label="Sort"><option value="price-desc">Highest price</option><option value="price-asc">Lowest price</option></select>
+          <button className="btn">Search</button>
+        </div>
       </form>
       <p className="sub">{shown.length} homes · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
       <div className="split">{shown.length === 0 ? <p>No home matches. Try a neighbourhood, or clear the beds filter.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}<MapView listings={shown} /></div>
