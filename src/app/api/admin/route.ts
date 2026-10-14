@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const action = String(body.action || "");
   let result: { error?: string; ok?: boolean } = { error: "Unknown action." };
   if (action === "instructions") result = await saveInstructions(String(body.id || ""), String(body.instructions || ""));
-  else if (action === "paid") result = await markPaid(String(body.id || ""));
+  else if (action === "paid") result = await markPaid(String(body.id || ""), { amountGyd: Number(body.amountGyd), paidBy: gate.profile.name || gate.profile.email || "Admin" });
   else if (action === "cap") result = await setCap(String(body.agentId || ""), Number(body.cap));
   else if (action === "plan") result = await setPlan(String(body.agentId || ""), String(body.plan || ""));
   else if (action === "suspend") result = await suspendAgent(String(body.agentId || ""));

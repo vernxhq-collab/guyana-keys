@@ -1,12 +1,17 @@
 "use client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+
+function isDesk(path: string) {
+  return path === "/account" || path.startsWith("/account/") || path === "/agent" || path.startsWith("/agent/") || path === "/admin" || path.startsWith("/admin/");
+}
+
 export function LiveChat() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
-  if (path.startsWith("/account") || path.startsWith("/agent") || path.startsWith("/admin")) return null;
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<{ from: string; body: string }[]>([{ from: "Keys", body: "Ask about a neighbourhood, a sale, a rental, or the title check." }]);
+  if (isDesk(path)) return null;
   async function send(event: React.FormEvent) {
     event.preventDefault();
     if (!text.trim()) return;

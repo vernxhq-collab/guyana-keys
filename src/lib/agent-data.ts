@@ -3,6 +3,7 @@ import { leadScore, replyDraft } from "./assist";
 import { mapProperty } from "./catalog";
 import type { Listing } from "./data";
 import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
+import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
 import { liveCap, type Profile } from "./session";
 import { serviceDb } from "./supabase";
@@ -153,6 +154,7 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     lat: Number.isFinite(Number(body.lat)) ? Number(body.lat) : 6.8,
     lng: Number.isFinite(Number(body.lng)) ? Number(body.lng) : -58.16,
     description: String(body.description || "").slice(0, 8000),
+    title_ref: String(body.titleRef || "").trim().slice(0, 160),
     status,
     featured: Boolean(existing?.featured),
     photo_urls: cleanPhotos(body.photos, profile.id),
@@ -188,15 +190,44 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
       return { error: "cap" as const, live: count || 0, cap };
     }
   }
-  if (!existing) {
-    const created = newId("gy");
-    const { error: insertError } = await db.from("properties").insert({ id: created, ...next, held_live: false });
-    if (insertError) return { error: "The listing could not be saved." };
-    return { id: created };
+  const savedId = existing ? id : newId("gy");
+  const payload = existing ? next : { id: savedId, ...next, held_live: false };
+  const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
+  if (writeError) return { error: "The listing could not be saved." };
+  if (next.status === "live" && existing?.status !== "live") {
+    await notifyMatches({
+      id: savedId,
+      title: next.title,
+      purpose: next.purpose,
+      area: next.area,
+      beds: next.beds,
+      priceGyd: next.price_gyd,
+    });
   }
-  const { error: updateError } = await db.from("properties").update(next).eq("id", id).eq("agent_id", profile.id);
-  if (updateError) return { error: "The listing could not be saved." };
-  return { id };
+  return { id: savedId };
+}
+
+function columnMissing(error: { message?: string } | null, column: string) {
+  return String(error?.message || "").toLowerCase().includes(column);
+}
+
+async function writeProperty(
+  db: NonNullable<ReturnType<typeof serviceDb>>,
+  mode: "insert" | "update",
+  id: string,
+  agentId: string,
+  payload: Record<string, unknown>,
+) {
+  const run = (row: Record<string, unknown>) => mode === "insert"
+    ? db.from("properties").insert(row)
+    : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
+  const first = await run(payload);
+  if (first.error && columnMissing(first.error, "title_ref")) {
+    const { title_ref: _drop, ...rest } = payload;
+    const second = await run(rest);
+    return second.error;
+  }
+  return first.error;
 }
 
 export async function duplicateListing(profile: Profile, id: string) {
@@ -224,6 +255,7 @@ export async function duplicateListing(profile: Profile, id: string) {
     featured: false,
     photo_urls: [],
     held_live: false,
+    ...(typeof (data as { title_ref?: unknown }).title_ref === "string" ? { title_ref: (data as { title_ref: string }).title_ref } : {}),
   });
   if (insertError) return { error: "The copy could not be made." };
   return { id: copyId };
@@ -362,7 +394,39 @@ export async function updateLead(profile: Profile, body: Record<string, unknown>
   patch.next_step = scored.nextStep;
   const saved = await db.from("enquiries").update(patch).eq("id", id).eq("agent_id", profile.id);
   if (saved.error) return { error: "The lead could not be saved." };
+  const buyerId = row.buyer_id ? String(row.buyer_id) : null;
+  const propertyId = String(row.property_id || "");
+  const phone = String(row.phone || "");
+  if (typeof patch.viewing_at === "string" && patch.viewing_at) {
+    await notifyBuyer({
+      phone,
+      buyerId,
+      kind: "viewing",
+      propertyId,
+      enquiryId: id,
+      text: viewingNotice(title, patch.viewing_at),
+      stamp: patch.viewing_at,
+    });
+  }
+  if (body.openWhatsapp && typeof patch.agent_reply === "string" && patch.agent_reply.trim()) {
+    const reply = patch.agent_reply.trim();
+    await notifyBuyer({
+      phone,
+      buyerId,
+      kind: "reply",
+      propertyId,
+      enquiryId: id,
+      text: reply,
+      stamp: replyStamp(reply),
+    });
+  }
   return { ok: true };
+}
+
+function replyStamp(reply: string) {
+  let hash = 0;
+  for (let index = 0; index < reply.length; index += 1) hash = (hash * 31 + reply.charCodeAt(index)) >>> 0;
+  return hash.toString(36);
 }
 
 export async function createRequest(profile: Profile, body: Record<string, unknown>) {
@@ -412,7 +476,7 @@ export async function agentPlan(profile: Profile) {
   const { db, error } = dbOrError();
   if (!db) return { error };
   const [requests, rows] = await Promise.all([
-    db.from("requests").select("id,kind,property_id,status,instructions,message,created_at").eq("agent_id", profile.id).order("created_at", { ascending: false }),
+    db.from("requests").select("*").eq("agent_id", profile.id).order("created_at", { ascending: false }),
     ownListings(profile.id),
   ]);
   const listings = rows.map((row) => mapProperty(row as Record<string, unknown>));
@@ -422,8 +486,21 @@ export async function agentPlan(profile: Profile) {
     cap: profile.listingCap,
     live: liveListings.length,
     requests: (requests.data || []).map((row) => {
-      const listing = listings.find((item) => item.id === String(row.property_id || ""));
-      return { ...row, listing: listing?.title || "", featured: Boolean(listing?.featured) };
+      const record = row as Record<string, unknown>;
+      const listing = listings.find((item) => item.id === String(record.property_id || ""));
+      return {
+        id: String(record.id || ""),
+        kind: String(record.kind || ""),
+        property_id: record.property_id ? String(record.property_id) : null,
+        status: String(record.status || ""),
+        instructions: String(record.instructions || ""),
+        message: String(record.message || ""),
+        listing: listing?.title || "",
+        featured: Boolean(listing?.featured),
+        amountGyd: Number(record.amount_gyd || 0),
+        paidAt: record.paid_at ? String(record.paid_at) : "",
+        paidBy: String(record.paid_by || ""),
+      };
     }),
     liveListings: liveListings.map((item) => ({ id: item.id, title: item.title, area: item.area, featured: Boolean(item.featured) })),
   };

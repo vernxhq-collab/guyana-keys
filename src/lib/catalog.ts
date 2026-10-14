@@ -32,6 +32,7 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     agentId: text(row.agent_id),
     featured: Boolean(row.featured),
     status,
+    titleRef: text(row.title_ref),
   };
 }
 
@@ -92,7 +93,7 @@ export async function publicAgent(agentId: string): Promise<Agent | null> {
     const db = serviceDb();
     if (!db) return null;
     const { data } = await db.from("profiles").select("*").eq("id", agentId).maybeSingle();
-    if (!data || data.role !== "agent" || data.suspended) return null;
+    if (!data || data.suspended || (data.role !== "agent" && data.role !== "admin")) return null;
     return {
       id: String(data.id),
       name: String(data.name || "Agent"),

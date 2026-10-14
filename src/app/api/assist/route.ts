@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { runAssist } from "../../../lib/assist";
-import { isAdminEmail, readSession } from "../../../lib/session";
+import { canUseAgentDesk, isAdminEmail, readSession } from "../../../lib/session";
 
 const tasks = ["buyer-search", "listing-draft", "price-hint", "reply-draft", "lead-score", "admin-summary"] as const;
 
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const role = session.profile.role;
   const allowed =
     (task === "buyer-search" && role === "buyer") ||
-    ((task === "listing-draft" || task === "price-hint" || task === "reply-draft" || task === "lead-score") && role === "agent" && !session.profile.suspended) ||
+    ((task === "listing-draft" || task === "price-hint" || task === "reply-draft" || task === "lead-score") && canUseAgentDesk(session.profile, session.user.email)) ||
     (task === "admin-summary" && role === "admin" && isAdminEmail(session.user.email));
   if (!allowed) return NextResponse.json({ error: "AI is not available, continue manually." }, { status: 403 });
   try {
