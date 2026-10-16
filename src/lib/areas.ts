@@ -3,6 +3,103 @@ export function areaByName(name: string) {
   return areas.find((item) => item.name.toLowerCase() === key);
 }
 
+export function areaFits(listingArea: string, wanted: string) {
+  const listing = listingArea.trim().toLowerCase();
+  const want = wanted.trim().toLowerCase();
+  if (!want) return true;
+  if (!listing) return false;
+  return listing === want || listing.startsWith(`${want} `);
+}
+
+export function regionSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export function regionIn(text: string) {
+  const q = text.toLowerCase();
+  const names = [...new Set(areas.map((item) => item.region))].sort((a, b) => b.length - a.length);
+  const named = names.find((name) => q.includes(name.toLowerCase()));
+  if (named) return named;
+  if (q.includes("east bank")) return "East Bank Demerara";
+  if (q.includes("east coast")) return "East Coast Demerara";
+  if (q.includes("west coast")) return "West Coast Demerara";
+  if (q.includes("berbice")) return "Berbice";
+  if (/\blinden\b/.test(q) && !q.includes("linden highway")) return "Upper Demerara";
+  return "";
+}
+
+const areaNotes: Record<string, { pros: string[]; cons: string[] }> = {
+  "bel-air-park": {
+    pros: ["Gated residential streets.", "Often the first neighbourhood diaspora buyers search."],
+    cons: ["Asking prices are among the higher ones on Guyana Keys.", "A listing is still not proof of title."],
+  },
+  "bel-air": {
+    pros: ["Residential streets beside Bel Air Park.", "Close to the commercial core of Georgetown."],
+    cons: ["Prices vary street by street.", "Confirm transport or certificate of title before any deposit."],
+  },
+  ogle: {
+    pros: ["Near the Ogle airstrip.", "Rentals serve people working the oil corridor."],
+    cons: ["The East Coast public road is busy.", "Oil-corridor rents can move faster than other villages."],
+  },
+  providence: {
+    pros: ["Land and schemes near the stadium.", "A common search for buyers who want space outside the city."],
+    cons: ["Ask whether the lot is transport, certificate of title, or lease.", "Roads and drainage differ by scheme."],
+  },
+  diamond: {
+    pros: ["A main search for family houses on the East Bank.", "Closer to shops and schools than the highway villages."],
+    cons: ["The East Bank public road is slow at peak times.", "Compare asking prices only against live Guyana Keys listings."],
+  },
+  eccles: {
+    pros: ["Schemes close to Georgetown.", "A shorter East Bank commute than Diamond or Providence."],
+    cons: ["Not enough live sales on Guyana Keys to call a price high or low.", "Title still needs a registry search."],
+  },
+  linden: {
+    pros: ["The main town up the Demerara.", "Houses and land sit in a market of their own, away from Georgetown prices."],
+    cons: ["The drive from Georgetown is long.", "The listing volume on Guyana Keys is thin."],
+  },
+  "new-amsterdam": {
+    pros: ["The main Berbice town.", "Riverside houses are a different market from Georgetown."],
+    cons: ["Distance from the oil corridor.", "Use a Berbice or Georgetown attorney for the title search."],
+  },
+};
+
+const marketPrice = "Not enough sales on Guyana Keys yet.";
+const marketYield = "Not enough rentals on Guyana Keys yet.";
+
+export function areaDetail(area: (typeof areas)[number]) {
+  const extra = areaNotes[area.slug];
+  return {
+    ...area,
+    pros: extra?.pros || [`${area.name} is in ${area.region}.`, "Listings on this page are the ones agents have published."],
+    cons: extra?.cons || ["A listing is not proof of title.", "There are not enough Guyana Keys sales here for an average price."],
+    averagePrice: marketPrice,
+    rentalYield: marketYield,
+  };
+}
+
+export const regionGuides = [
+  { slug: "east-bank-demerara", name: "East Bank Demerara", about: "Eccles, Providence, Diamond, and the villages down the East Bank public road. Family houses and house lots are the usual search.", pros: ["A wide range of schemes within a drive of Georgetown.", "Providence and Diamond are among the most searched names."], cons: ["Peak traffic on the public road.", "Title can be transport, certificate of title, or lease. Ask which one."] },
+  { slug: "east-coast-demerara", name: "East Coast Demerara", about: "Ogle through Mahaica, including the oil-corridor rentals near the airstrip and the villages further east.", pros: ["Ogle is the rental search for the oil corridor.", "Villages further east still have houses and house lots."], cons: ["The public road is congested.", "Rents near Ogle are not a guide for Lusignan or Mahaica."] },
+  { slug: "berbice", name: "Berbice", about: "New Amsterdam, the Corentyne towns, and the west-bank crossing at Rosignol.", pros: ["Town houses at asking prices well below Bel Air.", "A real market for people who live and work in Berbice."], cons: ["It is a long way from Georgetown and the oil corridor.", "Have the title searched before sending money from abroad."] },
+  { slug: "upper-demerara", name: "Linden", about: "Linden is the mining town in Upper Demerara. Treat it as its own market.", pros: ["Houses and land away from Georgetown prices.", "People who work in Linden actually search here."], cons: ["Thin listing volume.", "The highway drive is long, and a Georgetown price is the wrong comparison."] },
+  { slug: "georgetown", name: "Georgetown", about: "Bel Air, Kitty, Queenstown, and the other city neighbourhoods buyers name first.", pros: ["The deepest set of named neighbourhoods on Guyana Keys.", "Walkable to offices, schools, and the seawall in several wards."], cons: ["Asking prices in Bel Air Park are not a guide for Ruimveldt.", "Drainage and title both need a proper check."] },
+];
+
+export function regionGuide(name: string) {
+  const slug = regionSlug(name);
+  const guide = regionGuides.find((item) => item.slug === slug);
+  return {
+    slug,
+    name: guide?.name || name,
+    about: guide?.about || `Neighbourhoods in ${name}.`,
+    pros: guide?.pros || ["Live listings are the ones agents have published on Guyana Keys."],
+    cons: guide?.cons || ["A listing is not proof of title.", "Average price and rental yield wait until more sales are on Guyana Keys."],
+    areas: areas.filter((item) => item.region === name),
+    averagePrice: marketPrice,
+    rentalYield: marketYield,
+  };
+}
+
 export const areas = [
   { slug: "bel-air-park", name: "Bel Air Park", region: "Georgetown", note: "Gated homes and the prices diaspora buyers ask for first." },
   { slug: "bel-air", name: "Bel Air", region: "Georgetown", note: "Residential streets beside the park." },

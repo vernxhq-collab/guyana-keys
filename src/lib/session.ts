@@ -14,6 +14,8 @@ export type Profile = {
   company: string;
   address: string;
   photoUrl: string;
+  graLicence: string;
+  verified: boolean;
   areas: string[];
   plan: string;
   listingCap: number;
@@ -43,6 +45,12 @@ export function isAdminEmail(email: string) {
   return list.includes(email.trim().toLowerCase());
 }
 
+export function canUseAgentDesk(profile: Profile | null | undefined, email?: string) {
+  if (!profile || profile.suspended) return false;
+  if (profile.role === "agent") return true;
+  return profile.role === "admin" && isAdminEmail(email || profile.email);
+}
+
 function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
@@ -64,6 +72,8 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     company: text(row.company),
     address: text(row.address),
     photoUrl: text(row.photo_url),
+    graLicence: text(row.gra_licence),
+    verified: Boolean(row.verified),
     areas: Array.isArray(row.areas) ? row.areas.filter((item): item is string => typeof item === "string") : [],
     plan,
     listingCap: liveCap(plan, Number(row.listing_cap ?? 3)),
@@ -129,9 +139,17 @@ async function insertProfile(user: SessionUser, role: Role) {
   return mapProfile(row);
 }
 
+async function withEmail(user: SessionUser, profile: Profile | null) {
+  if (!profile || profile.email || !user.email) return profile;
+  const db = serviceDb();
+  if (!db) return { ...profile, email: user.email };
+  await db.from("profiles").update({ email: user.email }).eq("id", user.id);
+  return { ...profile, email: user.email };
+}
+
 export async function grantAdmin(user: SessionUser) {
-  if (!isAdminEmail(user.email)) return loadProfile(user.id);
-  const existing = await loadProfile(user.id);
+  if (!isAdminEmail(user.email)) return withEmail(user, await loadProfile(user.id));
+  const existing = await withEmail(user, await loadProfile(user.id));
   if (!existing) return insertProfile(user, "admin");
   if (existing.role === "admin") return existing;
   const db = serviceDb();
@@ -142,8 +160,8 @@ export async function grantAdmin(user: SessionUser) {
 }
 
 export async function ensureProfile(user: SessionUser, desk: Desk) {
-  if (desk === "admin") return isAdminEmail(user.email) ? grantAdmin(user) : loadProfile(user.id);
-  const existing = await loadProfile(user.id);
+  if (desk === "admin") return isAdminEmail(user.email) ? grantAdmin(user) : withEmail(user, await loadProfile(user.id));
+  const existing = await withEmail(user, await loadProfile(user.id));
   if (existing) return existing;
   if (desk === "agent") return insertProfile(user, "agent");
   return insertProfile(user, "buyer");

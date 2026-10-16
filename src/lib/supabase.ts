@@ -1,5 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
+// The hosted project ref is yednogdlhokowqddznht. A deployed NEXT_PUBLIC_SUPABASE_URL
+// has been seen with an extra "g" (yednoggd…). Rewrite that one misspelling so the
+// site still reaches the project. Set the env var to https://yednogdlhokowqddznht.supabase.co.
 export function supabaseUrl() {
   const raw = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
   return raw.replace("yednoggdlhokowqddznht", "yednogdlhokowqddznht").replace(/\/$/, "");

@@ -13,22 +13,30 @@ export default function AgentProfilePage() {
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [graLicence, setGraLicence] = useState("");
+  const [verified, setVerified] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
+  const [profileId, setProfileId] = useState("");
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     fetch("/api/agent?part=profile")
       .then((res) => res.json())
       .then((data) => {
         const profile = data.profile;
         if (!profile) { setNote(data.error || "Could not load the profile."); setLoading(false); return; }
+        setProfileId(profile.id || "");
         setName(profile.name || "");
         setCompany(profile.company || "");
         setPhone(profile.phone || "");
         setAddress(profile.address || "");
         setEmail(profile.email || "");
         setPhotoUrl(profile.photoUrl || "");
+        setGraLicence(profile.graLicence || "");
+        setVerified(Boolean(profile.verified));
         setPicked(profile.areas || []);
         setLoading(false);
       })
@@ -49,19 +57,21 @@ export default function AgentProfilePage() {
   return (
     <form className="stack" onSubmit={async (event) => {
       event.preventDefault();
-      const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "profile", name, company, phone, address, areas: picked, photoUrl }) });
+      const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "profile", name, company, phone, address, areas: picked, photoUrl, graLicence }) });
       const data = await res.json();
       setNote(res.ok ? "Saved." : data.error || "The profile could not be saved.");
     }}>
       <p className="eyebrow">Profile</p>
       <h1>Profile</h1>
-      <p className="quiet">Name, company, WhatsApp, address, and areas are required. Email comes from sign-in.</p>
+      <p className="quiet">Name, company, WhatsApp, address, and areas are required. Email comes from sign-in. {verified ? "Verified on Guyana Keys." : "A GRA licence is optional. The verified badge is added by the admin."}</p>
+      {profileId && origin ? <p className="quiet">Your Guyana Keys link: {origin}/a/{profileId}</p> : null}
       <p className="ai-bar next"><span>{missing ? missing.label : "Profile is complete."}</span></p>
       <label>Name<input value={name} onChange={(event) => setName(event.target.value)} required /></label>
       <label>Company<input value={company} onChange={(event) => setCompany(event.target.value)} required /></label>
       <label>WhatsApp<input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" required /></label>
       <label>Address<input value={address} onChange={(event) => setAddress(event.target.value)} required placeholder="Office address" /></label>
       <label>Email<input value={email} readOnly /></label>
+      <label>GRA licence (optional)<input value={graLicence} onChange={(event) => setGraLicence(event.target.value)} placeholder="Licence number, if you have one" /></label>
       {photoUrl ? <img src={photoUrl} alt="" style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 12 }} /> : null}
       <label>Photo
         <input type="file" accept="image/*" onChange={async (event) => {

@@ -39,12 +39,12 @@ export default function AgentHomePage() {
   return (
     <div className="stack">
       <p className="eyebrow">Agent desk</p>
-      <h1>{home.plan}</h1>
-      <p className="quiet">{home.plan === "Agency" ? "Paid plan." : "Free plan. 3 live listings."}</p>
+      <h1>Home</h1>
+      <p className="quiet">Listings are free. Featuring and advertising are arranged on Plan.</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live listings</p><strong>{home.live} / {home.cap}</strong><p className="quiet">{home.live >= home.cap ? "Cap reached" : `${home.cap - home.live} still open`}</p></article>
-        <article className={home.unanswered > 0 ? "stat attention" : "stat"}><p className="quiet">Unanswered enquiries</p><strong>{home.unanswered}</strong><p className="quiet">{home.unanswered > 0 ? "Reply today" : "Clear"}</p></article>
-        <article className="stat"><p className="quiet">Viewings in 7 days</p><strong>{home.viewings}</strong><p className="quiet">{home.viewings > 0 ? "This week" : "None set"}</p></article>
+        <a className="stat" href="/agent/listings"><p className="quiet">Live listings</p><strong>{home.live}</strong><p className="quiet">Free to publish</p></a>
+        <a className={home.unanswered > 0 ? "stat attention" : "stat"} href="/agent/leads?filter=unanswered"><p className="quiet">Unanswered enquiries</p><strong>{home.unanswered}</strong><p className="quiet">{home.unanswered > 0 ? "Reply today" : "Clear"}</p></a>
+        <a className="stat" href="/agent/leads?filter=viewing"><p className="quiet">Viewings in 7 days</p><strong>{home.viewings}</strong><p className="quiet">{home.viewings > 0 ? "This week" : "None set"}</p></a>
       </div>
       <h2>Today</h2>
       {next ? (
@@ -60,7 +60,6 @@ export default function AgentHomePage() {
         </div>
       ))}
       <a className="btn" href="/agent/listings/new">New listing</a>
-      {home.live >= home.cap ? <p>{home.live} of {home.cap} live listings are in use. <a href="/agent/plan">Contact the admin to upgrade</a></p> : null}
     </div>
   );
 }

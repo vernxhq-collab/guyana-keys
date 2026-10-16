@@ -1,5 +1,5 @@
 import { areaByName, areas } from "./areas";
-import { money, type Listing } from "./data";
+import { GYD_PER_USD, money, type Listing } from "./data";
 
 export type AssistHome = {
   id: string;
@@ -28,7 +28,11 @@ const longestAreas = [...areas].sort((a, b) => b.name.length - a.name.length);
 
 export function findArea(text: string) {
   const q = text.toLowerCase();
-  return longestAreas.find((item) => q.includes(item.name.toLowerCase()));
+  if (q.includes("oil corridor")) return areaByName("Ogle");
+  return longestAreas.find((item) => {
+    if (item.name === "Linden" && q.includes("linden highway")) return false;
+    return q.includes(item.name.toLowerCase());
+  });
 }
 
 export function parsePrice(text: string): number | null {
@@ -63,12 +67,13 @@ export function parseBuyerSearch(query: string) {
   const bedsMatch = q.match(/(\d+)\s*-?\s*bed/);
   const beds = bedsMatch ? Number(bedsMatch[1]) : 0;
   let maxPrice = 0;
-  const under = q.match(/(?:under|below|max|less than|up to|<)\s*([\d,.]+)\s*(million|mn|m|thousand|k)?/);
+  const under = q.match(/(?:under|below|max|less than|up to|<)\s*\$?\s*([\d,.]+)\s*(million|mn|m|thousand|k)?/);
   if (under) {
     const raw = Number(under[1].replace(/,/g, ""));
     const unit = under[2] || "";
     if (Number.isFinite(raw) && raw > 0) {
       maxPrice = /million|mn|^m$/.test(unit) ? Math.round(raw * 1_000_000) : /thousand|^k$/.test(unit) ? Math.round(raw * 1000) : raw < 1000 ? Math.round(raw * 1_000_000) : raw;
+      if (/\$|\busd\b/.test(q)) maxPrice = Math.round(maxPrice * GYD_PER_USD);
     }
   } else {
     const hinted = parsePrice(query);

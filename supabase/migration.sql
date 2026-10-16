@@ -573,3 +573,97 @@ alter table public.admin_events add column if not exists detail text not null de
 alter table public.admin_events add column if not exists created_at timestamptz not null default now();
 alter table public.admin_events enable row level security;
 revoke all on public.admin_events from anon, authenticated;
+
+-- public area alerts, match notices, title reference, payment receipt
+create table if not exists public.alerts (
+  id text primary key,
+  email text not null default '',
+  area text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.alerts add column if not exists email text not null default '';
+alter table public.alerts add column if not exists area text not null default '';
+alter table public.alerts add column if not exists created_at timestamptz not null default now();
+alter table public.alerts enable row level security;
+revoke all on public.alerts from anon, authenticated;
+
+create table if not exists public.notices (
+  id text primary key,
+  user_id uuid,
+  email text not null default '',
+  phone text not null default '',
+  channel text not null default 'email',
+  kind text not null default 'search',
+  property_id text not null default '',
+  body text not null default '',
+  status text not null default 'queued',
+  dedupe text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.notices add column if not exists user_id uuid;
+alter table public.notices add column if not exists email text not null default '';
+alter table public.notices add column if not exists phone text not null default '';
+alter table public.notices add column if not exists channel text not null default 'email';
+alter table public.notices add column if not exists kind text not null default 'search';
+alter table public.notices add column if not exists property_id text not null default '';
+alter table public.notices add column if not exists body text not null default '';
+alter table public.notices add column if not exists status text not null default 'queued';
+alter table public.notices add column if not exists dedupe text not null default '';
+alter table public.notices add column if not exists created_at timestamptz not null default now();
+
+create unique index if not exists notices_dedupe_key on public.notices (dedupe);
+
+alter table public.notices enable row level security;
+revoke all on public.notices from anon, authenticated;
+
+alter table public.properties add column if not exists title_ref text not null default '';
+
+alter table public.requests add column if not exists amount_gyd bigint not null default 0;
+alter table public.requests add column if not exists paid_at timestamptz;
+alter table public.requests add column if not exists paid_by text not null default '';
+
+alter table public.enquiries add column if not exists source text not null default 'guyana_keys';
+alter table public.enquiries add column if not exists intent text not null default '';
+
+alter table public.requests drop constraint if exists requests_kind_check;
+alter table public.requests add constraint requests_kind_check check (kind in ('feature', 'plan', 'help', 'advertise'));
+
+drop policy if exists requests_agent_insert on public.requests;
+create policy requests_agent_insert on public.requests
+for insert to authenticated with check (
+  agent_id = auth.uid()
+  and status = 'submitted'
+  and kind in ('feature', 'plan', 'help', 'advertise')
+);
+
+alter table public.properties add column if not exists title_status text not null default '';
+alter table public.properties drop constraint if exists properties_title_status_check;
+alter table public.properties add constraint properties_title_status_check
+  check (title_status in ('', 'transport', 'certificate', 'lease', 'unknown'));
+
+alter table public.profiles add column if not exists gra_licence text not null default '';
+alter table public.profiles add column if not exists verified boolean not null default false;
+
+-- Optional agent-entered services. Same statements as supabase/listing-place-facts.sql.
+alter table public.properties add column if not exists mobile_networks text[] not null default '{}';
+alter table public.properties add column if not exists broadband_providers text[] not null default '{}';
+alter table public.properties add column if not exists broadband_speed text not null default '';
+alter table public.properties add column if not exists water_supply text not null default '';
+alter table public.properties add column if not exists electricity text not null default '';
+alter table public.properties add column if not exists road_access text not null default '';
+alter table public.properties add column if not exists drainage_note text not null default '';
+alter table public.properties add column if not exists area_note text not null default '';
+
+alter table public.properties drop constraint if exists properties_water_supply_check;
+alter table public.properties add constraint properties_water_supply_check
+  check (water_supply in ('', 'gwi', 'well', 'both', 'none'));
+
+alter table public.properties drop constraint if exists properties_electricity_check;
+alter table public.properties add constraint properties_electricity_check
+  check (electricity in ('', 'gpl', 'generator', 'both', 'none'));
+
+alter table public.properties drop constraint if exists properties_road_access_check;
+alter table public.properties add constraint properties_road_access_check
+  check (road_access in ('', 'paved', 'unpaved'));
