@@ -16,13 +16,14 @@ type OsmElement = {
 };
 
 const endpoints = [
+  "https://overpass.openstreetmap.fr/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
   "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
   "https://overpass-api.de/api/interpreter",
 ];
 
 const radiusM = nearbyRadiusKm * 1000;
-const cacheVersion = "v2";
+const cacheVersion = "v5";
 const successTtl = 7 * 24 * 60 * 60 * 1000;
 const failureTtl = 10 * 60 * 1000;
 const memory = new Map<string, { at: number; ttl: number; report: NearbyReport }>();
@@ -148,7 +149,7 @@ function kindOf(tags: Record<string, string>) {
 
 function toPlaces(elements: OsmElement[], lat: number, lng: number): NearbyPlace[] {
   const seen = new Set<string>();
-  const places: NearbyPlace[] = [];
+  const places: (NearbyPlace & { named: boolean })[] = [];
   for (const element of elements) {
     const id = `${element.type || "n"}/${element.id || ""}`;
     if (!element.id || seen.has(id)) continue;
@@ -158,16 +159,40 @@ function toPlaces(elements: OsmElement[], lat: number, lng: number): NearbyPlace
     const kind = kindOf(tags);
     const km = haversineKm(lat, lng, where.lat, where.lng);
     if (km > nearbyRadiusKm + 0.05) continue;
+    const namedText = (tags.name || tags["name:en"] || "").trim();
+    const named = /[a-z]/i.test(namedText);
     seen.add(id);
     places.push({
       id,
-      name: (tags.name || tags["name:en"] || kind).trim(),
+      name: named ? namedText : kind,
       kind,
       km,
       mi: km * 0.621371,
+      named,
     });
   }
-  return places.sort((a, b) => a.km - b.km).slice(0, 5);
+  places.sort((a, b) => a.km - b.km);
+  const names = new Set<string>();
+  const take = (list: typeof places, limit: number) => {
+    const picked: NearbyPlace[] = [];
+    for (const place of list) {
+      const key = place.name.trim().toLowerCase();
+      if (names.has(key)) continue;
+      names.add(key);
+      picked.push({
+        id: place.id,
+        name: place.named ? place.name : `Unnamed ${place.kind.toLowerCase()}`,
+        kind: place.kind,
+        km: place.km,
+        mi: place.mi,
+      });
+      if (picked.length === limit) break;
+    }
+    return picked;
+  };
+  const named = take(places.filter((place) => place.named), 5);
+  if (named.length >= 3) return named;
+  return [...named, ...take(places.filter((place) => !place.named), 3 - named.length)];
 }
 
 const groupQueries: { id: NearbyGroup["id"]; queries: string[][] }[] = [

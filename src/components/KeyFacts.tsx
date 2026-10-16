@@ -43,7 +43,7 @@ export function KeyFacts({ listing }: { listing: Listing }) {
   ];
 
   return (
-    <>
+    <section className="listing-facts">
       <div className="fact-strip">
         <div>
           <Icon><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" /></Icon>
@@ -80,17 +80,17 @@ export function KeyFacts({ listing }: { listing: Listing }) {
                 {row.icon === "water" ? <path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z" /> : null}
                 {row.icon === "power" ? <path d="M13 2 4 14h7l-1 8 9-12h-7z" /> : null}
                 {row.icon === "road" ? <><path d="M4 19 10 5h4l6 14" /><path d="M12 8v2M12 13v2" /></> : null}
-                {row.icon === "drop" ? <path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z" /> : null}
+                {row.icon === "drop" ? <><path d="M3 8c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2" /><path d="M3 14c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2" /><path d="M3 20c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2" /></> : null}
                 {row.icon === "pin" ? <><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" /><circle cx="12" cy="10" r="2" /></> : null}
               </RowIcon>
               <span>
-                <strong>{row.label}</strong>
-                <span>{row.value || "Not provided by the agent."}</span>
+                <strong>{row.label}: </strong>
+                <span className={row.value ? "" : "meta"}>{row.value || "Not provided by the agent."}</span>
               </span>
             </li>
           ))}
         </ul>
       </section>
-    </>
+    </section>
   );
 }

@@ -58,7 +58,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <p className="disclaimer">A listing is not proof of title. These buttons save a Guyana Keys lead.</p>
           </section>
           <LocationSection area={listing.area} region={listing.region} lat={listing.lat} lng={listing.lng} report={nearby} />
-          {listing.purpose === "Sale" ? (
+          {listing.purpose === "Sale" && listing.priceGyd > 0 ? (
             <section>
               <h2>Mortgage and purchase costs</h2>
               <p className="sub">Estimates for this asking price. Change the rate, or open the full <Link href="/tools">tools page</Link>.</p>
