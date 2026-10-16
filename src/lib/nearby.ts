@@ -9,7 +9,7 @@ export type NearbyPlace = {
 };
 
 export type NearbyGroup = {
-  id: "schools" | "health" | "getting-around" | "shops";
+  id: "schools" | "colleges" | "health" | "getting-around" | "shops";
   label: string;
   empty: string;
   status: "ok" | "failed" | "loading";
@@ -22,6 +22,7 @@ export type NearbyReport = {
 
 export const nearbyGroupMeta: { id: NearbyGroup["id"]; label: string; empty: string }[] = [
   { id: "schools", label: "Schools", empty: "No mapped schools within 3 km yet." },
+  { id: "colleges", label: "Colleges", empty: "No mapped colleges or universities within 3 km yet." },
   { id: "health", label: "Health", empty: "No mapped hospitals or clinics within 3 km yet." },
   { id: "getting-around", label: "Getting around", empty: "No mapped stops, parks, or terminals within 3 km yet." },
   { id: "shops", label: "Shops & markets", empty: "No mapped shops or markets within 3 km yet." },

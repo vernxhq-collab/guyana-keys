@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export function ComingSoon({
   heading = "New listings coming soon",
-  line = "New listings coming soon. Be first to see them.",
+  line = "Be first to see them.",
 }: {
   heading?: string;
   line?: string;

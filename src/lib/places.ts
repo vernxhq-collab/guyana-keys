@@ -23,7 +23,7 @@ const endpoints = [
 ];
 
 const radiusM = nearbyRadiusKm * 1000;
-const cacheVersion = "v5";
+const cacheVersion = "v6";
 const successTtl = 7 * 24 * 60 * 60 * 1000;
 const failureTtl = 10 * 60 * 1000;
 const memory = new Map<string, { at: number; ttl: number; report: NearbyReport }>();
@@ -126,12 +126,31 @@ function point(element: OsmElement) {
   return { lat: lat as number, lng: lng as number };
 }
 
+function placeName(tags: Record<string, string>) {
+  return `${tags.name || ""} ${tags["name:en"] || ""}`;
+}
+
+function isHigherEducation(tags: Record<string, string>) {
+  const amenity = tags.amenity || "";
+  if (amenity === "college" || amenity === "university") return true;
+  const level = tags["isced:level"] || "";
+  if (/(?:^|;)[5-8](?:;|$)/.test(level)) return true;
+  const name = placeName(tags);
+  return /\b(university|college|polytechnic)\b/i.test(name) || /school of nursing|nursing school|academic centre|academic center/i.test(name);
+}
+
+function educationKind(tags: Record<string, string>) {
+  const name = placeName(tags);
+  if (tags.amenity === "university" || /\buniversity\b/i.test(name)) return "University";
+  if (isHigherEducation(tags)) return "College";
+  if (tags.amenity === "kindergarten") return "Kindergarten";
+  return "School";
+}
+
 function kindOf(tags: Record<string, string>) {
   const amenity = tags.amenity || "";
   const shop = tags.shop || "";
-  if (amenity === "school") return "School";
-  if (amenity === "kindergarten") return "Kindergarten";
-  if (amenity === "college" || amenity === "university") return "College";
+  if (amenity === "school" || amenity === "kindergarten" || amenity === "college" || amenity === "university") return educationKind(tags);
   if (amenity === "hospital") return "Hospital";
   if (amenity === "clinic" || amenity === "doctors") return "Clinic";
   if (amenity === "pharmacy") return "Pharmacy";
@@ -195,16 +214,16 @@ function toPlaces(elements: OsmElement[], lat: number, lng: number): NearbyPlace
   return [...named, ...take(places.filter((place) => !place.named), 3 - named.length)];
 }
 
+const educationClauses = [
+  'node["amenity"="school"]',
+  'node["amenity"="kindergarten"]',
+  'node["amenity"="college"]',
+  'node["amenity"="university"]',
+  'way["amenity"="college"]',
+  'way["amenity"="university"]',
+];
+
 const groupQueries: { id: NearbyGroup["id"]; queries: string[][] }[] = [
-  {
-    id: "schools",
-    queries: [[
-      'node["amenity"="school"]',
-      'node["amenity"="kindergarten"]',
-      'node["amenity"="college"]',
-      'node["amenity"="university"]',
-    ]],
-  },
   {
     id: "health",
     queries: [[
@@ -245,6 +264,27 @@ const groupQueries: { id: NearbyGroup["id"]; queries: string[][] }[] = [
   },
 ];
 
+function educationGroup(id: NearbyGroup["id"], elements: OsmElement[] | null, subset: OsmElement[], lat: number, lng: number): NearbyGroup {
+  const meta = nearbyGroupMeta.find((item) => item.id === id) || nearbyGroupMeta[0];
+  const failed = elements === null;
+  return {
+    id: meta.id,
+    label: meta.label,
+    empty: meta.empty,
+    status: !subset.length && failed ? "failed" : "ok",
+    places: toPlaces(subset, lat, lng),
+  };
+}
+
+async function loadEducation(lat: number, lng: number): Promise<NearbyGroup[]> {
+  const elements = await overpassClauses(lat, lng, educationClauses);
+  const list = elements || [];
+  return [
+    educationGroup("schools", elements, list.filter((item) => !isHigherEducation(item.tags || {})), lat, lng),
+    educationGroup("colleges", elements, list.filter((item) => isHigherEducation(item.tags || {})), lat, lng),
+  ];
+}
+
 async function loadGroup(lat: number, lng: number, spec: (typeof groupQueries)[number]): Promise<NearbyGroup> {
   const meta = nearbyGroupMeta.find((item) => item.id === spec.id) || nearbyGroupMeta[0];
   const results = await Promise.all(spec.queries.map((clauses) => overpassClauses(lat, lng, clauses)));
@@ -264,7 +304,11 @@ export async function nearbyPlaces(lat: number, lng: number): Promise<NearbyRepo
   const key = cacheKey(lat, lng);
   const cached = readEntry(key);
   if (cached) return cached.report;
-  const groups = await Promise.all(groupQueries.map((spec) => loadGroup(lat, lng, spec)));
+  const [education, rest] = await Promise.all([
+    loadEducation(lat, lng),
+    Promise.all(groupQueries.map((spec) => loadGroup(lat, lng, spec))),
+  ]);
+  const groups = [...education, ...rest];
   const report = { groups };
   const failed = groups.some((group) => group.status === "failed");
   writeCache(key, report, failed ? failureTtl : successTtl);

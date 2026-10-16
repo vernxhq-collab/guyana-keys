@@ -49,12 +49,18 @@ export function LocationSection({ area, region, lat, lng, report }: { area: stri
   }, [lat, lng, report]);
 
   useEffect(() => {
-    if (document.getElementById("leaflet-css")) return;
-    const link = document.createElement("link");
-    link.id = "leaflet-css";
-    link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    document.head.appendChild(link);
+    const sheets = [
+      ["leaflet-css", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"],
+      ["maplibre-css", "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"],
+    ];
+    for (const [id, href] of sheets) {
+      if (document.getElementById(id)) continue;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }
   }, []);
 
   useEffect(() => {
@@ -63,28 +69,40 @@ export function LocationSection({ area, region, lat, lng, report }: { area: stri
     let map: { remove: () => void } | null = null;
     let cancelled = false;
     const start = () => {
-      const L = (window as unknown as { L?: { map: Function; tileLayer: Function; circleMarker: Function } }).L;
-      if (!L || !host || cancelled) return;
+      const L = (window as unknown as { L?: { map: Function; maplibreGL?: Function; circleMarker: Function } }).L;
+      if (!L?.maplibreGL || !host || cancelled) return;
       map = L.map(host, { scrollWheelZoom: false, zoomControl: true }).setView([lat, lng], 15);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 20,
-      }).addTo(map);
+      L.maplibreGL({ style: "https://tiles.openfreemap.org/styles/positron" }).addTo(map);
       L.circleMarker([lat, lng], { radius: 8, color: "#ffffff", weight: 2, fillColor: "#116b4a", fillOpacity: 1 }).addTo(map);
     };
-    if ((window as unknown as { L?: unknown }).L) start();
-    else {
-      const existing = document.querySelector<HTMLScriptElement>("script[data-leaflet]");
-      if (existing) existing.addEventListener("load", start);
+    const scripts = [
+      ["leaflet", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"],
+      ["maplibre", "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"],
+      ["maplibre-leaflet", "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js"],
+    ];
+    const load = (index: number) => {
+      if (cancelled) return;
+      if (index >= scripts.length) {
+        start();
+        return;
+      }
+      const [id, src] = scripts[index];
+      const ready = () => load(index + 1);
+      const existing = document.querySelector<HTMLScriptElement>(`script[data-maplib="${id}"]`);
+      if (existing?.dataset.ready === "1") ready();
+      else if (existing) existing.addEventListener("load", ready, { once: true });
       else {
         const script = document.createElement("script");
-        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        script.dataset.leaflet = "1";
-        script.onload = start;
+        script.src = src;
+        script.dataset.maplib = id;
+        script.onload = () => {
+          script.dataset.ready = "1";
+          ready();
+        };
         document.body.appendChild(script);
       }
-    }
+    };
+    load(0);
     return () => {
       cancelled = true;
       map?.remove();
@@ -124,7 +142,7 @@ export function LocationSection({ area, region, lat, lng, report }: { area: stri
           </ul>
         )}
       </div>
-      <p className="meta place-credit"><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>. Map tiles © CARTO. Distances are as the crow flies.</p>
+      <p className="meta place-credit"><a href="https://openfreemap.org/">OpenFreeMap</a> <a href="https://www.openmaptiles.org/">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>. Distances are as the crow flies.</p>
     </section>
   );
 }
