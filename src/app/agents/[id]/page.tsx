@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function AgentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const agent = await publicAgent(id);
-  if (!agent) return <main className="wrap"><h1>Agent not found</h1></main>;
+  if (!agent) return <main className="wrap section"><h1>Agent not found</h1><p>This person is not listed on Guyana Keys.</p><p><Link href="/agents">All agents</Link> · <Link href="/advertise">List your property</Link></p></main>;
   const { listings } = await loadCatalog();
   const own = listings.filter((item) => item.agentId === agent.id);
   return (

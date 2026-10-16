@@ -38,7 +38,7 @@ export function Header() {
             <Link href="/listings?type=Land">Land</Link>
             <Link href="/agents">Find an agent</Link>
             <Link href="/tools">Tools</Link>
-            <Link href="/partners">Partners</Link>
+            <Link href="/partners">Partner with us</Link>
           </div>
           <div className="nav-actions">
             {signedIn ? (

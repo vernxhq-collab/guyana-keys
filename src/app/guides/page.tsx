@@ -22,7 +22,7 @@ export default function GuidesPage() {
       </ul>
       <h2>From abroad</h2>
       <p>Prices on Guyana Keys show GYD and an approximate USD figure. The guide rate is not the bank’s rate on the day. Use the <Link href="/tools">mortgage calculator</Link> as an estimate, then confirm the loan, stamp duty, and legal fees with the bank and your attorney.</p>
-      <p className="meta"><Link href="/partners">Trusted partners</Link> · <Link href="/tools">Tools</Link></p>
+      <p className="meta"><Link href="/partners">Partner with us</Link> · <Link href="/tools">Tools</Link></p>
     </main>
   );
 }

@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { loadCatalog, publicAgent } from "../../lib/catalog";
+import { ComingSoon } from "../../components/ComingSoon";
+import { loadPublicAgents } from "../../lib/catalog";
 
 export const dynamic = "force-dynamic";
 
 export default async function AgentsPage() {
-  const catalog = await loadCatalog();
-  const ids = [...new Set(catalog.listings.map((item) => item.agentId).filter(Boolean))];
-  const people = (await Promise.all(ids.map((id) => publicAgent(id)))).filter((agent) => agent !== null);
+  const people = await loadPublicAgents();
   return (
     <main className="wrap section">
       <h1>Agents</h1>
-      {people.length === 0 ? <p>No agent with a live listing yet.</p> : (
+      {people.length === 0 ? (
+        <ComingSoon heading="Agents coming soon" line="No agents are listed yet. New listings coming soon. Be first to see them." />
+      ) : (
         <div className="grid">
           {people.map((agent) => (
             <Link className="card" key={agent.id} href={`/agents/${agent.id}`}>

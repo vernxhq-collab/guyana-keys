@@ -49,7 +49,7 @@ export default async function RegionPage({ params }: { params: Promise<{ slug: s
         <Link className="card" key={area.slug} href={`/areas/${area.slug}`}><div className="card-body"><strong>{area.name}</strong><p className="meta">{area.note}</p></div></Link>
       ))}</div>
       <h2>Current listings</h2>
-      {matched.length === 0 ? <p>No live listing in {guide.name} yet.</p> : <div className="grid">{matched.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}
+      {matched.length === 0 ? <p>No live listing in {guide.name} yet. <Link href="/alerts">Be first to hear about one</Link>, or <Link href="/advertise">list your property</Link>.</p> : <div className="grid">{matched.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}
     </main>
   );
 }

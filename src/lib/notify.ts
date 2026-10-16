@@ -1,5 +1,5 @@
 import { whenLabel } from "./assist";
-import { deskFrom } from "./contact";
+import { deskFrom, siteUrl } from "./contact";
 import { digits, newId } from "./labels";
 import { serviceDb } from "./supabase";
 
@@ -36,7 +36,7 @@ export function e164(phone: string) {
 }
 
 function siteOrigin() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "https://guyana-keys.vercel.app").replace(/\/$/, "");
+  return siteUrl();
 }
 
 function missingRelation(error: { message?: string } | null, name: string) {

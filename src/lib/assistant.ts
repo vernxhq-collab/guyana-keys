@@ -1,8 +1,8 @@
 import { findArea, parseBuyerSearch } from "./assist";
 import { areaDetail, areaFits } from "./areas";
-import { agents, listings, money, type Listing } from "./data";
+import { money, type Listing } from "./data";
 
-export function answer(question: string, source: Listing[] = listings) {
+export function answer(question: string, source: Listing[] = [], people: { name: string; company: string }[] = []) {
   const q = question.toLowerCase();
   if (q.includes("scam") || q.includes("fraud") || (q.includes("deposit") && q.includes("before"))) {
     return "Do not send a deposit before a Georgetown attorney searches the Deeds Registry. Keep the conversation on Guyana Keys, and do not pay a stranger off the site.";
@@ -31,6 +31,9 @@ export function answer(question: string, source: Listing[] = listings) {
   });
   if (matched.length) return matched.slice(0, 3).map((item) => item.title + ": " + money(item.priceGyd, item.purpose) + " in " + item.area + ".").join(" ");
   if (area) return area.name + " is in " + area.region + ". " + area.note + " No live listing matches that yet.";
-  if (q.includes("agent")) return agents.map((item) => item.name + " at " + item.company).join(". ") + ".";
+  if (q.includes("agent")) {
+    if (!people.length) return "No agents are listed on Guyana Keys yet.";
+    return people.map((item) => item.company ? `${item.name} at ${item.company}` : item.name).join(". ") + ".";
+  }
   return "Ask for a neighbourhood, a house for sale, a rental, a price check, or the transport check. I only use Guyana Keys listings.";
 }

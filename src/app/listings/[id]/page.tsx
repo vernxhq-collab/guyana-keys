@@ -17,7 +17,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const catalog = await loadCatalog();
   const listing = catalog.listings.find((item) => item.id === id);
-  if (!listing) return <main className="wrap section"><h1>Listing not found</h1></main>;
+  if (!listing) return <main className="wrap section"><h1>Listing not found</h1><p>This home is not listed on Guyana Keys.</p><p><Link href="/listings">Back to search</Link> · <Link href="/advertise">List your property</Link></p></main>;
   const agent = await publicAgent(listing.agentId);
   const session = await readSession();
   const viewer = session?.profile?.role === "buyer" ? { name: session.profile.name, abroad: session.profile.abroad } : null;

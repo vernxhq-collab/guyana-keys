@@ -5,19 +5,18 @@ import { MortgageCalculator } from "../../components/MortgageCalculator";
 
 export const metadata: Metadata = {
   title: "Mortgage calculator | Guyana Keys",
-  description: "Estimate a Guyana mortgage payment, stamp duty, and legal fees in GYD and USD. Estimates only.",
+  description: "Estimate a payment from a rate you enter, plus stamp duty and legal fees. Estimates only.",
 };
 
 export default function ToolsPage() {
   return (
     <main className="wrap section">
-      <p className="chip">Listed on Guyana Keys</p>
       <h1>Mortgage and purchase costs</h1>
-      <p className="sub">Pick a bank for an approximate public rate, or type your own. Figures are estimates. Confirm them with the bank and your attorney.</p>
+      <p className="sub">Type the rate you were quoted. Figures are estimates. Confirm them with the lender and your attorney.</p>
       <MortgageCalculator />
       <h2>Currency guide</h2>
       <CurrencyConverter />
-      <p className="meta"><Link href="/partners">Trusted partners</Link> · <Link href="/guides">Safety guide</Link></p>
+      <p className="meta"><Link href="/partners">Partner with us</Link> · <Link href="/guides">Safety guide</Link></p>
     </main>
   );
 }
