@@ -49,62 +49,68 @@ export function LocationSection({ area, region, lat, lng, report }: { area: stri
   }, [lat, lng, report]);
 
   useEffect(() => {
-    const sheets = [
-      ["leaflet-css", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"],
-      ["maplibre-css", "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"],
-    ];
-    for (const [id, href] of sheets) {
-      if (document.getElementById(id)) continue;
-      const link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = href;
-      document.head.appendChild(link);
-    }
+    if (document.getElementById("maplibre-css")) return;
+    const link = document.createElement("link");
+    link.id = "maplibre-css";
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css";
+    document.head.appendChild(link);
   }, []);
 
   useEffect(() => {
     const host = node.current;
     if (!host) return;
-    let map: { remove: () => void } | null = null;
+    let map: { remove: () => void; resize: () => void; addControl: (control: unknown, position?: string) => void; on: (event: string, fn: () => void) => void } | null = null;
+    let observer: ResizeObserver | null = null;
     let cancelled = false;
     const start = () => {
-      const L = (window as unknown as { L?: { map: Function; maplibreGL?: Function; circleMarker: Function } }).L;
-      if (!L?.maplibreGL || !host || cancelled) return;
-      map = L.map(host, { scrollWheelZoom: false, zoomControl: true }).setView([lat, lng], 15);
-      L.maplibreGL({ style: "https://tiles.openfreemap.org/styles/positron" }).addTo(map);
-      L.circleMarker([lat, lng], { radius: 8, color: "#ffffff", weight: 2, fillColor: "#116b4a", fillOpacity: 1 }).addTo(map);
-    };
-    const scripts = [
-      ["leaflet", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"],
-      ["maplibre", "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"],
-      ["maplibre-leaflet", "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js"],
-    ];
-    const load = (index: number) => {
-      if (cancelled) return;
-      if (index >= scripts.length) {
-        start();
+      const ml = (window as unknown as { maplibregl?: { Map: new (options: object) => { remove: () => void; resize: () => void; addControl: (control: unknown, position?: string) => void; on: (event: string, fn: () => void) => void }; Marker: new (options: object) => { setLngLat: (lngLat: [number, number]) => { addTo: (target: unknown) => void } }; NavigationControl: new (options: object) => unknown } }).maplibregl;
+      if (!ml || !host || cancelled) return;
+      if (host.clientWidth === 0) {
+        requestAnimationFrame(start);
         return;
       }
-      const [id, src] = scripts[index];
-      const ready = () => load(index + 1);
-      const existing = document.querySelector<HTMLScriptElement>(`script[data-maplib="${id}"]`);
-      if (existing?.dataset.ready === "1") ready();
-      else if (existing) existing.addEventListener("load", ready, { once: true });
-      else {
-        const script = document.createElement("script");
-        script.src = src;
-        script.dataset.maplib = id;
-        script.onload = () => {
-          script.dataset.ready = "1";
-          ready();
-        };
-        document.body.appendChild(script);
-      }
+      const dot = document.createElement("div");
+      dot.className = "map-dot";
+      map = new ml.Map({
+        container: host,
+        style: "https://tiles.openfreemap.org/styles/positron",
+        center: [lng, lat],
+        zoom: 14,
+        maxZoom: 18,
+        scrollZoom: false,
+        dragRotate: false,
+        pitchWithRotate: false,
+        attributionControl: true,
+      });
+      map.addControl(new ml.NavigationControl({ showCompass: false }), "top-left");
+      new ml.Marker({ element: dot }).setLngLat([lng, lat]).addTo(map);
+      const resize = () => map?.resize();
+      map.on("load", resize);
+      observer = new ResizeObserver(resize);
+      observer.observe(host);
+      requestAnimationFrame(resize);
     };
-    load(0);
+    const existing = document.querySelector<HTMLScriptElement>("script[data-maplib='maplibre']");
+    const begin = () => {
+      if ((window as unknown as { maplibregl?: unknown }).maplibregl) start();
+      else requestAnimationFrame(begin);
+    };
+    if (existing?.dataset.ready === "1") begin();
+    else if (existing) existing.addEventListener("load", begin, { once: true });
+    else {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js";
+      script.dataset.maplib = "maplibre";
+      script.onload = () => {
+        script.dataset.ready = "1";
+        begin();
+      };
+      document.body.appendChild(script);
+    }
     return () => {
       cancelled = true;
+      observer?.disconnect();
       map?.remove();
     };
   }, [lat, lng]);
