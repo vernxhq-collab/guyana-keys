@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { areas } from "../lib/areas";
+import { broadbandProviders, electricitySupplies, mobileNetworks, roadAccesses, waterSupplies } from "../lib/place-facts";
 import { titleStatuses } from "../lib/trust";
 import { compressImage } from "../lib/photos";
 import { DeskSkeleton } from "./DeskSkeleton";
@@ -23,6 +24,14 @@ type Draft = {
   description: string;
   titleRef: string;
   titleStatus: string;
+  mobileNetworks: string[];
+  broadbandProviders: string[];
+  broadbandSpeed: string;
+  waterSupply: string;
+  electricity: string;
+  roadAccess: string;
+  drainageNote: string;
+  areaNote: string;
   lat: number;
   lng: number;
   status: "live" | "hidden";
@@ -30,7 +39,7 @@ type Draft = {
   featured: boolean;
 };
 
-const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
+const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
 
 export function ListingEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -71,6 +80,14 @@ export function ListingEditor({ id }: { id: string }) {
             description: listing.description || "",
             titleRef: listing.titleRef || "",
             titleStatus: listing.titleStatus || "",
+            mobileNetworks: listing.facts?.mobileNetworks || [],
+            broadbandProviders: listing.facts?.broadbandProviders || [],
+            broadbandSpeed: listing.facts?.broadbandSpeed || "",
+            waterSupply: listing.facts?.waterSupply || "",
+            electricity: listing.facts?.electricity || "",
+            roadAccess: listing.facts?.roadAccess || "",
+            drainageNote: listing.facts?.drainageNote || "",
+            areaNote: listing.facts?.areaNote || "",
             lat: listing.lat || 6.8,
             lng: listing.lng || -58.16,
             status: listing.status === "live" ? "live" : "hidden",
@@ -230,6 +247,43 @@ export function ListingEditor({ id }: { id: string }) {
         </select>
       </label>
       <p className="quiet">A listing is not proof of title. Status is what the agent has on file. Buyers can request a title check.</p>
+      <div className="panel">
+        <strong>Services at the property</strong>
+        <p className="quiet">Optional. Enter only what you know. Leave speed blank unless you have a figure to share. Guyana Keys does not check signal or coverage.</p>
+        <p>Mobile networks</p>
+        <div className="check-row">
+          {mobileNetworks.map((name) => (
+            <label key={name}><input type="checkbox" checked={draft.mobileNetworks.includes(name)} onChange={(event) => setDraft({ ...draft, mobileNetworks: event.target.checked ? [...draft.mobileNetworks, name] : draft.mobileNetworks.filter((item) => item !== name) })} /> {name}</label>
+          ))}
+        </div>
+        <p>Broadband or fibre</p>
+        <div className="check-row">
+          {broadbandProviders.map((name) => (
+            <label key={name}><input type="checkbox" checked={draft.broadbandProviders.includes(name)} onChange={(event) => setDraft({ ...draft, broadbandProviders: event.target.checked ? [...draft.broadbandProviders, name] : draft.broadbandProviders.filter((item) => item !== name) })} /> {name}</label>
+          ))}
+        </div>
+        <label>Broadband speed, optional<input value={draft.broadbandSpeed} onChange={(event) => setDraft({ ...draft, broadbandSpeed: event.target.value })} placeholder="Leave blank if you have no measured speed" /></label>
+        <label>Water
+          <select value={draft.waterSupply} onChange={(event) => setDraft({ ...draft, waterSupply: event.target.value })}>
+            <option value="">Not set</option>
+            {waterSupplies.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Electricity
+          <select value={draft.electricity} onChange={(event) => setDraft({ ...draft, electricity: event.target.value })}>
+            <option value="">Not set</option>
+            {electricitySupplies.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Road access
+          <select value={draft.roadAccess} onChange={(event) => setDraft({ ...draft, roadAccess: event.target.value })}>
+            <option value="">Not set</option>
+            {roadAccesses.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Drainage or flood note<textarea value={draft.drainageNote} onChange={(event) => setDraft({ ...draft, drainageNote: event.target.value })} placeholder="Only what you have observed or been told" /></label>
+        <label>Around the area<textarea value={draft.areaNote} onChange={(event) => setDraft({ ...draft, areaNote: event.target.value })} placeholder="A short note about the streets nearby" /></label>
+      </div>
       <label>Status
         <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value === "live" ? "live" : "hidden" })}>
           <option value="hidden">Hidden</option>

@@ -3,6 +3,7 @@ import { cleanTitleStatus } from "./trust";
 import { leadScore, replyDraft } from "./assist";
 import { mapProperty } from "./catalog";
 import type { Listing } from "./data";
+import { cleanFacts } from "./place-facts";
 import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
@@ -142,6 +143,16 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
   const type = types.includes(String(body.type)) ? String(body.type) : "House";
   const status = body.status === "live" ? "live" : "hidden";
   const price = Number(String(body.priceGyd ?? "").replace(/,/g, ""));
+  const facts = cleanFacts({
+    mobileNetworks: body.mobileNetworks,
+    broadbandProviders: body.broadbandProviders,
+    broadbandSpeed: body.broadbandSpeed,
+    waterSupply: body.waterSupply,
+    electricity: body.electricity,
+    roadAccess: body.roadAccess,
+    drainageNote: body.drainageNote,
+    areaNote: body.areaNote,
+  });
   return {
     title: String(body.title || "").trim().slice(0, 160),
     area: area?.name || "",
@@ -157,6 +168,14 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     description: String(body.description || "").slice(0, 8000),
     title_ref: String(body.titleRef || "").trim().slice(0, 160),
     title_status: cleanTitleStatus(body.titleStatus),
+    mobile_networks: facts.mobileNetworks,
+    broadband_providers: facts.broadbandProviders,
+    broadband_speed: facts.broadbandSpeed,
+    water_supply: facts.waterSupply,
+    electricity: facts.electricity,
+    road_access: facts.roadAccess,
+    drainage_note: facts.drainageNote,
+    area_note: facts.areaNote,
     status,
     featured: Boolean(existing?.featured),
     photo_urls: cleanPhotos(body.photos, profile.id),
@@ -218,7 +237,7 @@ async function writeProperty(
     : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
   let row = { ...payload };
   let result = await run(row);
-  const optional = ["title_status", "title_ref"];
+  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note"];
   while (result.error) {
     const missing = optional.find((column) => column in row && columnMissing(result.error, column));
     if (!missing) return result.error;
@@ -255,6 +274,14 @@ export async function duplicateListing(profile: Profile, id: string) {
     held_live: false,
     ...(typeof (data as { title_ref?: unknown }).title_ref === "string" ? { title_ref: (data as { title_ref: string }).title_ref } : {}),
     ...(typeof (data as { title_status?: unknown }).title_status === "string" ? { title_status: (data as { title_status: string }).title_status } : {}),
+    ...(Array.isArray((data as { mobile_networks?: unknown }).mobile_networks) ? { mobile_networks: (data as { mobile_networks: string[] }).mobile_networks } : {}),
+    ...(Array.isArray((data as { broadband_providers?: unknown }).broadband_providers) ? { broadband_providers: (data as { broadband_providers: string[] }).broadband_providers } : {}),
+    ...(typeof (data as { broadband_speed?: unknown }).broadband_speed === "string" ? { broadband_speed: (data as { broadband_speed: string }).broadband_speed } : {}),
+    ...(typeof (data as { water_supply?: unknown }).water_supply === "string" ? { water_supply: (data as { water_supply: string }).water_supply } : {}),
+    ...(typeof (data as { electricity?: unknown }).electricity === "string" ? { electricity: (data as { electricity: string }).electricity } : {}),
+    ...(typeof (data as { road_access?: unknown }).road_access === "string" ? { road_access: (data as { road_access: string }).road_access } : {}),
+    ...(typeof (data as { drainage_note?: unknown }).drainage_note === "string" ? { drainage_note: (data as { drainage_note: string }).drainage_note } : {}),
+    ...(typeof (data as { area_note?: unknown }).area_note === "string" ? { area_note: (data as { area_note: string }).area_note } : {}),
   });
   if (insertError) return { error: "The copy could not be made." };
   return { id: copyId };

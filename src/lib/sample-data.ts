@@ -8,6 +8,7 @@ const house2 = "https://images.unsplash.com/photo-1570129477492-45c003edd2be?aut
 const apt = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80";
 const land = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80";
 const office = "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80";
+const devPin = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700"><rect width="100%" height="100%" fill="#e7eeea"/><text x="50%" y="46%" text-anchor="middle" fill="#116b4a" font-family="sans-serif" font-size="42">Development pin</text><text x="50%" y="56%" text-anchor="middle" fill="#66716c" font-family="sans-serif" font-size="24">Not a property for sale</text></svg>');
 
 export const sampleAgents: Agent[] = [
   { id: "priya", name: "Priya Ramcharran", company: "Demerara Realty", phone: "5926001101", areas: ["Bel Air Park", "Queenstown", "Kitty"], image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80" },
@@ -21,6 +22,25 @@ export const sampleListings: Listing[] = [
   { id: "gy-1180", title: "Residential land, Providence", area: "Providence", region: "East Bank Demerara", type: "Land", purpose: "Sale", priceGyd: 18000000, beds: 0, baths: 0, sqft: 8000, lat: 6.768, lng: -58.155, image: land, description: "House lot near the stadium corridor.", agentId: "marcus" },
   { id: "gy-1214", title: "Office suite, Main Street", area: "Cummingsburg", region: "Georgetown", type: "Commercial", purpose: "Rent", priceGyd: 650000, beds: 0, baths: 2, sqft: 2100, lat: 6.813, lng: -58.158, image: office, description: "Office space on Main Street.", agentId: "priya" },
   { id: "gy-1302", title: "New Amsterdam riverside house", area: "New Amsterdam", region: "Berbice", type: "House", purpose: "Sale", priceGyd: 28000000, beds: 3, baths: 2, sqft: 1540, lat: 6.247, lng: -57.522, image: house2, description: "Town house near the Berbice river.", agentId: "anita" },
+  {
+    id: "dev-georgetown",
+    title: "Development pin, Queenstown",
+    area: "Queenstown",
+    region: "Georgetown",
+    type: "House",
+    purpose: "Sale",
+    priceGyd: 0,
+    beds: 3,
+    baths: 2,
+    sqft: 1800,
+    lat: 6.8163,
+    lng: -58.1598,
+    image: devPin,
+    photos: [devPin],
+    description: "Local preview pin near Queenstown, Georgetown, for the location map. This is not a home for sale. Mobile, broadband, water, and power are left blank on purpose.",
+    agentId: "dev-fixture",
+    titleStatus: "transport",
+  },
 ];
 
 export function sampleListingById(id: string) {

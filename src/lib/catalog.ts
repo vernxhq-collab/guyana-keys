@@ -1,4 +1,5 @@
 import { type Agent, type Listing } from "./data";
+import { factsFromRow } from "./place-facts";
 import { sampleAgents, sampleListingById, sampleListings } from "./sample-data";
 import { serviceDb } from "./supabase";
 
@@ -40,6 +41,7 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     status,
     titleRef: text(row.title_ref),
     titleStatus: text(row.title_status),
+    facts: factsFromRow(row),
   };
 }
 
