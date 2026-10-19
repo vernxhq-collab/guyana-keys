@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BuyerDesk, type BuyerPayload } from "../../components/BuyerDesk";
 import { DeskSkeleton } from "../../components/DeskSkeleton";
 import { MagicLinkForm } from "../../components/MagicLinkForm";
+import { SignOut } from "../../components/SignOut";
 
 export default function AccountPage() {
   const [phase, setPhase] = useState<"loading" | "out" | "in" | "refuse" | "error">("loading");
@@ -16,8 +17,17 @@ export default function AccountPage() {
       setPhase("out");
       return;
     }
-    if (auth.profile && auth.profile.role !== "buyer") {
+    if (auth.profile?.suspended) {
+      setError("This account is suspended.");
       setPhase("refuse");
+      return;
+    }
+    if (auth.profile?.role === "admin") {
+      window.location.replace("/admin");
+      return;
+    }
+    if (auth.profile?.role === "agent") {
+      window.location.replace("/agent");
       return;
     }
     const key = "gk-mine-" + auth.user.id;
@@ -43,31 +53,11 @@ export default function AccountPage() {
   }
 
   useEffect(() => {
-    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const accessToken = hash.get("access_token");
-    if (!accessToken) {
-      void load();
-      return;
-    }
-    fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "session", accessToken, desk: "buyer" }) })
-      .then(async (res) => ({ ok: res.ok, data: await res.json() }))
-      .then(({ ok, data: body }) => {
-        window.history.replaceState({}, "", "/account");
-        if (!ok) {
-          setError(body.error || "That sign-in link was not accepted.");
-          setPhase("out");
-          return;
-        }
-        return load();
-      })
-      .catch(() => {
-        setError("That sign-in link was not accepted.");
-        setPhase("out");
-      });
+    void load();
   }, []);
 
   if (phase === "loading") return <main className="wrap section desk"><DeskSkeleton count={3} /></main>;
-  if (phase === "refuse") return <main className="wrap section desk"><p>Your homes is for buyers.</p></main>;
+  if (phase === "refuse") return <main className="wrap section desk"><p>{error || "Your homes is for buyers."}</p><SignOut next="/account" /></main>;
   if (phase === "error") return <main className="wrap section desk"><p>{error || "Could not load your homes."}</p><button className="btn" type="button" onClick={() => void load()}>Try again</button></main>;
   if (phase === "in" && data) return <main className="wrap section desk"><BuyerDesk data={data} reload={async () => { await load(); }} /></main>;
   return (

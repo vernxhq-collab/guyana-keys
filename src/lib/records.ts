@@ -34,6 +34,7 @@ export async function openEnquiry(input: {
   occupants: number | null;
   viewingRequest?: string;
   title?: string;
+  intent?: string;
 }) {
   const db = serviceDb();
   if (!db) return { error: "The enquiry could not be saved." as const };
@@ -65,8 +66,18 @@ export async function openEnquiry(input: {
     next_step: input.viewingRequest ? "Confirm the viewing" : "Reply today",
     viewing_request: input.viewingRequest || null,
     private_note: "",
+    source: "guyana_keys",
+    intent: input.intent || "",
   };
-  const { error } = await db.from("enquiries").insert(row);
+  let { error } = await db.from("enquiries").insert(row);
+  if (error && String(error.message || "").toLowerCase().includes("source")) {
+    const { source: _source, ...rest } = row;
+    ({ error } = await db.from("enquiries").insert(rest));
+  }
+  if (error && String(error.message || "").toLowerCase().includes("intent")) {
+    const { intent: _intent, source: _source, ...rest } = row;
+    ({ error } = await db.from("enquiries").insert(rest));
+  }
   if (error) return { error: "The enquiry could not be saved." as const };
   await addEvent(id, "enquiry_received", input.note || "");
   await addEvent(id, "reply_drafted", draft.message);

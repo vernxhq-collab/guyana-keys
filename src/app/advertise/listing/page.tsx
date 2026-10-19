@@ -5,7 +5,7 @@ export default function AdvertiseListingPage() {
   return (
     <main className="wrap section">
       <h1>Advertise a listing</h1>
-      <p className="sub">Contact us to feature a listing or upgrade a package. Payment is arranged with Guyana Keys before anything is featured or upgraded.</p>
+      <p className="sub">Listings are free. Contact us to feature a listing or advertise. Payment is arranged with Guyana Keys before anything is featured or advertised.</p>
       <form className="card" style={{maxWidth:520, padding:22, display:"grid", gap:12}} onSubmit={async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);

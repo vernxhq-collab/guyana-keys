@@ -1,10 +1,13 @@
 import { areas } from "./areas";
+import { cleanTitleStatus } from "./trust";
 import { leadScore, replyDraft } from "./assist";
 import { mapProperty } from "./catalog";
 import type { Listing } from "./data";
+import { cleanFacts } from "./place-facts";
 import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
+import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
-import { liveCap, type Profile } from "./session";
+import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
 
@@ -140,6 +143,16 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
   const type = types.includes(String(body.type)) ? String(body.type) : "House";
   const status = body.status === "live" ? "live" : "hidden";
   const price = Number(String(body.priceGyd ?? "").replace(/,/g, ""));
+  const facts = cleanFacts({
+    mobileNetworks: body.mobileNetworks,
+    broadbandProviders: body.broadbandProviders,
+    broadbandSpeed: body.broadbandSpeed,
+    waterSupply: body.waterSupply,
+    electricity: body.electricity,
+    roadAccess: body.roadAccess,
+    drainageNote: body.drainageNote,
+    areaNote: body.areaNote,
+  });
   return {
     title: String(body.title || "").trim().slice(0, 160),
     area: area?.name || "",
@@ -153,6 +166,16 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     lat: Number.isFinite(Number(body.lat)) ? Number(body.lat) : 6.8,
     lng: Number.isFinite(Number(body.lng)) ? Number(body.lng) : -58.16,
     description: String(body.description || "").slice(0, 8000),
+    title_ref: String(body.titleRef || "").trim().slice(0, 160),
+    title_status: cleanTitleStatus(body.titleStatus),
+    mobile_networks: facts.mobileNetworks,
+    broadband_providers: facts.broadbandProviders,
+    broadband_speed: facts.broadbandSpeed,
+    water_supply: facts.waterSupply,
+    electricity: facts.electricity,
+    road_access: facts.roadAccess,
+    drainage_note: facts.drainageNote,
+    area_note: facts.areaNote,
     status,
     featured: Boolean(existing?.featured),
     photo_urls: cleanPhotos(body.photos, profile.id),
@@ -181,22 +204,47 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     existing = data as Record<string, unknown>;
   }
   const next = listingInput(profile, body, existing);
+  const savedId = existing ? id : newId("gy");
+  const payload = existing ? next : { id: savedId, ...next, held_live: false };
+  const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
+  if (writeError) return { error: "The listing could not be saved." };
   if (next.status === "live" && existing?.status !== "live") {
-    const cap = liveCap(profile.plan, profile.listingCap);
-    const { count } = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", profile.id).eq("status", "live");
-    if ((count || 0) >= cap) {
-      return { error: "cap" as const, live: count || 0, cap };
-    }
+    await notifyMatches({
+      id: savedId,
+      title: next.title,
+      purpose: next.purpose,
+      area: next.area,
+      beds: next.beds,
+      priceGyd: next.price_gyd,
+    });
   }
-  if (!existing) {
-    const created = newId("gy");
-    const { error: insertError } = await db.from("properties").insert({ id: created, ...next, held_live: false });
-    if (insertError) return { error: "The listing could not be saved." };
-    return { id: created };
+  return { id: savedId };
+}
+
+function columnMissing(error: { message?: string } | null, column: string) {
+  return String(error?.message || "").toLowerCase().includes(column);
+}
+
+async function writeProperty(
+  db: NonNullable<ReturnType<typeof serviceDb>>,
+  mode: "insert" | "update",
+  id: string,
+  agentId: string,
+  payload: Record<string, unknown>,
+) {
+  const run = (row: Record<string, unknown>) => mode === "insert"
+    ? db.from("properties").insert(row)
+    : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
+  let row = { ...payload };
+  let result = await run(row);
+  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note"];
+  while (result.error) {
+    const missing = optional.find((column) => column in row && columnMissing(result.error, column));
+    if (!missing) return result.error;
+    delete row[missing];
+    result = await run(row);
   }
-  const { error: updateError } = await db.from("properties").update(next).eq("id", id).eq("agent_id", profile.id);
-  if (updateError) return { error: "The listing could not be saved." };
-  return { id };
+  return null;
 }
 
 export async function duplicateListing(profile: Profile, id: string) {
@@ -224,6 +272,16 @@ export async function duplicateListing(profile: Profile, id: string) {
     featured: false,
     photo_urls: [],
     held_live: false,
+    ...(typeof (data as { title_ref?: unknown }).title_ref === "string" ? { title_ref: (data as { title_ref: string }).title_ref } : {}),
+    ...(typeof (data as { title_status?: unknown }).title_status === "string" ? { title_status: (data as { title_status: string }).title_status } : {}),
+    ...(Array.isArray((data as { mobile_networks?: unknown }).mobile_networks) ? { mobile_networks: (data as { mobile_networks: string[] }).mobile_networks } : {}),
+    ...(Array.isArray((data as { broadband_providers?: unknown }).broadband_providers) ? { broadband_providers: (data as { broadband_providers: string[] }).broadband_providers } : {}),
+    ...(typeof (data as { broadband_speed?: unknown }).broadband_speed === "string" ? { broadband_speed: (data as { broadband_speed: string }).broadband_speed } : {}),
+    ...(typeof (data as { water_supply?: unknown }).water_supply === "string" ? { water_supply: (data as { water_supply: string }).water_supply } : {}),
+    ...(typeof (data as { electricity?: unknown }).electricity === "string" ? { electricity: (data as { electricity: string }).electricity } : {}),
+    ...(typeof (data as { road_access?: unknown }).road_access === "string" ? { road_access: (data as { road_access: string }).road_access } : {}),
+    ...(typeof (data as { drainage_note?: unknown }).drainage_note === "string" ? { drainage_note: (data as { drainage_note: string }).drainage_note } : {}),
+    ...(typeof (data as { area_note?: unknown }).area_note === "string" ? { area_note: (data as { area_note: string }).area_note } : {}),
   });
   if (insertError) return { error: "The copy could not be made." };
   return { id: copyId };
@@ -270,6 +328,8 @@ function publicLead(row: Record<string, unknown>, listing: Listing | undefined) 
     home: listing ? listing.title : "Home removed",
     area: listing?.area || "",
     purpose: listing?.purpose || "",
+    source: "Guyana Keys",
+    intent: String(row.intent || ""),
   };
 }
 
@@ -362,13 +422,45 @@ export async function updateLead(profile: Profile, body: Record<string, unknown>
   patch.next_step = scored.nextStep;
   const saved = await db.from("enquiries").update(patch).eq("id", id).eq("agent_id", profile.id);
   if (saved.error) return { error: "The lead could not be saved." };
+  const buyerId = row.buyer_id ? String(row.buyer_id) : null;
+  const propertyId = String(row.property_id || "");
+  const phone = String(row.phone || "");
+  if (typeof patch.viewing_at === "string" && patch.viewing_at) {
+    await notifyBuyer({
+      phone,
+      buyerId,
+      kind: "viewing",
+      propertyId,
+      enquiryId: id,
+      text: viewingNotice(title, patch.viewing_at),
+      stamp: patch.viewing_at,
+    });
+  }
+  if (body.openWhatsapp && typeof patch.agent_reply === "string" && patch.agent_reply.trim()) {
+    const reply = patch.agent_reply.trim();
+    await notifyBuyer({
+      phone,
+      buyerId,
+      kind: "reply",
+      propertyId,
+      enquiryId: id,
+      text: reply,
+      stamp: replyStamp(reply),
+    });
+  }
   return { ok: true };
+}
+
+function replyStamp(reply: string) {
+  let hash = 0;
+  for (let index = 0; index < reply.length; index += 1) hash = (hash * 31 + reply.charCodeAt(index)) >>> 0;
+  return hash.toString(36);
 }
 
 export async function createRequest(profile: Profile, body: Record<string, unknown>) {
   const { db, error } = dbOrError();
   if (!db) return { error };
-  const kind = body.kind === "feature" || body.kind === "plan" || body.kind === "help" ? body.kind : "";
+  const kind = body.kind === "feature" || body.kind === "plan" || body.kind === "help" || body.kind === "advertise" ? body.kind : "";
   if (!kind) return { error: "Choose a request." };
   if (kind === "plan") {
     if (profile.plan === "agency") return { error: "This account is already on a paid plan." };
@@ -392,7 +484,15 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
   }
   const typed = `${String(body.subject || "").trim()}${body.message ? `\n${String(body.message).trim()}` : ""}`.trim();
   if (kind === "help" && typed.length < 3) return { error: "Write a subject and a message." };
-  const message = typed || (kind === "plan"
+  if (kind === "advertise") {
+    const { data } = await db.from("requests").select("id,status").eq("agent_id", profile.id).eq("kind", "advertise");
+    if ((data || []).some((item) => item.status === "submitted" || item.status === "instructions")) {
+      return { error: "An advertise request is already with the admin." };
+    }
+  }
+  const message = typed || (kind === "advertise"
+    ? "Asked to advertise. Listings stay free. Payment is with the admin."
+    : kind === "plan"
     ? "Asked to upgrade the package. Payment is with the admin."
     : `Asked to feature ${listingTitle}. Payment is with the admin.`);
   const { error: insertError } = await db.from("requests").insert({
@@ -404,7 +504,10 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
     instructions: "",
     message,
   });
-  if (insertError) return { error: "The request could not be sent." };
+  if (insertError) {
+    if (String(insertError.message || "").toLowerCase().includes("kind")) return { error: "That request is not ready on this desk yet." };
+    return { error: "The request could not be sent." };
+  }
   return { ok: true };
 }
 
@@ -412,7 +515,7 @@ export async function agentPlan(profile: Profile) {
   const { db, error } = dbOrError();
   if (!db) return { error };
   const [requests, rows] = await Promise.all([
-    db.from("requests").select("id,kind,property_id,status,instructions,message,created_at").eq("agent_id", profile.id).order("created_at", { ascending: false }),
+    db.from("requests").select("*").eq("agent_id", profile.id).order("created_at", { ascending: false }),
     ownListings(profile.id),
   ]);
   const listings = rows.map((row) => mapProperty(row as Record<string, unknown>));
@@ -422,8 +525,21 @@ export async function agentPlan(profile: Profile) {
     cap: profile.listingCap,
     live: liveListings.length,
     requests: (requests.data || []).map((row) => {
-      const listing = listings.find((item) => item.id === String(row.property_id || ""));
-      return { ...row, listing: listing?.title || "", featured: Boolean(listing?.featured) };
+      const record = row as Record<string, unknown>;
+      const listing = listings.find((item) => item.id === String(record.property_id || ""));
+      return {
+        id: String(record.id || ""),
+        kind: String(record.kind || ""),
+        property_id: record.property_id ? String(record.property_id) : null,
+        status: String(record.status || ""),
+        instructions: String(record.instructions || ""),
+        message: String(record.message || ""),
+        listing: listing?.title || "",
+        featured: Boolean(listing?.featured),
+        amountGyd: Number(record.amount_gyd || 0),
+        paidAt: record.paid_at ? String(record.paid_at) : "",
+        paidBy: String(record.paid_by || ""),
+      };
     }),
     liveListings: liveListings.map((item) => ({ id: item.id, title: item.title, area: item.area, featured: Boolean(item.featured) })),
   };
@@ -448,14 +564,22 @@ export async function saveAgentProfile(profile: Profile, body: Record<string, un
     const host = supabaseUrl();
     if (body.photoUrl.startsWith(`${host}/storage/v1/object/public/listing-photos/${profile.id}/`)) photo = body.photoUrl;
   }
-  const { error: updateError } = await db.from("profiles").update({
+  const gra = String(body.graLicence || "").trim().slice(0, 40);
+  const payload: Record<string, unknown> = {
     name,
     company,
     phone,
     address,
     areas: picked,
     photo_url: photo,
-  }).eq("id", profile.id);
+    gra_licence: gra,
+  };
+  let { error: updateError } = await db.from("profiles").update(payload).eq("id", profile.id);
+  if (updateError && String(updateError.message || "").toLowerCase().includes("gra_licence")) {
+    if (gra) return { error: "GRA licence is not ready on this desk yet." };
+    delete payload.gra_licence;
+    ({ error: updateError } = await db.from("profiles").update(payload).eq("id", profile.id));
+  }
   if (updateError) {
     if (String(updateError.message || "").toLowerCase().includes("address")) return { error: "Address is not ready on this desk yet." };
     return { error: "The profile could not be saved." };

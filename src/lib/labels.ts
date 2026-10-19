@@ -37,6 +37,7 @@ export function requestStatusLabel(status: string) {
 export function requestKindLabel(kind: string) {
   if (kind === "plan") return "Package";
   if (kind === "feature") return "Feature";
+  if (kind === "advertise") return "Advertise";
   if (kind === "help") return "Help";
   return "Request";
 }

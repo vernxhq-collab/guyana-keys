@@ -157,6 +157,8 @@ export async function adminAgent(id: string) {
       cap: shownCap(String(data.plan || "starter"), Number(data.listing_cap || 3)),
       live: listings.filter((row) => row.status === "live").length,
       suspended: Boolean(data.suspended),
+      graLicence: String(data.gra_licence || ""),
+      verified: Boolean(data.verified),
       createdAt: String(data.created_at || ""),
     },
     listings: listings.map((row) => ({
@@ -254,6 +256,9 @@ export async function adminRequest(id: string) {
       company: String(agent.data?.company || ""),
       listing: listing.data?.title ? `${listing.data.title}${listing.data.area ? " · " + listing.data.area : ""}` : "",
       line: summary.line,
+      amountGyd: Number(data.amount_gyd || 0),
+      paidAt: data.paid_at ? String(data.paid_at) : "",
+      paidBy: text(data.paid_by),
     },
   };
 }
@@ -272,7 +277,7 @@ export async function saveInstructions(id: string, instructions: string) {
   return { ok: true };
 }
 
-export async function markPaid(id: string) {
+export async function markPaid(id: string, receipt: { amountGyd?: number; paidBy?: string } = {}) {
   const db = serviceDb();
   if (!db) return { error: "The request could not be updated." };
   const { data } = await db.from("requests").select("*").eq("id", id).maybeSingle();
@@ -285,17 +290,28 @@ export async function markPaid(id: string) {
     await remember(db, `Marked ${agent.data?.name || "an agent"}'s help request done.`);
     return { ok: true };
   }
-  const { error } = await db.from("requests").update({ status: "paid" }).eq("id", id);
-  if (error) return { error: "The request could not be updated." };
+  const amount = Math.round(Number(receipt.amountGyd || 0));
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Enter the amount paid in GYD." };
+  const paidBy = String(receipt.paidBy || "").trim().slice(0, 120);
+  const paidAt = new Date().toISOString();
+  const { error } = await db.from("requests").update({ status: "paid", amount_gyd: amount, paid_at: paidAt, paid_by: paidBy }).eq("id", id);
+  if (error) {
+    if (String(error.message || "").toLowerCase().includes("amount_gyd")) return { error: "Payment receipt is not ready on this desk yet." };
+    return { error: "The request could not be updated." };
+  }
   if (data.kind === "plan" && data.agent_id) {
-    await db.from("profiles").update({ plan: "agency", listing_cap: 20 }).eq("id", data.agent_id);
+    await db.from("profiles").update({ plan: "agency" }).eq("id", data.agent_id);
     const agent = await db.from("profiles").select("name").eq("id", data.agent_id).maybeSingle();
-    await remember(db, `Marked ${agent.data?.name || "an agent"}'s plan paid. The plan is agency and the cap is 20.`);
+    await remember(db, `Marked ${agent.data?.name || "an agent"}'s plan paid. GYD ${amount.toLocaleString("en-GY")}${paidBy ? `, marked by ${paidBy}` : ""}. Listings stay free.`);
+  }
+  if (data.kind === "advertise" && data.agent_id) {
+    const agent = await db.from("profiles").select("name").eq("id", data.agent_id).maybeSingle();
+    await remember(db, `Marked ${agent.data?.name || "an agent"}'s advertising paid. GYD ${amount.toLocaleString("en-GY")}${paidBy ? `, marked by ${paidBy}` : ""}. Listings stay free.`);
   }
   if (data.kind === "feature" && data.property_id) {
     await db.from("properties").update({ featured: true }).eq("id", data.property_id);
     const listing = await db.from("properties").select("title").eq("id", data.property_id).maybeSingle();
-    await remember(db, `Marked the feature request paid for ${listing.data?.title || "a listing"}.`);
+    await remember(db, `Marked the feature request paid for ${listing.data?.title || "a listing"}. GYD ${amount.toLocaleString("en-GY")}${paidBy ? `, marked by ${paidBy}` : ""}.`);
   }
   return { ok: true };
 }
@@ -307,10 +323,21 @@ export async function setCap(agentId: string, cap: number) {
   const { data } = await db.from("profiles").select("name,plan").eq("id", agentId).eq("role", "agent").maybeSingle();
   if (!data) return { error: "That agent was not found." };
   const rounded = Math.round(cap);
-  if (String(data.plan || "starter") !== "agency" && rounded > 3) return { error: "A free plan stays at 3 live listings." };
   const { error } = await db.from("profiles").update({ listing_cap: rounded }).eq("id", agentId).eq("role", "agent");
   if (error) return { error: "The cap could not be saved." };
   await remember(db, `Set ${data.name || "an agent"}'s cap to ${rounded}.`);
+  return { ok: true };
+}
+
+export async function setVerified(agentId: string, verified: boolean) {
+  const db = serviceDb();
+  if (!db) return { error: "Verification could not be saved." };
+  const { data } = await db.from("profiles").select("name").eq("id", agentId).eq("role", "agent").maybeSingle();
+  if (!data) return { error: "That agent was not found." };
+  const { error } = await db.from("profiles").update({ verified }).eq("id", agentId).eq("role", "agent");
+  if (error && String(error.message || "").toLowerCase().includes("verified")) return { error: "Verification is not ready on this desk yet." };
+  if (error) return { error: "Verification could not be saved." };
+  await remember(db, verified ? `Marked ${data.name || "an agent"} verified on Guyana Keys.` : `Removed the verified badge for ${data.name || "an agent"}.`);
   return { ok: true };
 }
 
@@ -318,14 +345,11 @@ export async function setPlan(agentId: string, plan: string) {
   const db = serviceDb();
   if (!db) return { error: "The plan could not be saved." };
   if (plan !== "starter" && plan !== "agency") return { error: "Choose starter or agency." };
-  const listingCap = plan === "agency" ? 20 : 3;
   const { data } = await db.from("profiles").select("name").eq("id", agentId).eq("role", "agent").maybeSingle();
   if (!data) return { error: "That agent was not found." };
-  const { error } = await db.from("profiles").update({ plan, listing_cap: listingCap }).eq("id", agentId).eq("role", "agent");
+  const { error } = await db.from("profiles").update({ plan }).eq("id", agentId).eq("role", "agent");
   if (error) return { error: "The plan could not be saved." };
-  await remember(db, plan === "agency"
-    ? `Set ${data.name || "an agent"} to agency. The cap is 20.`
-    : `Set ${data.name || "an agent"} to the free plan. The cap is 3.`);
+  await remember(db, `Set ${data.name || "an agent"} to ${plan}. Listings stay free. Featuring and advertising are paid.`);
   return { ok: true };
 }
 

@@ -2,6 +2,7 @@ import { leadScore } from "./assist";
 import { loadCatalog, resolveTouched } from "./catalog";
 import type { Listing } from "./data";
 import { newId, stageLabel } from "./labels";
+import { leadIntent, notifyAgentEnquiry } from "./notify";
 import { addEvent, leadFromEnquiry, openEnquiry } from "./records";
 import type { Profile } from "./session";
 import { serviceDb } from "./supabase";
@@ -26,11 +27,17 @@ async function agentForProperty(propertyId: string) {
 export async function buyerDesk(profile: Profile) {
   const db = serviceDb();
   if (!db) return { error: "The desk is not connected." as const };
-  const [saves, enquiries, searches, views] = await Promise.all([
+  const email = profile.email.trim().toLowerCase();
+  const noticeQuery = db.from("notices").select("id,kind,body,status,property_id,created_at").order("created_at", { ascending: false }).limit(30);
+  const notices = email.includes("@")
+    ? noticeQuery.or(`user_id.eq.${profile.id},email.eq.${email.replace(/[,]/g, "")}`)
+    : noticeQuery.eq("user_id", profile.id);
+  const [saves, enquiries, searches, views, noticeRows] = await Promise.all([
     db.from("saved_homes").select("property_id,created_at").eq("user_id", profile.id),
     db.from("enquiries").select("id,property_id,name,phone,note,abroad,move_in,occupants,stage,agent_reply,viewing_at,viewing_request,created_at").eq("buyer_id", profile.id).order("created_at", { ascending: false }),
     db.from("saved_searches").select("id,label,purpose,area,beds,max_price,created_at").eq("user_id", profile.id).order("created_at", { ascending: false }),
     db.from("recently_viewed").select("property_id,viewed_at").eq("user_id", profile.id).order("viewed_at", { ascending: false }).limit(6),
+    notices,
   ]);
   const savedIds = (saves.data || []).map((row) => String(row.property_id));
   const enquiryRows = (enquiries.data || []) as Record<string, unknown>[];
@@ -72,6 +79,14 @@ export async function buyerDesk(profile: Profile) {
       maxPrice: Number(row.max_price || 0),
     })),
     recent,
+    notices: noticeRows.error ? [] : (noticeRows.data || []).map((row) => ({
+      id: String(row.id || ""),
+      kind: String(row.kind || ""),
+      body: String(row.body || ""),
+      status: String(row.status || ""),
+      propertyId: String(row.property_id || ""),
+      createdAt: String(row.created_at || ""),
+    })),
   };
 }
 
@@ -111,7 +126,7 @@ async function publicHome(propertyId: string) {
   if (!listing) return null;
   const home = await agentForProperty(propertyId);
   const agentId = home?.agentId && /^[0-9a-f-]{36}$/i.test(home.agentId) ? home.agentId : null;
-  return { agentId, title: listing.title, purpose: listing.purpose };
+  return { agentId, title: listing.title, purpose: listing.purpose, area: listing.area };
 }
 
 export async function saveHome(profile: Profile, propertyId: string) {
@@ -138,6 +153,7 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
   if (!home) return { error: "That home was not found." };
   const purpose = home.purpose || "Sale";
   const title = home.title || "this home";
+  const intent = await leadIntent(profile.id, input.propertyId, home.area || "");
   const opened = await openEnquiry({
     buyerId: profile.id,
     propertyId: input.propertyId,
@@ -150,6 +166,7 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
     occupants: purpose === "Rent" ? input.occupants : null,
     viewingRequest: input.viewingRequest,
     title,
+    intent,
   });
   if ("error" in opened && opened.error) return { error: opened.error };
   const row = opened.row;
@@ -172,6 +189,18 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
   if (db) {
     const score = leadScore(leadFromEnquiry({ ...row, name: input.name, note: input.note, abroad: input.abroad, viewing_request: input.viewingRequest || row.viewing_request || null, created_at: row.created_at || new Date().toISOString(), stage: row.stage || "new", agent_reply: row.agent_reply || "" }, title));
     await db.from("enquiries").update({ score: score.score, next_step: score.nextStep }).eq("id", row.id);
+  }
+  if (opened.created) {
+    await notifyAgentEnquiry({
+      agentId: home.agentId,
+      buyerName: input.name.trim(),
+      phone: input.phone.trim(),
+      title,
+      note: input.note.trim(),
+      intent,
+      propertyId: input.propertyId,
+      enquiryId: text(row.id),
+    });
   }
   return { ok: true, viewing: Boolean(input.viewingRequest) };
 }

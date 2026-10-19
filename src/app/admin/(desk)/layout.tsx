@@ -1,5 +1,4 @@
 import { DeskNav } from "../../../components/DeskNav";
-import { SessionCatcher } from "../../../components/SessionCatcher";
 import { SignOut } from "../../../components/SignOut";
 import { grantAdmin, isAdminEmail, readSession } from "../../../lib/session";
 
@@ -13,7 +12,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const allowed = profile?.role === "admin" && Boolean(session && isAdminEmail(session.user.email));
   return (
     <main className="wrap section desk">
-      <SessionCatcher desk="admin" />
       {!session ? (
         <>
           <h1>Admin desk</h1>
@@ -25,11 +23,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p>This desk is for the Guyana Keys admin.</p>
           {session?.user.email ? <p className="quiet">Signed in as {session.user.email}.</p> : null}
           <a className="btn" href="/admin/login">Admin sign in</a>
-          {session ? <SignOut next="/admin/login" /> : null}
+          <SignOut next="/admin/login" label="Log out" />
         </div>
       ) : (
         <>
-          <DeskNav label="Admin desk" name="Admin" items={items} />
+          <DeskNav label="Admin desk" name="Admin" items={items} signOut="/admin/login" />
           {children}
         </>
       )}
