@@ -19,6 +19,7 @@ export function DeskNav({ label, name, items, signOut }: { label: string; name: 
           className="desk-logout"
           type="button"
           onClick={async () => {
+            await fetch("/api/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "leave" }) }).catch(() => null);
             await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
             window.location.href = signOut;
           }}

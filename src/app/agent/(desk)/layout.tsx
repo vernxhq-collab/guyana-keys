@@ -1,10 +1,21 @@
 import { DeskNav } from "../../../components/DeskNav";
 import { SignOut } from "../../../components/SignOut";
+import { readPreview } from "../../../lib/preview/http";
 import { canUseAgentDesk, readSession } from "../../../lib/session";
 
-const items: [string, string][] = [["Home", "/agent"], ["Listings", "/agent/listings"], ["Leads", "/agent/leads"], ["Plan", "/agent/plan"], ["Help", "/agent/help"], ["Profile", "/agent/profile"]];
+const items: [string, string][] = [["Today", "/agent"], ["Listings", "/agent/listings"], ["Leads", "/agent/leads"], ["Calendar", "/agent/calendar"], ["Plan", "/agent/plan"]];
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
+  const preview = await readPreview();
+  if (preview?.actor.kind === "agent") {
+    return (
+      <main className="wrap section desk agent-desk">
+        <DeskNav label="Agent desk" name={`${preview.actor.name} · ${preview.actor.agency}`} items={items} signOut="/preview" />
+        <p className="quiet desk-links"><a href="/agent/profile">Profile</a> · <a href="/agent/help">Help</a> · <a href="/preview">Test buyer</a></p>
+        {children}
+      </main>
+    );
+  }
   const session = await readSession();
   return (
     <main className="wrap section desk agent-desk">
@@ -28,7 +39,8 @@ export default async function AgentLayout({ children }: { children: React.ReactN
         </div>
       ) : (
         <>
-          <DeskNav label="Agent desk" name="Agent" items={items} signOut="/agent/login" />
+          <DeskNav label="Agent desk" name={session.profile?.name || "Agent"} items={items} signOut="/agent/login" />
+          <p className="quiet desk-links"><a href="/agent/profile">Profile</a> · <a href="/agent/help">Help</a></p>
           {children}
         </>
       )}

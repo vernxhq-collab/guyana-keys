@@ -91,7 +91,24 @@ export async function agentHome(profile: Profile) {
     viewings,
     openRequests: (requests.data || []).length,
     today: actions.slice(0, 12),
+    greetingName: profile.name,
+    agency: profile.company,
   };
+}
+
+export async function agentCalendar(profile: Profile) {
+  const [rows, leads] = await Promise.all([ownListings(profile.id), ownLeads(profile.id)]);
+  const listings = rows.map((row) => mapProperty(row as Record<string, unknown>));
+  const viewings = leads
+    .filter((lead) => lead.viewing_at)
+    .map((lead) => ({
+      id: String(lead.id),
+      name: String(lead.name || "Buyer"),
+      home: titleOf(listings, String(lead.property_id || "")),
+      viewingAt: String(lead.viewing_at),
+      href: `/agent/leads/${lead.id}`,
+    }));
+  return { viewings };
 }
 
 export async function agentListings(profile: Profile) {

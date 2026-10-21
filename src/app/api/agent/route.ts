@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
-import { agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
+import { agentCalendar, agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
+import { encodeWorld, readPreview, WORLD_COOKIE } from "../../../lib/preview/http";
+import { previewGet, previewPost } from "../../../lib/preview/handle";
+import type { World } from "../../../lib/preview/world";
 import { canUseAgentDesk, readSession } from "../../../lib/session";
+
+function withWorld(body: unknown, status: number, world?: World) {
+  const response = NextResponse.json(body, { status });
+  if (world) {
+    response.cookies.set(WORLD_COOKIE, encodeWorld(world), { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.VERCEL_ENV === "preview", maxAge: 60 * 60 * 24 * 7 });
+  }
+  return response;
+}
 
 async function agent() {
   const session = await readSession();
@@ -12,6 +23,12 @@ async function agent() {
 }
 
 export async function GET(request: Request) {
+  const preview = await readPreview();
+  if (preview) {
+    const url = new URL(request.url);
+    const result = previewGet(preview.world, preview.actor, url.searchParams.get("part") || "home", url.searchParams.get("id") || "");
+    return NextResponse.json(result.body, { status: result.status });
+  }
   const gate = await agent();
   if ("error" in gate) return gate.error;
   const part = new URL(request.url).searchParams.get("part") || "home";
@@ -21,6 +38,7 @@ export async function GET(request: Request) {
   if (part === "listing") return NextResponse.json(await agentListing(gate.profile, id || "new"));
   if (part === "leads") return NextResponse.json(await agentLeadList(gate.profile));
   if (part === "lead") return NextResponse.json(await agentLead(gate.profile, id));
+  if (part === "calendar") return NextResponse.json(await agentCalendar(gate.profile));
   if (part === "plan") return NextResponse.json(await agentPlan(gate.profile));
   if (part === "profile") {
     return NextResponse.json({
@@ -31,9 +49,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}));
+  const preview = await readPreview();
+  if (preview) {
+    const result = previewPost(preview.world, preview.actor, body);
+    return withWorld(result.body, result.status, result.world);
+  }
   const gate = await agent();
   if ("error" in gate) return gate.error;
-  const body = await request.json().catch(() => ({}));
   const action = String(body.action || "");
   let result: { error?: string; id?: string; ok?: boolean; live?: number; cap?: number } = { error: "Unknown action." };
   if (action === "saveListing") result = await saveListing(gate.profile, body);
