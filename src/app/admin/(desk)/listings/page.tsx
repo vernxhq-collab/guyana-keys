@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Row = { id: string; title: string; area: string; agentName: string; status?: string; featured?: boolean; featurePaid: boolean };
+type Row = { id: string; title: string; area: string; agentName: string; status?: string; featured?: boolean; featurePaid: boolean; waiting?: boolean };
 
 export default function AdminListingsPage() {
   const [q, setQ] = useState("");
@@ -37,8 +37,8 @@ export default function AdminListingsPage() {
       {rows.length === 0 ? <p>No listing matches.</p> : rows.map((row) => (
         <article className="panel" key={row.id}>
           <strong>{row.title}</strong>
-          <p className="quiet">{row.area} · {row.agentName} · {row.status === "live" ? "Live" : "Hidden"} · {row.featured ? "Featured" : "Not featured"}</p>
-          {row.status === "live" ? <button className="btn ghost" type="button" onClick={() => void act({ action: "hide", propertyId: row.id })}>Hide</button> : <button className="btn ghost" type="button" onClick={() => void act({ action: "publish", propertyId: row.id })}>Publish</button>}
+          <p className="quiet">{row.area} · {row.agentName} · {row.status === "live" ? "Live" : row.waiting ? "Waiting for account approval" : "Hidden"} · {row.featured ? "Featured" : "Not featured"}</p>
+          {row.status === "live" ? <button className="btn ghost" type="button" onClick={() => void act({ action: "hide", propertyId: row.id })}>Hide</button> : row.waiting ? <p className="quiet">Approve the agent on their person page before this listing can go live.</p> : <button className="btn ghost" type="button" onClick={() => void act({ action: "publish", propertyId: row.id })}>Publish</button>}
           {row.featured ? <button className="btn ghost" type="button" onClick={() => void act({ action: "unfeature", propertyId: row.id })}>Unfeature</button> : row.featurePaid ? <button className="btn ghost" type="button" onClick={() => void act({ action: "feature", propertyId: row.id })}>Mark featured</button> : null}
         </article>
       ))}

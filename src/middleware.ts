@@ -13,24 +13,26 @@ function expOf(token: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  if (process.env.VERCEL_ENV === "preview") return NextResponse.next();
+  const headers = new Headers(request.headers);
+  headers.set("x-gk-path", request.nextUrl.pathname);
+  const pass = () => NextResponse.next({ request: { headers } });
+  if (process.env.VERCEL_ENV === "preview") return pass();
   const refresh = request.cookies.get("gk_refresh")?.value || "";
   const access = request.cookies.get("gk_session")?.value || "";
-  if (!refresh) return NextResponse.next();
-  if (access && expOf(access) * 1000 > Date.now() + 60_000) return NextResponse.next();
+  if (!refresh) return pass();
+  if (access && expOf(access) * 1000 > Date.now() + 60_000) return pass();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  if (!url || !key) return NextResponse.next();
+  if (!url || !key) return pass();
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data } = await client.auth.refreshSession({ refresh_token: refresh });
   const session = data.session;
   if (!session?.access_token || !session.refresh_token) {
-    const response = NextResponse.next();
+    const response = pass();
     response.cookies.set("gk_session", "", { path: "/", maxAge: 0 });
     response.cookies.set("gk_refresh", "", { path: "/", maxAge: 0 });
     return response;
   }
-  const headers = new Headers(request.headers);
   const cookie = request.cookies.getAll()
     .filter((item) => item.name !== "gk_session" && item.name !== "gk_refresh")
     .map((item) => `${item.name}=${item.value}`)
@@ -44,4 +46,19 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/agent/:path*", "/account/:path*", "/admin/:path*", "/api/agent/:path*", "/api/buyer/:path*", "/api/admin/:path*"] };
+export const config = {
+  matcher: [
+    "/agent",
+    "/agent/:path*",
+    "/account",
+    "/account/:path*",
+    "/admin",
+    "/admin/:path*",
+    "/api/agent",
+    "/api/agent/:path*",
+    "/api/buyer",
+    "/api/buyer/:path*",
+    "/api/admin",
+    "/api/admin/:path*",
+  ],
+};

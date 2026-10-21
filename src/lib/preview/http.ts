@@ -6,7 +6,7 @@ export const WORLD_COOKIE = "gk_preview_world";
 export const ACTOR_COOKIE = "gk_preview_actor";
 
 export function previewEnabled() {
-  return process.env.VERCEL_ENV !== "production";
+  return process.env.PREVIEW_DESK === "1";
 }
 
 export { decodeWorld, encodeWorld, fitWorld };

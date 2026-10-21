@@ -1,5 +1,31 @@
--- Runs after scripts/rls-fixture.sql and supabase/p0-rls.sql.
--- Each block is a buyer (or anon) attack. A leaked row fails the script.
+-- Runs after scripts/rls-seed.sql and supabase/p0-rls.sql.
+-- Safe to run more than once. A leaked or unexpected row fails the script.
+
+delete from public.enquiries where id in ('enq-attack', 'enq-owned');
+delete from public.properties where id in ('attack-live', 'agent-ok', 'home-stopped', 'home-buyer');
+update public.properties set title = 'Bel Air house', status = 'live', featured = false where id = 'home-1';
+update public.properties set title = 'Draft house', status = 'hidden', featured = false where id = 'home-hidden';
+
+-- The suspended agent is seeded before the backfill, with approved left null.
+-- After p0-rls.sql that flag must still be false.
+do $$
+declare
+  stopped uuid := '33333333-3333-4333-8333-333333333333';
+  agent uuid := '22222222-2222-4222-8222-222222222222';
+begin
+  if not exists (
+    select 1 from public.profiles
+    where id = stopped and role = 'agent' and suspended = true and approved = false
+  ) then
+    raise exception 'suspended agent was approved by the backfill';
+  end if;
+  if not exists (
+    select 1 from public.profiles
+    where id = agent and role = 'agent' and suspended = false and approved = true
+  ) then
+    raise exception 'active agent was not approved by the backfill';
+  end if;
+end $$;
 
 do $$
 declare
@@ -125,7 +151,102 @@ begin
 end $$;
 
 do $$
+declare
+  agent uuid := '22222222-2222-4222-8222-222222222222';
 begin
+  perform set_config('request.jwt.claim.sub', agent::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  set local role authenticated;
+  update public.properties set title = 'Renamed draft' where id = 'home-hidden';
+  reset role;
+  if not exists (select 1 from public.properties where id = 'home-hidden' and title = 'Renamed draft' and status = 'hidden') then
+    raise exception 'active agent could not edit a hidden listing';
+  end if;
+end $$;
+
+-- Result: allowed. Approval is account-level. An approved agent can edit a live
+-- listing through the database API. There is no second review of that edit.
+do $$
+declare
+  agent uuid := '22222222-2222-4222-8222-222222222222';
+begin
+  if not exists (
+    select 1 from public.profiles
+    where id = agent and role = 'agent' and suspended = false and approved = true
+  ) then
+    raise exception 'the live-listing edit was not run as an approved agent';
+  end if;
+  perform set_config('request.jwt.claim.sub', agent::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  set local role authenticated;
+  update public.properties set title = 'Edited live' where id = 'home-1';
+  reset role;
+  if not exists (
+    select 1 from public.properties
+    where id = 'home-1' and title = 'Edited live' and status = 'live'
+  ) then
+    raise exception 'approved agent could not edit a live listing';
+  end if;
+end $$;
+
+do $$
+declare
+  stopped uuid := '33333333-3333-4333-8333-333333333333';
+begin
+  if not exists (
+    select 1 from public.profiles
+    where id = stopped and role = 'agent' and suspended = true and approved = false
+  ) then
+    raise exception 'suspended agent was approved by the backfill';
+  end if;
+  insert into public.properties (id, agent_id, title, status, featured)
+  values ('home-stopped', stopped, 'Still mine', 'hidden', false)
+  on conflict (id) do update set agent_id = stopped, title = 'Still mine', status = 'hidden';
+
+  perform set_config('request.jwt.claim.sub', stopped::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  set local role authenticated;
+  update public.properties set title = 'Taken' where id = 'home-stopped';
+  delete from public.properties where id = 'home-stopped';
+  reset role;
+  if exists (select 1 from public.properties where id = 'home-stopped' and title = 'Taken') then
+    raise exception 'suspended agent edited a listing';
+  end if;
+  if not exists (select 1 from public.properties where id = 'home-stopped') then
+    raise exception 'suspended agent deleted a listing';
+  end if;
+  if exists (
+    select 1 from public.profiles
+    where id = stopped and approved = true
+  ) then
+    raise exception 'suspended agent was approved by the backfill';
+  end if;
+end $$;
+
+do $$
+declare
+  buyer uuid := '11111111-1111-4111-8111-111111111111';
+begin
+  insert into public.properties (id, agent_id, title, status, featured)
+  values ('home-buyer', buyer, 'Not yours', 'hidden', false)
+  on conflict (id) do update set agent_id = buyer, title = 'Not yours', status = 'hidden';
+
+  perform set_config('request.jwt.claim.sub', buyer::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  set local role authenticated;
+  update public.properties set title = 'Stolen edit', status = 'live' where id = 'home-buyer';
+  reset role;
+  if exists (select 1 from public.properties where id = 'home-buyer' and (title = 'Stolen edit' or status = 'live')) then
+    raise exception 'buyer edited a listing they do not publish';
+  end if;
+end $$;
+
+-- Phase tables exist on the fixture database. The real migration does not create them.
+do $$
+begin
+  if to_regclass('public.agencies') is null then
+    return;
+  end if;
   if not (select relrowsecurity from pg_class where oid = 'public.agencies'::regclass) then
     raise exception 'agencies has no row security';
   end if;

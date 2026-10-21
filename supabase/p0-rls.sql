@@ -1,6 +1,12 @@
 -- DO NOT RUN on production until Boss approves.
 -- One transaction. Refuses to run if a required column is missing.
 -- Does not send mail. Does not deploy. Service role still bypasses RLS.
+--
+-- Read-only. Run this SELECT alone first if you want the list of accounts
+-- the approval backfill will approve. It changes nothing.
+-- select id, email, name, role
+-- from public.profiles
+-- where role in ('agent', 'admin') and suspended = false;
 
 begin;
 
@@ -43,8 +49,12 @@ end
 $check$;
 
 alter table public.profiles add column if not exists approved boolean;
-update public.profiles set approved = true where role in ('agent', 'admin') and approved is null;
+update public.profiles set approved = true
+where role in ('agent', 'admin') and suspended = false and approved is null;
 update public.profiles set approved = false where approved is null;
+-- An older copy of this file approved every agent and admin, including suspended ones.
+-- Clear that on every run. Safe to run again: a suspended account stays unapproved.
+update public.profiles set approved = false where suspended = true and approved = true;
 alter table public.profiles alter column approved set default false;
 alter table public.profiles alter column approved set not null;
 
@@ -57,6 +67,11 @@ begin
   end if;
 end
 $alerts$;
+
+-- Optional. Leave this commented. Existing alerts were saved before confirm-by-email.
+-- With it commented, those rows stay unconfirmed and are not emailed until the person confirms.
+-- Uncomment only if those people should keep receiving matches without a new confirm click.
+-- update public.alerts set confirmed = true where confirmed is not true and unsubscribed is not true;
 
 create or replace function private.guard_profile_update()
 returns trigger
@@ -156,28 +171,11 @@ begin
 end;
 $$;
 
--- PUBLIC must not call these. The signed-in role still needs EXECUTE or the trigger cannot fire.
-revoke all on function private.guard_profile_update() from public;
-revoke all on function private.guard_property_update() from public;
-revoke all on function private.guard_enquiry_insert() from public;
-grant execute on function private.guard_profile_update() to authenticated;
-grant execute on function private.guard_property_update() to authenticated;
-grant execute on function private.guard_enquiry_insert() to authenticated;
-
-do $roles$
-begin
-  if exists (select 1 from pg_roles where rolname = 'anon') then
-    revoke all on function private.guard_profile_update() from anon;
-    revoke all on function private.guard_property_update() from anon;
-    revoke all on function private.guard_enquiry_insert() from anon;
-  end if;
-  if exists (select 1 from pg_roles where rolname = 'service_role') then
-    grant execute on function private.guard_profile_update() to service_role;
-    grant execute on function private.guard_property_update() to service_role;
-    grant execute on function private.guard_enquiry_insert() to service_role;
-  end if;
-end
-$roles$;
+-- Triggers fire as the function owner. They do not need EXECUTE granted to
+-- authenticated, anon, or public. A signed-in session must not call these directly.
+revoke all on function private.guard_profile_update() from public, anon, authenticated;
+revoke all on function private.guard_property_update() from public, anon, authenticated;
+revoke all on function private.guard_enquiry_insert() from public, anon, authenticated;
 
 drop trigger if exists guard_profile_update on public.profiles;
 create trigger guard_profile_update before update on public.profiles
@@ -217,6 +215,39 @@ with check (
   and viewing_at is null
   and coalesce(source, 'guyana_keys') = 'guyana_keys'
   and coalesce(intent, '') = ''
+  and (
+    (property_id is null and agent_id is null)
+    or agent_id = (select p.agent_id from public.properties p where p.id = property_id)
+  )
+);
+
+drop policy if exists properties_agent_update on public.properties;
+create policy properties_agent_update on public.properties
+for update to authenticated
+using (
+  agent_id = auth.uid()
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'agent' and suspended = false
+  )
+)
+with check (
+  agent_id = auth.uid()
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'agent' and suspended = false
+  )
+);
+
+drop policy if exists properties_agent_delete on public.properties;
+create policy properties_agent_delete on public.properties
+for delete to authenticated
+using (
+  agent_id = auth.uid()
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'agent' and suspended = false
+  )
 );
 
 do $lock$

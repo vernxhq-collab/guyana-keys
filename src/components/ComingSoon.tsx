@@ -25,7 +25,13 @@ export function ComingSoon({
           body: JSON.stringify({ email: data.get("email"), area: data.get("area"), website: data.get("website") || "" }),
         });
         const payload = await res.json().catch(() => ({}));
-        setSent(res.ok ? "Check that email and confirm the alert. Nothing is sent until you confirm." : payload.error || "Could not save the alert.");
+        setSent(!res.ok
+          ? payload.error || "Could not save the alert."
+          : payload.step === "saved"
+            ? "Alert saved. We will email you when a home in that area is listed."
+            : payload.step === "paused"
+              ? "Alert saved. Confirm email is not connected yet, so this alert stays paused until you confirm it."
+              : "Check that email and confirm the alert. Nothing is sent until you confirm.");
       }}>
         <input name="email" type="email" required placeholder="Email" />
         <input name="area" required placeholder="Area, such as Bel Air Park" />

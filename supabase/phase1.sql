@@ -26,3 +26,16 @@ alter table agencies enable row level security;
 alter table audit_events enable row level security;
 revoke all on table agencies from public;
 revoke all on table audit_events from public;
+
+do $lock$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on table agencies from anon;
+    revoke all on table audit_events from anon;
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    revoke all on table agencies from authenticated;
+    revoke all on table audit_events from authenticated;
+  end if;
+end
+$lock$;

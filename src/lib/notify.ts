@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { noticeAllowed } from "./abuse";
 import { whenLabel } from "./assist";
 import { deskFrom, siteUrl } from "./contact";
@@ -38,6 +39,32 @@ export function e164(phone: string) {
 
 function siteOrigin() {
   return siteUrl();
+}
+
+function alertSecret() {
+  return process.env.ALERTS_TOKEN_SECRET || "";
+}
+
+export function searchStopQuery(id: string) {
+  const secret = alertSecret();
+  if (!id || !secret) return "";
+  const sig = createHmac("sha256", secret).update(`search:${id}`).digest("base64url");
+  return `search=${encodeURIComponent(id)}&sig=${sig}`;
+}
+
+export function searchStopValid(id: string, sig: string) {
+  const secret = alertSecret();
+  if (!id || !sig || !secret) return false;
+  const expected = createHmac("sha256", secret).update(`search:${id}`).digest("base64url");
+  const left = Buffer.from(sig);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
+function missingAlertColumns(error: { message?: string } | null) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("confirmed") || message.includes("unsubscribed") || message.includes("token") || message.includes("schema cache");
 }
 
 function missingRelation(error: { message?: string } | null, name: string) {
@@ -116,6 +143,22 @@ function listingLine(listing: MatchListing) {
   return `${listing.title} in ${listing.area} is live (${listing.purpose}, GYD ${price}). ${link}`;
 }
 
+async function sentThisHour(agentId: string) {
+  const db = serviceDb();
+  if (!db || !agentId) return null;
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count, error } = await db.from("notices").select("id", { count: "exact", head: true }).eq("user_id", agentId).gte("created_at", since);
+  if (error) return null;
+  return count || 0;
+}
+
+async function agentMayNotify(agentId: string) {
+  if (!agentId) return false;
+  const sent = await sentThisHour(agentId);
+  if (sent !== null && sent >= 20) return false;
+  return noticeAllowed(agentId);
+}
+
 export async function notifyMatches(listing: MatchListing) {
   try {
     const db = serviceDb();
@@ -146,9 +189,11 @@ export async function notifyMatches(listing: MatchListing) {
       const userId = String(search.user_id || "");
       const person = people.get(userId) || { email: "", phone: "" };
       const base = `search:${search.id}:${listing.id}`;
+      const stopQuery = searchStopQuery(String(search.id || ""));
+      const unsubscribe = stopQuery ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?${stopQuery}` : "";
       if (person.email && !seen.has(`${base}:email`)) {
-        const status = await sendEmail(person.email, subject, line);
-        await recordNotice({ userId, email: person.email, channel: "email", kind: "search", propertyId: listing.id, body: line, status, dedupe: `${base}:email` });
+        const status = await sendEmail(person.email, subject, line + unsubscribe);
+        await recordNotice({ userId, email: person.email, channel: "email", kind: "search", propertyId: listing.id, body: line + unsubscribe, status, dedupe: `${base}:email` });
       }
       if (person.phone && !seen.has(`${base}:whatsapp`)) {
         const status = await sendWhatsApp(person.phone, line);
@@ -158,20 +203,26 @@ export async function notifyMatches(listing: MatchListing) {
         await recordNotice({ userId, channel: "email", kind: "search", propertyId: listing.id, body: line, status: "skipped", dedupe: base });
       }
     }
-    if (alerts.error) {
-      if (String(alerts.error.message || "").toLowerCase().includes("confirmed")) return;
+    let alertRows: { id?: string; email?: string; area?: string; confirmed?: boolean; unsubscribed?: boolean; token?: string }[] = alerts.data || [];
+    let legacy = false;
+    if (alerts.error && missingAlertColumns(alerts.error)) {
+      const plain = await db.from("alerts").select("id,email,area");
+      if (plain.error) return;
+      alertRows = plain.data || [];
+      legacy = true;
+    } else if (alerts.error) {
       return;
     }
-    for (const alert of alerts.data || []) {
-      if (alert.confirmed !== true || alert.unsubscribed === true) continue;
+    for (const alert of alertRows) {
+      if (!legacy && (alert.confirmed !== true || alert.unsubscribed === true)) continue;
       const area = String(alert.area || "");
       if (!matchSearch({ area }, listing)) continue;
       const email = String(alert.email || "").trim();
       const dedupe = `alert:${alert.id}:${listing.id}:email`;
       if (!email || seen.has(dedupe) || !noticeAllowed(email)) continue;
-      const stop = alert.token ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?stop=${alert.token}` : "";
+      const stop = !legacy && alert.token ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?stop=${alert.token}` : "";
       const status = await sendEmail(email, subject, line + stop);
-      await recordNotice({ email, channel: "email", kind: "alert", propertyId: listing.id, body: line, status, dedupe });
+      await recordNotice({ email, channel: "email", kind: "alert", propertyId: listing.id, body: line + stop, status, dedupe });
     }
   } catch {
     // A notice problem must not block the listing.
@@ -233,33 +284,38 @@ export async function notifyAgentEnquiry(input: {
 }) {
   try {
     if (!input.agentId || !input.enquiryId) return;
-    if (!noticeAllowed(input.agentId)) return;
     const db = serviceDb();
     if (!db) return;
     const agent = await db.from("profiles").select("phone,email").eq("id", input.agentId).maybeSingle();
     const phone = String(agent.data?.phone || "");
     const email = String(agent.data?.email || "");
     const text = guyanaKeysLeadMessage(input);
-    const whatsapp = await sendWhatsApp(phone, text);
-    await recordNotice({
-      phone,
-      channel: "whatsapp",
-      kind: "enquiry",
-      propertyId: input.propertyId,
-      body: text,
-      status: whatsapp,
-      dedupe: `enquiry:${input.enquiryId}`,
-    });
-    const mailed = await sendEmail(email, "Guyana Keys Lead", text);
-    await recordNotice({
-      email,
-      channel: "email",
-      kind: "enquiry",
-      propertyId: input.propertyId,
-      body: text,
-      status: mailed,
-      dedupe: `enquiry:${input.enquiryId}:email`,
-    });
+    if (phone && await agentMayNotify(input.agentId)) {
+      const whatsapp = await sendWhatsApp(phone, text);
+      await recordNotice({
+        userId: input.agentId,
+        phone,
+        channel: "whatsapp",
+        kind: "enquiry",
+        propertyId: input.propertyId,
+        body: text,
+        status: whatsapp,
+        dedupe: `enquiry:${input.enquiryId}`,
+      });
+    }
+    if (email && await agentMayNotify(input.agentId)) {
+      const mailed = await sendEmail(email, "Guyana Keys Lead", text);
+      await recordNotice({
+        userId: input.agentId,
+        email,
+        channel: "email",
+        kind: "enquiry",
+        propertyId: input.propertyId,
+        body: text,
+        status: mailed,
+        dedupe: `enquiry:${input.enquiryId}:email`,
+      });
+    }
   } catch {
     // The enquiry is already saved.
   }
@@ -268,6 +324,7 @@ export async function notifyAgentEnquiry(input: {
 export async function notifyBuyer(input: {
   phone: string;
   buyerId?: string | null;
+  agentId?: string | null;
   kind: "reply" | "viewing";
   propertyId: string;
   enquiryId: string;
@@ -276,10 +333,12 @@ export async function notifyBuyer(input: {
 }) {
   try {
     if (!input.enquiryId || !input.text.trim() || !input.stamp) return;
-    if (input.phone && !noticeAllowed(input.phone)) return;
+    const agentId = input.agentId || "";
+    if (agentId && !(await agentMayNotify(agentId))) return;
+    if (!agentId && input.phone && !noticeAllowed(input.phone)) return;
     const status = await sendWhatsApp(input.phone, input.text);
     await recordNotice({
-      userId: input.buyerId || null,
+      userId: agentId || input.buyerId || null,
       phone: input.phone,
       channel: "whatsapp",
       kind: input.kind,

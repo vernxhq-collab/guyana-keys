@@ -33,7 +33,6 @@ function paymentLine(kind: string, status: string, stillFeatured = true) {
 
 export default function PlanPage() {
   const [plan, setPlan] = useState("");
-  const [cap, setCap] = useState(3);
   const [live, setLive] = useState(0);
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [listings, setListings] = useState<Live[]>([]);
@@ -50,7 +49,6 @@ export default function PlanPage() {
           const liveListings: Live[] = data.liveListings || [];
           const rows: RequestRow[] = data.requests || [];
           setPlan(data.plan);
-          setCap(data.cap);
           setLive(data.live);
           setRequests(rows);
           setListings(liveListings);

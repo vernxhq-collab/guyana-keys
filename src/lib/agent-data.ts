@@ -452,6 +452,7 @@ export async function updateLead(profile: Profile, body: Record<string, unknown>
     await notifyBuyer({
       phone,
       buyerId,
+      agentId: profile.id,
       kind: "viewing",
       propertyId,
       enquiryId: id,
@@ -464,6 +465,7 @@ export async function updateLead(profile: Profile, body: Record<string, unknown>
     await notifyBuyer({
       phone,
       buyerId,
+      agentId: profile.id,
       kind: "reply",
       propertyId,
       enquiryId: id,
