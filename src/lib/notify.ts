@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { noticeAllowed } from "./abuse";
 import { whenLabel } from "./assist";
 import { deskFrom, siteUrl } from "./contact";
@@ -38,6 +39,29 @@ export function e164(phone: string) {
 
 function siteOrigin() {
   return siteUrl();
+}
+
+function alertSecret() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ALERT_FROM_EMAIL || "guyana-keys";
+}
+
+export function searchStopQuery(id: string) {
+  const sig = createHmac("sha256", alertSecret()).update(`search:${id}`).digest("base64url");
+  return `search=${encodeURIComponent(id)}&sig=${sig}`;
+}
+
+export function searchStopValid(id: string, sig: string) {
+  if (!id || !sig) return false;
+  const expected = createHmac("sha256", alertSecret()).update(`search:${id}`).digest("base64url");
+  const left = Buffer.from(sig);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
+function missingAlertColumns(error: { message?: string } | null) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("confirmed") || message.includes("unsubscribed") || message.includes("token") || message.includes("schema cache");
 }
 
 function missingRelation(error: { message?: string } | null, name: string) {
@@ -162,9 +186,11 @@ export async function notifyMatches(listing: MatchListing) {
       const userId = String(search.user_id || "");
       const person = people.get(userId) || { email: "", phone: "" };
       const base = `search:${search.id}:${listing.id}`;
+      const searchId = String(search.id || "");
+      const unsubscribe = searchId ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?${searchStopQuery(searchId)}` : "";
       if (person.email && !seen.has(`${base}:email`)) {
-        const status = await sendEmail(person.email, subject, line);
-        await recordNotice({ userId, email: person.email, channel: "email", kind: "search", propertyId: listing.id, body: line, status, dedupe: `${base}:email` });
+        const status = await sendEmail(person.email, subject, line + unsubscribe);
+        await recordNotice({ userId, email: person.email, channel: "email", kind: "search", propertyId: listing.id, body: line + unsubscribe, status, dedupe: `${base}:email` });
       }
       if (person.phone && !seen.has(`${base}:whatsapp`)) {
         const status = await sendWhatsApp(person.phone, line);
@@ -174,20 +200,26 @@ export async function notifyMatches(listing: MatchListing) {
         await recordNotice({ userId, channel: "email", kind: "search", propertyId: listing.id, body: line, status: "skipped", dedupe: base });
       }
     }
-    if (alerts.error) {
-      if (String(alerts.error.message || "").toLowerCase().includes("confirmed")) return;
+    let alertRows: { id?: string; email?: string; area?: string; confirmed?: boolean; unsubscribed?: boolean; token?: string }[] = alerts.data || [];
+    let legacy = false;
+    if (alerts.error && missingAlertColumns(alerts.error)) {
+      const plain = await db.from("alerts").select("id,email,area");
+      if (plain.error) return;
+      alertRows = plain.data || [];
+      legacy = true;
+    } else if (alerts.error) {
       return;
     }
-    for (const alert of alerts.data || []) {
-      if (alert.confirmed !== true || alert.unsubscribed === true) continue;
+    for (const alert of alertRows) {
+      if (!legacy && (alert.confirmed !== true || alert.unsubscribed === true)) continue;
       const area = String(alert.area || "");
       if (!matchSearch({ area }, listing)) continue;
       const email = String(alert.email || "").trim();
       const dedupe = `alert:${alert.id}:${listing.id}:email`;
       if (!email || seen.has(dedupe) || !noticeAllowed(email)) continue;
-      const stop = alert.token ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?stop=${alert.token}` : "";
+      const stop = !legacy && alert.token ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?stop=${alert.token}` : "";
       const status = await sendEmail(email, subject, line + stop);
-      await recordNotice({ email, channel: "email", kind: "alert", propertyId: listing.id, body: line, status, dedupe });
+      await recordNotice({ email, channel: "email", kind: "alert", propertyId: listing.id, body: line + stop, status, dedupe });
     }
   } catch {
     // A notice problem must not block the listing.

@@ -49,7 +49,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       live: rows.filter((listing) => listing.status === "live").length,
       hidden: rows.filter((listing) => listing.status !== "live").length,
-      rows: rows.map((listing) => ({ id: listing.id, title: listing.title, status: listing.status || "hidden", views: 0, saves: 0, enquiries: listing.enquiries })),
+      tracked: false,
+      rows: rows.map((listing) => ({ id: listing.id, title: listing.title, status: listing.status || "hidden", enquiries: listing.enquiries })),
     });
   }
   if (part === "agency") {
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
   const gate = await agent();
   if ("error" in gate) return gate.error;
   const action = String(body.action || "");
-  let result: { error?: string; id?: string; ok?: boolean; live?: number; cap?: number; pending?: boolean } = { error: "Unknown action." };
+  let result: { error?: string; id?: string; ok?: boolean; pending?: boolean } = { error: "Unknown action." };
   if (action === "saveListing") result = await saveListing(gate.profile, body);
   else if (action === "duplicate") result = await duplicateListing(gate.profile, String(body.id || ""));
   else if (action === "hide") result = await hideListing(gate.profile, String(body.id || ""));
@@ -84,7 +85,6 @@ export async function POST(request: Request) {
   else if (action === "lead") result = await updateLead(gate.profile, body);
   else if (action === "request") result = await createRequest(gate.profile, body);
   else if (action === "profile") result = await saveAgentProfile(gate.profile, body);
-  if (result.error === "cap") return NextResponse.json({ error: "Publishing another live listing is blocked.", live: result.live, cap: result.cap }, { status: 403 });
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json(result);
 }

@@ -8,7 +8,7 @@ type Row = { id: string; title: string; area: string; purpose: string; priceGyd:
 
 export default function AgentListingsPage() {
   const [rows, setRows] = useState<Row[] | null>(null);
-  const [meta, setMeta] = useState({ live: 0, cap: 3 });
+  const [meta, setMeta] = useState({ live: 0 });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function AgentListingsPage() {
         if (!ok) setError(data.error || "Could not load listings.");
         else {
           setRows(data.listings || []);
-          setMeta({ live: data.live || 0, cap: data.cap || 3 });
+          setMeta({ live: data.live || 0 });
         }
       })
       .catch(() => setError("Could not load listings."));

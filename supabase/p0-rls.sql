@@ -1,6 +1,12 @@
 -- DO NOT RUN on production until Boss approves.
 -- One transaction. Refuses to run if a required column is missing.
 -- Does not send mail. Does not deploy. Service role still bypasses RLS.
+--
+-- Read-only. Run this SELECT alone first if you want the list of accounts
+-- the approval backfill will approve. It changes nothing.
+-- select id, email, name, role
+-- from public.profiles
+-- where role in ('agent', 'admin') and suspended = false;
 
 begin;
 
@@ -43,7 +49,8 @@ end
 $check$;
 
 alter table public.profiles add column if not exists approved boolean;
-update public.profiles set approved = true where role in ('agent', 'admin') and approved is null;
+update public.profiles set approved = true
+where role in ('agent', 'admin') and suspended = false and approved is null;
 update public.profiles set approved = false where approved is null;
 alter table public.profiles alter column approved set default false;
 alter table public.profiles alter column approved set not null;
@@ -57,6 +64,11 @@ begin
   end if;
 end
 $alerts$;
+
+-- Optional. Leave this commented. Existing alerts were saved before confirm-by-email.
+-- With it commented, those rows stay unconfirmed and are not emailed until the person confirms.
+-- Uncomment only if those people should keep receiving matches without a new confirm click.
+-- update public.alerts set confirmed = true where confirmed is not true and unsubscribed is not true;
 
 create or replace function private.guard_profile_update()
 returns trigger
@@ -156,31 +168,11 @@ begin
 end;
 $$;
 
--- PUBLIC and anon must not call these.
--- authenticated keeps EXECUTE so the trigger can run and clear a forged enquiry.
--- Without that grant the insert fails closed, and a normal profile edit from the
--- signed-in role fails before the guard can tell a forbidden field from a name change.
-revoke all on function private.guard_profile_update() from public;
-revoke all on function private.guard_property_update() from public;
-revoke all on function private.guard_enquiry_insert() from public;
-grant execute on function private.guard_profile_update() to authenticated;
-grant execute on function private.guard_property_update() to authenticated;
-grant execute on function private.guard_enquiry_insert() to authenticated;
-
-do $roles$
-begin
-  if exists (select 1 from pg_roles where rolname = 'anon') then
-    revoke all on function private.guard_profile_update() from anon;
-    revoke all on function private.guard_property_update() from anon;
-    revoke all on function private.guard_enquiry_insert() from anon;
-  end if;
-  if exists (select 1 from pg_roles where rolname = 'service_role') then
-    grant execute on function private.guard_profile_update() to service_role;
-    grant execute on function private.guard_property_update() to service_role;
-    grant execute on function private.guard_enquiry_insert() to service_role;
-  end if;
-end
-$roles$;
+-- Triggers fire as the function owner. They do not need EXECUTE granted to
+-- authenticated, anon, or public. A signed-in session must not call these directly.
+revoke all on function private.guard_profile_update() from public, anon, authenticated;
+revoke all on function private.guard_property_update() from public, anon, authenticated;
+revoke all on function private.guard_enquiry_insert() from public, anon, authenticated;
 
 drop trigger if exists guard_profile_update on public.profiles;
 create trigger guard_profile_update before update on public.profiles

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../components/DeskSkeleton";
 
 type Action = { id: string; text: string; href: string };
-type Home = { plan: string; live: number; cap: number; unanswered: number; viewings: number; today: Action[]; greetingName?: string; agency?: string; audits?: { id: string; at: string; actor: string; detail: string }[]; matches?: { buyer: string; home: string; href: string; why: string }[]; error?: string; preview?: boolean };
+type Home = { plan: string; live: number; unanswered: number; viewings: number; today: Action[]; greetingName?: string; agency?: string; audits?: { id: string; at: string; actor: string; detail: string }[]; matches?: { buyer: string; home: string; href: string; why: string }[]; error?: string; preview?: boolean };
 
 export default function AgentHomePage() {
   const [home, setHome] = useState<Home | null>(null);
