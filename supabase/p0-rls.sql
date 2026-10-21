@@ -52,6 +52,9 @@ alter table public.profiles add column if not exists approved boolean;
 update public.profiles set approved = true
 where role in ('agent', 'admin') and suspended = false and approved is null;
 update public.profiles set approved = false where approved is null;
+-- An older copy of this file approved every agent and admin, including suspended ones.
+-- Clear that on every run. Safe to run again: a suspended account stays unapproved.
+update public.profiles set approved = false where suspended = true and approved = true;
 alter table public.profiles alter column approved set default false;
 alter table public.profiles alter column approved set not null;
 

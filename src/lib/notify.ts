@@ -42,17 +42,20 @@ function siteOrigin() {
 }
 
 function alertSecret() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ALERT_FROM_EMAIL || "guyana-keys";
+  return process.env.ALERTS_TOKEN_SECRET || "";
 }
 
 export function searchStopQuery(id: string) {
-  const sig = createHmac("sha256", alertSecret()).update(`search:${id}`).digest("base64url");
+  const secret = alertSecret();
+  if (!id || !secret) return "";
+  const sig = createHmac("sha256", secret).update(`search:${id}`).digest("base64url");
   return `search=${encodeURIComponent(id)}&sig=${sig}`;
 }
 
 export function searchStopValid(id: string, sig: string) {
-  if (!id || !sig) return false;
-  const expected = createHmac("sha256", alertSecret()).update(`search:${id}`).digest("base64url");
+  const secret = alertSecret();
+  if (!id || !sig || !secret) return false;
+  const expected = createHmac("sha256", secret).update(`search:${id}`).digest("base64url");
   const left = Buffer.from(sig);
   const right = Buffer.from(expected);
   if (left.length !== right.length) return false;
@@ -186,8 +189,8 @@ export async function notifyMatches(listing: MatchListing) {
       const userId = String(search.user_id || "");
       const person = people.get(userId) || { email: "", phone: "" };
       const base = `search:${search.id}:${listing.id}`;
-      const searchId = String(search.id || "");
-      const unsubscribe = searchId ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?${searchStopQuery(searchId)}` : "";
+      const stopQuery = searchStopQuery(String(search.id || ""));
+      const unsubscribe = stopQuery ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?${stopQuery}` : "";
       if (person.email && !seen.has(`${base}:email`)) {
         const status = await sendEmail(person.email, subject, line + unsubscribe);
         await recordNotice({ userId, email: person.email, channel: "email", kind: "search", propertyId: listing.id, body: line + unsubscribe, status, dedupe: `${base}:email` });

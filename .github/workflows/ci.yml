@@ -57,3 +57,30 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-seed.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/p0-rls.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+  upgrade:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: keys
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: git fetch --depth=1 origin 0b110575026710748384f85744b3dda601c2829e
+      - run: git show 0b110575026710748384f85744b3dda601c2829e:supabase/p0-rls.sql > /tmp/p0-rls-main.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/supabase-stubs.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/migration.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-seed.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f /tmp/p0-rls-main.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/p0-rls.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
