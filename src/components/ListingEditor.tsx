@@ -46,7 +46,6 @@ export function ListingEditor({ id }: { id: string }) {
   const [draft, setDraft] = useState<Draft>(empty);
   const [notes, setNotes] = useState("");
   const [live, setLive] = useState(0);
-  const [cap, setCap] = useState(3);
   const [message, setMessage] = useState("");
   const [aiNote, setAiNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,7 +61,6 @@ export function ListingEditor({ id }: { id: string }) {
           return;
         }
         setLive(data.live || 0);
-        setCap(data.cap || 3);
         if (data.listing) {
           const listing = data.listing;
           setDraft({
@@ -179,10 +177,6 @@ export function ListingEditor({ id }: { id: string }) {
     const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "saveListing", ...draft, priceGyd: draft.priceGyd }) });
     const data = await res.json();
     setBusy(false);
-    if (data.error === "Publishing another live listing is blocked." || res.status === 403) {
-      setMessage(`${data.live ?? live} of ${data.cap ?? cap} live listings are in use. Publishing another live listing is blocked.`);
-      return;
-    }
     if (!res.ok) {
       setMessage(data.error || "The listing could not be saved.");
       return;
@@ -197,14 +191,13 @@ export function ListingEditor({ id }: { id: string }) {
 
   if (loading) return <DeskSkeleton count={3} />;
   const missing = checks.find((check) => !check.ok);
-  const blocked = message.includes("blocked");
-  const nextLine = blocked ? message : missing ? `Still needed: ${missing.label.replace(/\.$/, "")}.` : "Listing check is complete.";
+  const nextLine = missing ? `Still needed: ${missing.label.replace(/\.$/, "")}.` : "Listing check is complete.";
 
   return (
     <form className="stack" onSubmit={save}>
       <p className="eyebrow">Listing</p>
       <h1>{id === "new" ? "New listing" : "Edit listing"}</h1>
-      <p className="quiet">{live} live. Listings are free. A hidden listing stays off the public site.</p>
+      <p className="quiet">{live} live. Listings are free, with no limit. A hidden listing stays off the public site.</p>
       <p className="ai-bar next"><span>{nextLine}</span></p>
       <div className="panel">
         <p className="quiet">Rough notes</p>
@@ -330,10 +323,9 @@ export function ListingEditor({ id }: { id: string }) {
       <ul className="tick-list">
         {checks.map((check) => <li key={check.label} className={check.ok ? "ok" : ""}>{check.ok ? "Done. " : ""}{check.label}</li>)}
       </ul>
-      {message && !blocked ? <p>{message}</p> : null}
+      {message ? <p>{message}</p> : null}
       <div className="actions">
-        <button className={blocked ? "btn ghost" : "btn"} type="submit" disabled={busy}>{busy ? "Please wait..." : "Save listing"}</button>
-        {blocked ? <a className="btn" href="/agent/plan">Contact admin to upgrade</a> : null}
+        <button className="btn" type="submit" disabled={busy}>{busy ? "Please wait..." : "Save listing"}</button>
       </div>
       {id !== "new" && draft.featured ? <p className="quiet">This listing is featured.</p> : null}
       {id !== "new" && !draft.featured && draft.status !== "live" ? <p className="quiet">A hidden listing cannot be featured. Publish it live, then contact the admin.</p> : null}

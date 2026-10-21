@@ -228,11 +228,6 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     pending = true;
   }
   const savedId = existing ? id : newId("gy");
-  if (next.status === "live") {
-    const owned = await ownListings(profile.id);
-    const live = owned.filter((row) => String(row.status || "") === "live" && String(row.id) !== savedId).length;
-    if (live >= profile.listingCap) return { error: "cap", live, cap: profile.listingCap };
-  }
   const payload = existing ? next : { id: savedId, ...next, held_live: false };
   const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
   if (writeError) return { error: "The listing could not be saved." };
