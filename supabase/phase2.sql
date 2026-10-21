@@ -34,3 +34,18 @@ alter table outbox enable row level security;
 revoke all on table listing_stats from public;
 revoke all on table buyer_needs from public;
 revoke all on table outbox from public;
+
+do $lock$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on table listing_stats from anon;
+    revoke all on table buyer_needs from anon;
+    revoke all on table outbox from anon;
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    revoke all on table listing_stats from authenticated;
+    revoke all on table buyer_needs from authenticated;
+    revoke all on table outbox from authenticated;
+  end if;
+end
+$lock$;

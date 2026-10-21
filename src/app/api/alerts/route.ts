@@ -16,11 +16,12 @@ export async function GET(request: Request) {
   const db = serviceDb();
   if (!db || (!stop && !confirm)) return NextResponse.json({ ok: false }, { status: 400 });
   if (stop) {
-    await db.from("alerts").update({ unsubscribed: true, confirmed: false }).eq("token", stop);
+    const { data, error } = await db.from("alerts").update({ unsubscribed: true, confirmed: false }).eq("token", stop).select("id");
+    if (error || !data?.length) return NextResponse.json({ error: "This alert link was not accepted." }, { status: 400 });
     return NextResponse.json({ ok: true, unsubscribed: true });
   }
-  const { error } = await db.from("alerts").update({ confirmed: true }).eq("token", confirm).eq("unsubscribed", false);
-  if (error) return NextResponse.json({ error: "This alert could not be confirmed." }, { status: 400 });
+  const { data, error } = await db.from("alerts").update({ confirmed: true }).eq("token", confirm).eq("unsubscribed", false).select("id");
+  if (error || !data?.length) return NextResponse.json({ error: "This alert could not be confirmed." }, { status: 400 });
   return NextResponse.json({ ok: true, confirmed: true });
 }
 

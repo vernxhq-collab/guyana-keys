@@ -156,7 +156,10 @@ begin
 end;
 $$;
 
--- PUBLIC must not call these. The signed-in role still needs EXECUTE or the trigger cannot fire.
+-- PUBLIC and anon must not call these.
+-- authenticated keeps EXECUTE so the trigger can run and clear a forged enquiry.
+-- Without that grant the insert fails closed, and a normal profile edit from the
+-- signed-in role fails before the guard can tell a forbidden field from a name change.
 revoke all on function private.guard_profile_update() from public;
 revoke all on function private.guard_property_update() from public;
 revoke all on function private.guard_enquiry_insert() from public;
@@ -217,6 +220,39 @@ with check (
   and viewing_at is null
   and coalesce(source, 'guyana_keys') = 'guyana_keys'
   and coalesce(intent, '') = ''
+  and (
+    (property_id is null and agent_id is null)
+    or agent_id = (select p.agent_id from public.properties p where p.id = property_id)
+  )
+);
+
+drop policy if exists properties_agent_update on public.properties;
+create policy properties_agent_update on public.properties
+for update to authenticated
+using (
+  agent_id = auth.uid()
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'agent' and suspended = false
+  )
+)
+with check (
+  agent_id = auth.uid()
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'agent' and suspended = false
+  )
+);
+
+drop policy if exists properties_agent_delete on public.properties;
+create policy properties_agent_delete on public.properties
+for delete to authenticated
+using (
+  agent_id = auth.uid()
+  and exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'agent' and suspended = false
+  )
 );
 
 do $lock$

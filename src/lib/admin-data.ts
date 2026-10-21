@@ -194,18 +194,23 @@ export async function adminAgent(id: string) {
 export async function adminListings(query: string) {
   const db = serviceDb();
   if (!db) return { error: "The desk is not connected." as const };
-  const [props, profiles, requests] = await Promise.all([
+  const [props, profileQuery, requests] = await Promise.all([
     db.from("properties").select("*").order("created_at", { ascending: false }).limit(300),
-    db.from("profiles").select("id,name,company").eq("role", "agent"),
+    db.from("profiles").select("id,name,company,approved").eq("role", "agent"),
     db.from("requests").select("property_id,status").eq("kind", "feature").in("status", ["paid", "on"]),
   ]);
+  const profiles = profileQuery.error && String(profileQuery.error.message || "").toLowerCase().includes("approved")
+    ? await db.from("profiles").select("id,name,company").eq("role", "agent")
+    : profileQuery;
   const names = new Map((profiles.data || []).map((row) => [String(row.id), `${row.name || "Agent"}${row.company ? " · " + row.company : ""}`]));
+  const approved = new Map((profiles.data || []).map((row) => [String(row.id), (row as { approved?: boolean }).approved !== false]));
   const paid = new Set((requests.data || []).map((row) => String(row.property_id || "")));
   const q = query.trim().toLowerCase();
   const listings = (props.data || [])
     .map((row) => {
       const listing = mapProperty(row as Record<string, unknown>);
-      return { ...listing, agentName: names.get(listing.agentId) || "Agent", featurePaid: paid.has(listing.id) };
+      const canPublish = approved.get(listing.agentId) !== false;
+      return { ...listing, agentName: names.get(listing.agentId) || "Agent", featurePaid: paid.has(listing.id), waiting: listing.status !== "live" && !canPublish };
     })
     .filter((item) => !q || `${item.area} ${item.region} ${item.title} ${item.agentName}`.toLowerCase().includes(q));
   return { listings };

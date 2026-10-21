@@ -116,6 +116,22 @@ function listingLine(listing: MatchListing) {
   return `${listing.title} in ${listing.area} is live (${listing.purpose}, GYD ${price}). ${link}`;
 }
 
+async function sentThisHour(agentId: string) {
+  const db = serviceDb();
+  if (!db || !agentId) return null;
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count, error } = await db.from("notices").select("id", { count: "exact", head: true }).eq("user_id", agentId).gte("created_at", since);
+  if (error) return null;
+  return count || 0;
+}
+
+async function agentMayNotify(agentId: string) {
+  if (!agentId) return false;
+  const sent = await sentThisHour(agentId);
+  if (sent !== null && sent >= 20) return false;
+  return noticeAllowed(agentId);
+}
+
 export async function notifyMatches(listing: MatchListing) {
   try {
     const db = serviceDb();
@@ -233,33 +249,38 @@ export async function notifyAgentEnquiry(input: {
 }) {
   try {
     if (!input.agentId || !input.enquiryId) return;
-    if (!noticeAllowed(input.agentId)) return;
     const db = serviceDb();
     if (!db) return;
     const agent = await db.from("profiles").select("phone,email").eq("id", input.agentId).maybeSingle();
     const phone = String(agent.data?.phone || "");
     const email = String(agent.data?.email || "");
     const text = guyanaKeysLeadMessage(input);
-    const whatsapp = await sendWhatsApp(phone, text);
-    await recordNotice({
-      phone,
-      channel: "whatsapp",
-      kind: "enquiry",
-      propertyId: input.propertyId,
-      body: text,
-      status: whatsapp,
-      dedupe: `enquiry:${input.enquiryId}`,
-    });
-    const mailed = await sendEmail(email, "Guyana Keys Lead", text);
-    await recordNotice({
-      email,
-      channel: "email",
-      kind: "enquiry",
-      propertyId: input.propertyId,
-      body: text,
-      status: mailed,
-      dedupe: `enquiry:${input.enquiryId}:email`,
-    });
+    if (phone && await agentMayNotify(input.agentId)) {
+      const whatsapp = await sendWhatsApp(phone, text);
+      await recordNotice({
+        userId: input.agentId,
+        phone,
+        channel: "whatsapp",
+        kind: "enquiry",
+        propertyId: input.propertyId,
+        body: text,
+        status: whatsapp,
+        dedupe: `enquiry:${input.enquiryId}`,
+      });
+    }
+    if (email && await agentMayNotify(input.agentId)) {
+      const mailed = await sendEmail(email, "Guyana Keys Lead", text);
+      await recordNotice({
+        userId: input.agentId,
+        email,
+        channel: "email",
+        kind: "enquiry",
+        propertyId: input.propertyId,
+        body: text,
+        status: mailed,
+        dedupe: `enquiry:${input.enquiryId}:email`,
+      });
+    }
   } catch {
     // The enquiry is already saved.
   }
@@ -268,6 +289,7 @@ export async function notifyAgentEnquiry(input: {
 export async function notifyBuyer(input: {
   phone: string;
   buyerId?: string | null;
+  agentId?: string | null;
   kind: "reply" | "viewing";
   propertyId: string;
   enquiryId: string;
@@ -276,10 +298,12 @@ export async function notifyBuyer(input: {
 }) {
   try {
     if (!input.enquiryId || !input.text.trim() || !input.stamp) return;
-    if (input.phone && !noticeAllowed(input.phone)) return;
+    const agentId = input.agentId || "";
+    if (agentId && !(await agentMayNotify(agentId))) return;
+    if (!agentId && input.phone && !noticeAllowed(input.phone)) return;
     const status = await sendWhatsApp(input.phone, input.text);
     await recordNotice({
-      userId: input.buyerId || null,
+      userId: agentId || input.buyerId || null,
       phone: input.phone,
       channel: "whatsapp",
       kind: input.kind,

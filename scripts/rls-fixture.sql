@@ -122,7 +122,7 @@ alter table public.properties enable row level security;
 alter table public.enquiries enable row level security;
 
 grant select, update on public.profiles to authenticated;
-grant select, insert, update on public.properties to authenticated;
+grant select, insert, update, delete on public.properties to authenticated;
 grant select, insert on public.enquiries to authenticated;
 
 drop policy if exists profiles_select_own on public.profiles;
