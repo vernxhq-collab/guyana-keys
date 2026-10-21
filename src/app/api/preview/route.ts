@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ACTOR_COOKIE, actorById, decodeWorld, encodeWorld, previewEnabled, WORLD_COOKIE } from "../../../lib/preview/http";
+import { ACTOR_COOKIE, actorById, decodeWorld, encodeWorld, fitWorld, previewEnabled, WORLD_COOKIE } from "../../../lib/preview/http";
 import { buyerView, seedWorld, updateLead } from "../../../lib/preview/world";
 import { presentHome } from "../../../lib/preview/present";
 
@@ -47,20 +47,20 @@ export async function POST(request: Request) {
   if (action === "reset") {
     const actor = actorById(String(body.actor || actorId)) || actorById("asha");
     if (!actor) return NextResponse.json({ error: "Unknown test person." }, { status: 400 });
-    return write(NextResponse.json({ ok: true, actor }), encodeWorld(seedWorld()), actor.id);
+    return write(NextResponse.json({ ok: true, actor }), encodeWorld(fitWorld(seedWorld())), actor.id);
   }
   if (action === "enter") {
     const actor = actorById(String(body.actor || ""));
     if (!actor) return NextResponse.json({ error: "Unknown test person." }, { status: 400 });
     const next = world.leads.length ? world : seedWorld();
-    return write(NextResponse.json({ ok: true, actor }), encodeWorld(next), actor.id);
+    return write(NextResponse.json({ ok: true, actor }), encodeWorld(fitWorld(next)), actor.id);
   }
   const actor = actorById(actorId);
   if (!actor) return NextResponse.json({ error: "Open the test desk first." }, { status: 401 });
   if (action === "lead") {
     const result = updateLead(world, actor, String(body.id || ""), body);
     if (result.error) return NextResponse.json({ error: result.error }, { status: 403 });
-    return write(NextResponse.json({ ok: true }), encodeWorld(result.world), actor.id);
+    return write(NextResponse.json({ ok: true }), encodeWorld(fitWorld(result.world)), actor.id);
   }
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });
 }

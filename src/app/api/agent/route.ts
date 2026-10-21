@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { agentCalendar, agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
-import { encodeWorld, readPreview, WORLD_COOKIE } from "../../../lib/preview/http";
+import { encodeWorld, fitWorld, readPreview, WORLD_COOKIE } from "../../../lib/preview/http";
 import { previewGet, previewPost } from "../../../lib/preview/handle";
 import type { World } from "../../../lib/preview/world";
 import { canUseAgentDesk, readSession } from "../../../lib/session";
@@ -8,7 +8,7 @@ import { canUseAgentDesk, readSession } from "../../../lib/session";
 function withWorld(body: unknown, status: number, world?: World) {
   const response = NextResponse.json(body, { status });
   if (world) {
-    response.cookies.set(WORLD_COOKIE, encodeWorld(world), { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.VERCEL_ENV === "preview", maxAge: 60 * 60 * 24 * 7 });
+    response.cookies.set(WORLD_COOKIE, encodeWorld(fitWorld(world)), { httpOnly: true, sameSite: "lax", path: "/", secure: process.env.VERCEL_ENV === "preview", maxAge: 60 * 60 * 24 * 7 });
   }
   return response;
 }

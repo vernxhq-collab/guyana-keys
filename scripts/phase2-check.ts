@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { draftDescription, draftReply } from "../src/lib/ai/local.ts";
-import { actors, holdReply, matchesFor, performanceFor, saveDescription, seedWorld, todayFor } from "../src/lib/preview/world.ts";
+import { actors, buyerView, holdReply, matchesFor, performanceFor, saveDescription, seedWorld, todayFor, updateLead } from "../src/lib/preview/world.ts";
+import { guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
 
 const world = seedWorld();
 const matches = matchesFor(world, actors.asha);
@@ -20,11 +21,21 @@ const held = holdReply(world, actors.asha, "lead-maria", reply.message);
 assert.equal(held.error, undefined);
 assert.equal(held.world.outbox.length, 2);
 assert.ok(held.world.outbox.every((item) => item.status === "held"));
-assert.equal(holdReply(world, actors.jon, "lead-maria", "no").error, "That lead belongs to another agency.");
+assert.equal(holdReply(world, actors.jon, "lead-maria", "no").error, "Not found or not in your agency.");
+const drafted = updateLead(world, actors.asha, "lead-maria", { reply: "Thursday at 2pm works.", saveDraft: true });
+assert.equal(buyerView(drafted.world, actors.maria).enquiries[0].reply, "");
+const heldAfter = holdReply(drafted.world, actors.asha, "lead-maria", "Thursday at 2pm works.");
+assert.equal(heldAfter.world.outbox.length, 2);
+assert.equal(buyerView(heldAfter.world, actors.maria).enquiries[0].reply, "");
+const utc = guyanaLocalToUtc("2026-10-23T15:00");
+assert.equal(utc, "2026-10-23T19:00:00.000Z");
+assert.match(guyanaLabel(utc || ""), /3:00/);
+const stats = performanceFor(world, actors.asha);
+assert.equal(stats.live, 2);
+assert.equal(stats.hidden, 1);
 
 const saved = saveDescription(world, actors.asha, "home-prov", copy.description);
 assert.match(saved.world.listings.find((item) => item.id === "home-prov")?.description || "", /Bel Air/);
-const stats = performanceFor(world, actors.asha);
 assert.equal(stats.rows.find((item) => item.id === "home-belair")?.views, 128);
 assert.equal(stats.rows.find((item) => item.id === "home-belair")?.enquiries, 1);
 assert.ok(todayFor(world, actors.asha).today.some((item) => item.text.includes("Maria")));

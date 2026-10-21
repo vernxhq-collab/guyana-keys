@@ -7,12 +7,15 @@ type Row = { id: string; title: string; status: string; views: number; saves: nu
 
 export default function PerformancePage() {
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [live, setLive] = useState(0);
+  const [hidden, setHidden] = useState(0);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/agent?part=performance")
       .then(async (res) => ({ ok: res.ok, data: await res.json() }))
-      .then(({ ok, data }) => { if (!ok) setError(data.error || "Could not load performance."); else setRows(data.rows || []); })
+      .then(({ ok, data }) => { if (!ok) setError(data.error || "Could not load performance.");
+        else { setRows(data.rows || []); setLive(data.live || 0); setHidden(data.hidden || 0); } })
       .catch(() => setError("Could not load performance."));
   }, []);
 
@@ -28,8 +31,9 @@ export default function PerformancePage() {
       <p className="quiet">Views and saves are counted on the listing. A number is not a valuation.</p>
       <div className="stats">
         <article className="stat"><p className="quiet">Views</p><strong>{views}</strong></article>
+        <article className="stat"><p className="quiet">Live</p><strong>{live}</strong></article>
+        <article className="stat"><p className="quiet">Hidden</p><strong>{hidden}</strong></article>
         <article className="stat"><p className="quiet">Enquiries</p><strong>{enquiries}</strong></article>
-        <article className="stat"><p className="quiet">Listings</p><strong>{rows.length}</strong></article>
       </div>
       {rows.map((row) => (
         <p className="quiet-row" key={row.id}>

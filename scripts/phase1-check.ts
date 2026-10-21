@@ -14,7 +14,7 @@ assert.equal(ashaToday.audits.some((item) => item.detail.includes("Kevin")), fal
 const jonToday = todayFor(world, jon, Date.parse("2026-10-21T15:00:00Z"));
 assert.ok(jonToday.today.some((item) => item.text.includes("Kevin")));
 assert.equal(jonToday.today.some((item) => item.text.includes("Maria")), false);
-assert.equal(leadFor(world, jon, "lead-maria").error, "That lead belongs to another agency.");
+assert.equal(leadFor(world, jon, "lead-maria").error, "Not found or not in your agency.");
 
 const saved = updateLead(world, asha, "lead-maria", { reply: "Thursday at 2pm works." }, Date.parse("2026-10-21T16:00:00Z"));
 assert.equal(saved.error, undefined);
@@ -25,6 +25,6 @@ assert.match(buyer.enquiries[0].reply, /Thursday at 2pm/);
 assert.ok(buyer.enquiries[0].viewingAt);
 assert.equal(buyerView(viewed.world, maria).enquiries.some((item) => item.home.includes("New Amsterdam")), false);
 assert.ok(viewed.world.audits.some((item) => item.action === "lead" && item.detail.includes("Viewing set")));
-assert.equal(leadFor(viewed.world, asha, "lead-kevin").error, "That lead belongs to another agency.");
+assert.equal(leadFor(viewed.world, asha, "lead-kevin").error, "Not found or not in your agency.");
 
 console.log("phase 1 checks passed");

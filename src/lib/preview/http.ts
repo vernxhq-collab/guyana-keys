@@ -12,6 +12,21 @@ export function encodeWorld(world: World) {
   return Buffer.from(JSON.stringify(world)).toString("base64url");
 }
 
+export function fitWorld(world: World): World {
+  let next = world;
+  while (encodeWorld(next).length > 3200 && next.audits.length > 2) {
+    next = { ...next, audits: next.audits.slice(0, -1) };
+  }
+  if (encodeWorld(next).length > 3200) {
+    next = {
+      ...next,
+      audits: next.audits.slice(0, 2),
+      listings: next.listings.map((item) => ({ ...item, description: item.description.slice(0, 160) })),
+    };
+  }
+  return next;
+}
+
 export function decodeWorld(raw: string | undefined): World {
   if (!raw) return seedWorld();
   try {

@@ -7,6 +7,7 @@ import { cleanFacts } from "./place-facts";
 import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
+import { guyanaLocalToUtc } from "./time";
 import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
@@ -404,11 +405,11 @@ export async function updateLead(profile: Profile, body: Record<string, unknown>
     patch.viewing_at = null;
     await addEvent(id, "viewing_cleared", "The viewing time was removed.");
   } else if (typeof body.viewingAt === "string" && body.viewingAt) {
-    const time = new Date(body.viewingAt);
-    if (Number.isNaN(time.getTime())) return { error: "Enter a real date and time." };
-    patch.viewing_at = time.toISOString();
-    const draft = replyDraft({ name: String(row.name || ""), listing: title, viewingAt: time.toISOString() });
-    await addEvent(id, "viewing_set", time.toISOString());
+    const iso = guyanaLocalToUtc(body.viewingAt);
+    if (!iso) return { error: "Enter a real date and time." };
+    patch.viewing_at = iso;
+    const draft = replyDraft({ name: String(row.name || ""), listing: title, viewingAt: iso });
+    await addEvent(id, "viewing_set", iso);
     await addEvent(id, "reply_drafted", draft.message);
     if (!patch.stage && (row.stage === "new" || row.stage === "contacted")) {
       patch.stage = "viewing";

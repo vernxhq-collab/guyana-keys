@@ -7,7 +7,11 @@ export function previewGet(world: World, actor: Actor, part: string, id: string)
   if (part === "home") return { status: 200, body: presentHome(world, actor) };
   if (part === "listings") return { status: 200, body: presentListings(world, actor) };
   if (part === "leads") return { status: 200, body: presentLeads(world, actor) };
-  if (part === "lead") return { status: 200, body: presentLead(world, actor, id) };
+  if (part === "lead") {
+    const body = presentLead(world, actor, id);
+    if ("error" in body && body.error) return { status: body.error.includes("agency") || body.error.includes("Not found") ? 404 : 404, body };
+    return { status: 200, body };
+  }
   if (part === "calendar") return { status: 200, body: presentCalendar(world, actor) };
   if (part === "performance") return { status: 200, body: presentPerformance(world, actor) };
   if (part === "agency") return { status: 200, body: presentAgency(world, actor) };
@@ -56,7 +60,8 @@ export function previewPost(world: World, actor: Actor, body: Record<string, unk
     clearViewing: Boolean(body.clearViewing),
     stage: typeof body.stage === "string" ? body.stage : undefined,
     privateNote: typeof body.privateNote === "string" ? body.privateNote : undefined,
+    saveDraft: Boolean(body.saveDraft),
   });
-  if (result.error) return { status: 403, body: { error: result.error }, world };
+  if (result.error) return { status: result.error.includes("Not found") ? 404 : 403, body: { error: result.error }, world };
   return { status: 200, body: { ok: true }, world: result.world };
 }

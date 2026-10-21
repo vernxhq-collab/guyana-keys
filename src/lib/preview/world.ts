@@ -1,3 +1,5 @@
+import { guyanaLocalToUtc } from "../time.ts";
+
 export type Actor = { id: string; name: string; kind: "agent" | "buyer"; agencyId: string; agency: string };
 
 export type PreviewLead = {
@@ -184,7 +186,7 @@ export function todayFor(world: World, actor: Actor, now = Date.now()) {
 export function leadFor(world: World, actor: Actor, id: string) {
   const lead = world.leads.find((item) => item.id === id);
   if (!lead) return { error: "That lead is not on this desk." };
-  if (actor.kind === "agent" && lead.agencyId !== actor.agencyId) return { error: "That lead belongs to another agency." };
+  if (actor.kind === "agent" && lead.agencyId !== actor.agencyId) return { error: "Not found or not in your agency." };
   if (actor.kind === "buyer" && lead.buyerId !== actor.id) return { error: "That enquiry is not yours." };
   return { lead };
 }
@@ -195,7 +197,7 @@ export function calendarFor(world: World, actor: Actor) {
     .map((lead) => ({ id: lead.id, name: lead.name, home: lead.home, viewingAt: lead.viewingAt, href: "/agent/leads/" + lead.id }));
 }
 
-type Change = { reply?: string; viewingAt?: string; clearViewing?: boolean; stage?: string; privateNote?: string };
+type Change = { reply?: string; viewingAt?: string; clearViewing?: boolean; stage?: string; privateNote?: string; saveDraft?: boolean };
 
 export function updateLead(world: World, actor: Actor, id: string, change: Change, now = Date.now()): { world: World; error?: string } {
   const found = leadFor(world, actor, id);
@@ -205,17 +207,21 @@ export function updateLead(world: World, actor: Actor, id: string, change: Chang
   if (!lead) return { world, error: "That lead is not on this desk." };
   const next: PreviewLead = { ...lead };
   const notes: string[] = [];
-  if (typeof change.reply === "string") {
+  if (typeof change.reply === "string" && !change.saveDraft) {
     next.agentReply = change.reply;
     next.repliedAt = new Date(now).toISOString();
     if (next.stage === "new") next.stage = "contacted";
     notes.push("Reply saved");
+  } else if (change.saveDraft && typeof change.reply === "string") {
+    notes.push("Draft saved");
   }
   if (change.clearViewing) {
     next.viewingAt = null;
     notes.push("Viewing cleared");
   } else if (typeof change.viewingAt === "string" && change.viewingAt) {
-    next.viewingAt = new Date(change.viewingAt).toISOString();
+    const iso = guyanaLocalToUtc(change.viewingAt);
+    if (!iso) return { world, error: "Enter a real date and time." };
+    next.viewingAt = iso;
     next.stage = "viewing";
     notes.push("Viewing set");
   }
@@ -284,6 +290,8 @@ export function performanceFor(world: World, actor: Actor) {
   const listings = world.listings.filter((item) => item.agencyId === actor.agencyId);
   const leads = leadsFor(world, actor);
   return {
+    live: listings.filter((item) => item.status === "live").length,
+    hidden: listings.filter((item) => item.status !== "live").length,
     rows: listings.map((item) => ({
       id: item.id,
       title: item.title,
