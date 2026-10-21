@@ -40,11 +40,12 @@ export default function PreviewPage() {
   return (
     <main className="wrap section">
       <p className="eyebrow">Preview only</p>
-      <h1>Phase 1 test desk</h1>
-      <p className="sub">Isolated records. Nothing here is written to the live database, and no email or WhatsApp is sent.</p>
+      <h1>Phase 2 test desk</h1>
+      <p className="sub">Isolated records. Sign-in email is off. Nothing here is written to the live database, and no WhatsApp or email is sent.</p>
       {error ? <p>{error}</p> : null}
       <div className="actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "18px 0" }}>
         <button className="btn" type="button" onClick={() => void enter("asha")}>Open as Asha, Demerara Homes</button>
+        <button className="btn ghost" type="button" onClick={() => void enter("ravi")}>Open as Ravi, same agency</button>
         <button className="btn ghost" type="button" onClick={() => void enter("jon")}>Open as Jon, Berbice Estates</button>
         <button className="btn ghost" type="button" onClick={() => void enter("maria")}>View as Maria, the buyer</button>
         <button className="btn ghost" type="button" onClick={async () => { await fetch("/api/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "reset", actor: actor?.id || "asha" }) }); await load(); }}>Reset test data</button>

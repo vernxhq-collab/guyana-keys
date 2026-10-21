@@ -39,6 +39,15 @@ export async function GET(request: Request) {
   if (part === "leads") return NextResponse.json(await agentLeadList(gate.profile));
   if (part === "lead") return NextResponse.json(await agentLead(gate.profile, id));
   if (part === "calendar") return NextResponse.json(await agentCalendar(gate.profile));
+  if (part === "performance") {
+    const data = await agentListings(gate.profile);
+    return NextResponse.json({ rows: data.listings.map((listing) => ({ id: listing.id, title: listing.title, status: listing.status || "hidden", views: 0, saves: 0, enquiries: listing.enquiries })) });
+  }
+  if (part === "agency") {
+    const data = await agentListings(gate.profile);
+    return NextResponse.json({ agency: gate.profile.company || "Your agency", people: [{ id: gate.profile.id, name: gate.profile.name || "Agent", live: data.live, open: 0 }], held: 0 });
+  }
+  if (part === "outbox") return NextResponse.json({ messages: [] });
   if (part === "plan") return NextResponse.json(await agentPlan(gate.profile));
   if (part === "profile") {
     return NextResponse.json({

@@ -12,8 +12,13 @@ export function db() {
   return serviceDb();
 }
 
+export function liveDataAllowed() {
+  return process.env.VERCEL_ENV !== "preview";
+}
+
 export function serviceDb() {
   if (typeof window !== "undefined") return null;
+  if (!liveDataAllowed()) return null;
   const url = supabaseUrl();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
@@ -21,6 +26,7 @@ export function serviceDb() {
 }
 
 export function authClient() {
+  if (!liveDataAllowed()) return null;
   const url = supabaseUrl();
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;

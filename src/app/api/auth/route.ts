@@ -38,6 +38,9 @@ export async function POST(request: Request) {
     response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0, secure: true });
     return response;
   }
+  if (process.env.VERCEL_ENV === "preview") {
+    return NextResponse.json({ error: "This preview does not send sign-in email. Open the test desk." }, { status: 403 });
+  }
   const client = authClient();
   if (!client) return NextResponse.json({ error: "Sign-in email is not connected." }, { status: 503 });
   const desk = deskOf(body.desk);

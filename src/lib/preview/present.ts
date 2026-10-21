@@ -1,6 +1,7 @@
-import { leadScore, replyDraft, whenLabel } from "../assist";
+import { draftDescription, draftReply } from "../ai/local";
+import { leadScore, whenLabel } from "../assist";
 import { stageLabel } from "../labels";
-import { calendarFor, leadFor, leadsFor, todayFor, type Actor, type World } from "./world";
+import { agencyFor, calendarFor, leadFor, leadsFor, performanceFor, todayFor, type Actor, type World } from "./world";
 
 const placeholder =
   "data:image/svg+xml;utf8," +
@@ -53,9 +54,10 @@ export function presentLead(world: World, actor: Actor, id: string) {
       intent: lead.abroad ? "Buying from abroad" : "",
       privateNote: lead.privateNote,
       reviewRequested: false,
-      draft: lead.agentReply || replyDraft({ name: lead.name, listing: lead.home, viewingAt: lead.viewingAt }).message,
+      draft: lead.agentReply || draftReply({ name: lead.name, home: lead.home, area: lead.area, note: lead.note, abroad: lead.abroad, viewingAt: lead.viewingAt }).message,
       agentReply: lead.agentReply,
       timeline,
+      preview: true,
     },
   };
 }
@@ -91,7 +93,7 @@ export function presentListings(world: World, actor: Actor) {
       title: item.title,
       area: item.area,
       purpose: item.purpose,
-      priceGyd: item.purpose === "Rent" ? 420000 : 95000000,
+      priceGyd: item.priceGyd,
       status: item.status,
       featured: false,
       image: placeholder,
@@ -102,4 +104,23 @@ export function presentListings(world: World, actor: Actor) {
 
 export function presentCalendar(world: World, actor: Actor) {
   return { viewings: calendarFor(world, actor) };
+}
+
+export function presentPerformance(world: World, actor: Actor) {
+  return performanceFor(world, actor);
+}
+
+export function presentAgency(world: World, actor: Actor) {
+  return agencyFor(world, actor);
+}
+
+export function presentOutbox(world: World, actor: Actor) {
+  return { messages: world.outbox.filter((item) => item.agencyId === actor.agencyId) };
+}
+
+export function presentCompose(world: World, actor: Actor, id: string) {
+  const listing = world.listings.find((item) => item.id === id && item.agencyId === actor.agencyId);
+  if (!listing) return { error: "That listing is not in this agency." };
+  const draft = draftDescription({ title: listing.title, area: listing.area, purpose: listing.purpose, beds: listing.beds, priceGyd: listing.priceGyd });
+  return { listing: { id: listing.id, title: listing.title, area: listing.area, description: listing.description || draft.description, provider: "local" } };
 }

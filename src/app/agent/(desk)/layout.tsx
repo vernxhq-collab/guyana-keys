@@ -11,7 +11,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
     return (
       <main className="wrap section desk agent-desk">
         <DeskNav label="Agent desk" name={`${preview.actor.name} · ${preview.actor.agency}`} items={items} signOut="/preview" />
-        <p className="quiet desk-links"><a href="/agent/profile">Profile</a> · <a href="/agent/help">Help</a> · <a href="/preview">Test buyer</a></p>
+        <p className="quiet desk-links"><a href="/agent/performance">Performance</a> · <a href="/agent/agency">Agency</a> · <a href="/agent/outbox">Outbox</a> · <a href="/agent/profile">Profile</a> · <a href="/agent/help">Help</a> · <a href="/preview">Test buyer</a></p>
         {children}
       </main>
     );
@@ -40,7 +40,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
       ) : (
         <>
           <DeskNav label="Agent desk" name={session.profile?.name || "Agent"} items={items} signOut="/agent/login" />
-          <p className="quiet desk-links"><a href="/agent/profile">Profile</a> · <a href="/agent/help">Help</a></p>
+          <p className="quiet desk-links"><a href="/agent/performance">Performance</a> · <a href="/agent/agency">Agency</a> · <a href="/agent/outbox">Outbox</a> · <a href="/agent/profile">Profile</a> · <a href="/agent/help">Help</a></p>
           {children}
         </>
       )}

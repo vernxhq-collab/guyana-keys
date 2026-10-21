@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../components/DeskSkeleton";
 
 type Action = { id: string; text: string; href: string };
-type Home = { plan: string; live: number; cap: number; unanswered: number; viewings: number; today: Action[]; greetingName?: string; agency?: string; audits?: { id: string; at: string; actor: string; detail: string }[]; error?: string; preview?: boolean };
+type Home = { plan: string; live: number; cap: number; unanswered: number; viewings: number; today: Action[]; greetingName?: string; agency?: string; audits?: { id: string; at: string; actor: string; detail: string }[]; matches?: { buyer: string; home: string; href: string; why: string }[]; error?: string; preview?: boolean };
 
 export default function AgentHomePage() {
   const [home, setHome] = useState<Home | null>(null);
@@ -64,6 +64,14 @@ export default function AgentHomePage() {
         </div>
       ))}
       <a className="btn" href={next?.href || "/agent/listings/new"}>{next ? "Open the next task" : "New listing"}</a>
+      {home.matches && home.matches.length > 0 ? (
+        <>
+          <h2>Matches</h2>
+          {home.matches.map((item) => (
+            <a className="quiet-row" key={item.home + item.buyer} href={item.href}><span><strong>{item.buyer}</strong> · {item.home}</span><span className="quiet">{item.why}</span></a>
+          ))}
+        </>
+      ) : null}
       {home.audits && home.audits.length > 0 ? (
         <>
           <h2>Audit</h2>
