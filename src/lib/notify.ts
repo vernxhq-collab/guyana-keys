@@ -1,3 +1,4 @@
+import { noticeAllowed } from "./abuse";
 import { whenLabel } from "./assist";
 import { deskFrom, siteUrl } from "./contact";
 import { digits, newId } from "./labels";
@@ -51,7 +52,7 @@ function alreadyStored(error: { message?: string; code?: string } | null) {
 export async function sendWhatsApp(phone: string, text: string): Promise<SendStatus> {
   const key = process.env.WASENDER_API_KEY || "";
   const to = e164(phone);
-  if (!key || !to || !text.trim()) return "skipped";
+  if (process.env.VERCEL_ENV === "preview" || !key || !to || !text.trim()) return "skipped";
   try {
     const res = await fetch("https://www.wasenderapi.com/api/send-message", {
       method: "POST",
@@ -67,7 +68,7 @@ export async function sendWhatsApp(phone: string, text: string): Promise<SendSta
 export async function sendEmail(to: string, subject: string, text: string): Promise<SendStatus> {
   const key = process.env.RESEND_API_KEY || "";
   const from = process.env.ALERT_FROM_EMAIL || deskFrom;
-  if (!key || !from || !to.includes("@") || !subject.trim() || !text.trim()) return "skipped";
+  if (process.env.VERCEL_ENV === "preview" || !key || !from || !to.includes("@") || !subject.trim() || !text.trim()) return "skipped";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -123,7 +124,7 @@ export async function notifyMatches(listing: MatchListing) {
     if (prior.error) return;
     const seen = new Set((prior.data || []).map((row) => String(row.dedupe || "")));
     const searches = await db.from("saved_searches").select("id,user_id,purpose,area,beds,max_price");
-    const alerts = await db.from("alerts").select("id,email,area");
+    const alerts = await db.from("alerts").select("id,email,area,confirmed,unsubscribed,token");
     const searchRows = searches.data || [];
     const userIds = [...new Set(searchRows.map((row) => String(row.user_id || "")).filter(Boolean))];
     const people = new Map<string, { email: string; phone: string }>();
@@ -157,14 +158,19 @@ export async function notifyMatches(listing: MatchListing) {
         await recordNotice({ userId, channel: "email", kind: "search", propertyId: listing.id, body: line, status: "skipped", dedupe: base });
       }
     }
-    if (alerts.error) return;
+    if (alerts.error) {
+      if (String(alerts.error.message || "").toLowerCase().includes("confirmed")) return;
+      return;
+    }
     for (const alert of alerts.data || []) {
+      if (alert.confirmed !== true || alert.unsubscribed === true) continue;
       const area = String(alert.area || "");
       if (!matchSearch({ area }, listing)) continue;
       const email = String(alert.email || "").trim();
       const dedupe = `alert:${alert.id}:${listing.id}:email`;
-      if (!email || seen.has(dedupe)) continue;
-      const status = await sendEmail(email, subject, line);
+      if (!email || seen.has(dedupe) || !noticeAllowed(email)) continue;
+      const stop = alert.token ? `\n\nUnsubscribe: ${siteOrigin()}/api/alerts?stop=${alert.token}` : "";
+      const status = await sendEmail(email, subject, line + stop);
       await recordNotice({ email, channel: "email", kind: "alert", propertyId: listing.id, body: line, status, dedupe });
     }
   } catch {
@@ -227,6 +233,7 @@ export async function notifyAgentEnquiry(input: {
 }) {
   try {
     if (!input.agentId || !input.enquiryId) return;
+    if (!noticeAllowed(input.agentId)) return;
     const db = serviceDb();
     if (!db) return;
     const agent = await db.from("profiles").select("phone,email").eq("id", input.agentId).maybeSingle();
@@ -269,6 +276,7 @@ export async function notifyBuyer(input: {
 }) {
   try {
     if (!input.enquiryId || !input.text.trim() || !input.stamp) return;
+    if (input.phone && !noticeAllowed(input.phone)) return;
     const status = await sendWhatsApp(input.phone, input.text);
     await recordNotice({
       userId: input.buyerId || null,

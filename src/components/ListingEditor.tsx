@@ -187,7 +187,11 @@ export function ListingEditor({ id }: { id: string }) {
       setMessage(data.error || "The listing could not be saved.");
       return;
     }
-    if (data.id && data.id !== id) router.replace(`/agent/listings/${data.id}`);
+    if (data.pending) {
+      setMessage("Saved as hidden. An admin has to approve this account before a listing can go live.");
+      if (data.id && data.id !== id) router.replace(`/agent/listings/${data.id}`);
+      return;
+    }
     else setMessage("Saved.");
   }
 

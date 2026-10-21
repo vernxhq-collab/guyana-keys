@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { authClient } from "../../../lib/supabase";
 import { canUseAgentDesk, ensureProfile, isAdminEmail, loadProfile, readToken, redirectFor, SESSION_COOKIE, userFromToken, type Desk } from "../../../lib/session";
 
+const REFRESH_COOKIE = "gk_refresh";
+
+function cookieOptions(maxAge: number) {
+  return { httpOnly: true, sameSite: "lax" as const, path: "/", maxAge, secure: true };
+}
+
+function signedIn(user: { id: string; name: string; email: string }, profile: unknown, token: string, refresh = "") {
+  const response = NextResponse.json({ user, profile });
+  response.cookies.set(SESSION_COOKIE, token, cookieOptions(60 * 60 * 24 * 30));
+  if (refresh) response.cookies.set(REFRESH_COOKIE, refresh, cookieOptions(60 * 60 * 24 * 30));
+  return response;
+}
 function plainError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("rate limit")) return "Too many emails were sent in the last hour. Use the link already in your inbox, or wait before asking again.";
@@ -12,12 +24,6 @@ function plainError(message: string) {
 function deskOf(value: unknown): Desk {
   if (value === "agent" || value === "admin") return value;
   return "buyer";
-}
-
-function signedIn(user: { id: string; name: string; email: string }, profile: unknown, token: string) {
-  const response = NextResponse.json({ user, profile });
-  response.cookies.set(SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30, secure: true });
-  return response;
 }
 
 export async function GET() {
@@ -35,7 +41,8 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   if (body.action === "logout") {
     const response = NextResponse.json({ user: null });
-    response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0, secure: true });
+    response.cookies.set(SESSION_COOKIE, "", cookieOptions(0));
+    response.cookies.set(REFRESH_COOKIE, "", cookieOptions(0));
     return response;
   }
   if (process.env.VERCEL_ENV === "preview") {
@@ -46,6 +53,7 @@ export async function POST(request: Request) {
   const desk = deskOf(body.desk);
   if (body.action === "session") {
     const token = String(body.accessToken || "");
+    const refresh = String(body.refreshToken || "");
     const user = token ? await userFromToken(token) : null;
     if (!user) return NextResponse.json({ error: "That sign-in link was not accepted." }, { status: 400 });
     if (desk === "admin" && !isAdminEmail(user.email)) {
@@ -61,7 +69,7 @@ export async function POST(request: Request) {
       return response;
     }
     const safe = profile ? { role: profile.role, name: profile.name, suspended: profile.suspended } : null;
-    return signedIn(user, safe, token);
+    return signedIn(user, safe, token, refresh);
   }
   const email = String(body.email || "").trim().toLowerCase();
   if (body.action === "start") {
@@ -88,7 +96,7 @@ export async function POST(request: Request) {
     if (desk === "agent" && profile && !canUseAgentDesk(profile, user.email)) {
       return NextResponse.json({ error: profile.suspended ? "This account is suspended." : "This desk is for agents. Use the agent email." }, { status: 403 });
     }
-    return signedIn(user, profile ? { role: profile.role, name: profile.name } : null, data.session.access_token);
+    return signedIn(user, profile ? { role: profile.role, name: profile.name } : null, data.session.access_token, data.session.refresh_token);
   }
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });
 }

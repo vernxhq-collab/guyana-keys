@@ -19,6 +19,7 @@ export function LeadForm({ propertyId, preset, button }: { propertyId?: string; 
         name: data.get("name"),
         phone: data.get("phone"),
         note: message ? `${preset} — ${message}` : preset,
+        website: data.get("website") || "",
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -30,6 +31,7 @@ export function LeadForm({ propertyId, preset, button }: { propertyId?: string; 
     <form className="tool-form" onSubmit={(event) => void submit(event)}>
       <input name="name" required placeholder="Your name" />
       <input name="phone" required placeholder="WhatsApp number" />
+      <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
       <input name="note" placeholder="Message (optional)" />
       <button className="btn" type="submit" disabled={busy}>{button}</button>
       {sent ? <p>{sent}</p> : null}

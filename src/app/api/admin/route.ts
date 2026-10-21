@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAgent, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminRequest, adminRequests, markPaid, saveInstructions, setCap, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
+import { adminAgent, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, saveInstructions, setApproved, setCap, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { isAdminEmail, readSession } from "../../../lib/session";
 
 async function admin() {
@@ -42,6 +42,8 @@ export async function POST(request: Request) {
   else if (action === "verified") result = await setVerified(String(body.agentId || ""), Boolean(body.verified));
   else if (action === "suspend") result = await suspendAgent(String(body.agentId || ""));
   else if (action === "unsuspend") result = await unsuspendAgent(String(body.agentId || ""));
+  else if (action === "approve") result = await setApproved(String(body.agentId || ""), body.approved !== false);
+  else if (action === "publish") result = await adminPublish(String(body.propertyId || ""));
   else if (action === "hide") result = await adminHide(String(body.propertyId || ""));
   else if (action === "feature") result = await adminFeature(String(body.propertyId || ""), true);
   else if (action === "unfeature") result = await adminFeature(String(body.propertyId || ""), false);

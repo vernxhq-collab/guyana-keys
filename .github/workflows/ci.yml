@@ -1,15 +1,34 @@
 name: ci
 on:
+  push:
   pull_request:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: keys
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
       - run: node --experimental-strip-types scripts/phase1-check.ts
       - run: node --experimental-strip-types scripts/phase2-check.ts
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-fixture.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/p0-rls.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql

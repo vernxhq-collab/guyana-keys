@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "./DeskSkeleton";
 import { digits, eventLabel, stageLabel } from "../lib/labels";
+import { guyanaInputValue } from "../lib/time";
 import { whenLabel } from "../lib/assist";
 
 type Lead = {
@@ -54,7 +55,7 @@ export function LeadDesk({ id }: { id: string }) {
     setReply(data.lead.draft || "");
     setNote(data.lead.privateNote || "");
     setStage(data.lead.stage || "new");
-    setWhen(data.lead.viewingAt ? data.lead.viewingAt.slice(0, 16) : "");
+    setWhen(data.lead.viewingAt ? guyanaInputValue(data.lead.viewingAt) : "");
   }
 
   useEffect(() => { void load(); }, [id]);

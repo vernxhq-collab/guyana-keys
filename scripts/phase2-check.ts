@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { draftDescription, draftReply } from "../src/lib/ai/local.ts";
+import { decodeWorld, encodeWorld } from "../src/lib/preview/codec.ts";
 import { actors, buyerView, holdReply, matchesFor, performanceFor, saveDescription, seedWorld, todayFor, updateLead } from "../src/lib/preview/world.ts";
-import { guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
+import { guyanaInputValue, guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
 
 const world = seedWorld();
 const matches = matchesFor(world, actors.asha);
@@ -29,7 +30,20 @@ assert.equal(heldAfter.world.outbox.length, 2);
 assert.equal(buyerView(heldAfter.world, actors.maria).enquiries[0].reply, "");
 const utc = guyanaLocalToUtc("2026-10-23T15:00");
 assert.equal(utc, "2026-10-23T19:00:00.000Z");
+assert.equal(guyanaInputValue(utc || ""), "2026-10-23T15:00");
+assert.equal(guyanaLocalToUtc("2026-10-23T19:00:00.000Z"), "2026-10-23T19:00:00.000Z");
+assert.equal(guyanaLocalToUtc("2026-02-31T15:00"), null);
 assert.match(guyanaLabel(utc || ""), /3:00/);
+let packed = world;
+for (let i = 0; i < 30; i += 1) {
+  const next = holdReply(packed, actors.asha, "lead-maria", `Hold number ${i} stays on the desk.`, 1_700_000_000_000 + i);
+  assert.equal(next.error, undefined);
+  packed = next.world;
+}
+const cookie = encodeWorld(packed);
+assert.ok(cookie.length < 4000, `cookie is ${cookie.length}`);
+const restored = decodeWorld(cookie);
+assert.ok(restored.outbox.some((item) => item.body.includes("Hold number 29")));
 const stats = performanceFor(world, actors.asha);
 assert.equal(stats.live, 2);
 assert.equal(stats.hidden, 1);

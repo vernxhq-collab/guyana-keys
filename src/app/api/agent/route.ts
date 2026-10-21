@@ -37,11 +37,20 @@ export async function GET(request: Request) {
   if (part === "listings") return NextResponse.json(await agentListings(gate.profile));
   if (part === "listing") return NextResponse.json(await agentListing(gate.profile, id || "new"));
   if (part === "leads") return NextResponse.json(await agentLeadList(gate.profile));
-  if (part === "lead") return NextResponse.json(await agentLead(gate.profile, id));
+  if (part === "lead") {
+    const result = await agentLead(gate.profile, id);
+    if (result.error) return NextResponse.json({ error: result.error }, { status: 404 });
+    return NextResponse.json(result);
+  }
   if (part === "calendar") return NextResponse.json(await agentCalendar(gate.profile));
   if (part === "performance") {
     const data = await agentListings(gate.profile);
-    return NextResponse.json({ rows: data.listings.map((listing) => ({ id: listing.id, title: listing.title, status: listing.status || "hidden", views: 0, saves: 0, enquiries: listing.enquiries })) });
+    const rows = data.listings || [];
+    return NextResponse.json({
+      live: rows.filter((listing) => listing.status === "live").length,
+      hidden: rows.filter((listing) => listing.status !== "live").length,
+      rows: rows.map((listing) => ({ id: listing.id, title: listing.title, status: listing.status || "hidden", views: 0, saves: 0, enquiries: listing.enquiries })),
+    });
   }
   if (part === "agency") {
     const data = await agentListings(gate.profile);
@@ -67,7 +76,7 @@ export async function POST(request: Request) {
   const gate = await agent();
   if ("error" in gate) return gate.error;
   const action = String(body.action || "");
-  let result: { error?: string; id?: string; ok?: boolean; live?: number; cap?: number } = { error: "Unknown action." };
+  let result: { error?: string; id?: string; ok?: boolean; live?: number; cap?: number; pending?: boolean } = { error: "Unknown action." };
   if (action === "saveListing") result = await saveListing(gate.profile, body);
   else if (action === "duplicate") result = await duplicateListing(gate.profile, String(body.id || ""));
   else if (action === "hide") result = await hideListing(gate.profile, String(body.id || ""));

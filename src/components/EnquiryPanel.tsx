@@ -59,7 +59,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
     const res = await fetch("/api/enquiries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ propertyId: listing.id, name: data.get("name"), phone: data.get("phone"), note: data.get("note") }),
+      body: JSON.stringify({ propertyId: listing.id, name: data.get("name"), phone: data.get("phone"), note: data.get("note"), website: data.get("website") || "" }),
     });
     const body = await res.json().catch(() => ({}));
     setBusy(false);
@@ -75,6 +75,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
         <strong>Contact agent</strong>
         <input name="name" required placeholder="Your name" defaultValue={viewer?.name || ""} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
         <input name="phone" required placeholder="WhatsApp number" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+        <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
         <input name="note" placeholder="Message (optional)" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
         <button className="btn" type="submit" disabled={busy}>Request info</button>
       </form>

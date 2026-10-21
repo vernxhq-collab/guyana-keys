@@ -34,7 +34,7 @@ export function SessionCatcher() {
     fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "session", accessToken, desk: deskFor(path) }),
+      body: JSON.stringify({ action: "session", accessToken, refreshToken: hash.get("refresh_token") || "", desk: deskFor(path) }),
     })
       .then(async (res) => ({ ok: res.ok, data: await res.json() }))
       .then(({ ok, data }) => {

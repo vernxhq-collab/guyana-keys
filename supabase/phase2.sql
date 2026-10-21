@@ -1,4 +1,6 @@
--- Phase 2. Do not run against production until approved.
+-- DO NOT RUN. Not applied. Not part of any deploy.
+-- Row security below denies everyone except the table owner.
+-- supabase/p0-rls.sql locks these tables again if they exist. Do not run this on production.
 
 create table if not exists listing_stats (
   property_id text primary key,
@@ -25,3 +27,10 @@ create table if not exists outbox (
   status text not null default 'held',
   created_at timestamptz not null default now()
 );
+
+alter table listing_stats enable row level security;
+alter table buyer_needs enable row level security;
+alter table outbox enable row level security;
+revoke all on table listing_stats from public;
+revoke all on table buyer_needs from public;
+revoke all on table outbox from public;

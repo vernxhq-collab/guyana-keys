@@ -222,7 +222,17 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     existing = data as Record<string, unknown>;
   }
   const next = listingInput(profile, body, existing);
+  let pending = false;
+  if (next.status === "live" && profile.approved === false) {
+    next.status = "hidden";
+    pending = true;
+  }
   const savedId = existing ? id : newId("gy");
+  if (next.status === "live") {
+    const owned = await ownListings(profile.id);
+    const live = owned.filter((row) => String(row.status || "") === "live" && String(row.id) !== savedId).length;
+    if (live >= profile.listingCap) return { error: "cap", live, cap: profile.listingCap };
+  }
   const payload = existing ? next : { id: savedId, ...next, held_live: false };
   const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
   if (writeError) return { error: "The listing could not be saved." };
@@ -236,7 +246,7 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
       priceGyd: next.price_gyd,
     });
   }
-  return { id: savedId };
+  return pending ? { id: savedId, pending: true } : { id: savedId };
 }
 
 function columnMissing(error: { message?: string } | null, column: string) {
@@ -361,7 +371,7 @@ export async function agentLead(profile: Profile, id: string) {
   const { db, error } = dbOrError();
   if (!db) return { error };
   const { data } = await db.from("enquiries").select("*").eq("id", id).eq("agent_id", profile.id).maybeSingle();
-  if (!data) return { error: "That lead was not found." };
+  if (!data) return { error: "Not found or not in your agency." };
   const row = data as Record<string, unknown>;
   const property = row.property_id ? await db.from("properties").select("*").eq("id", String(row.property_id)).eq("agent_id", profile.id).maybeSingle() : { data: null };
   const listing = property.data ? mapProperty(property.data as Record<string, unknown>) : undefined;
