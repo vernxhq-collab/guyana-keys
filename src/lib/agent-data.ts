@@ -7,6 +7,7 @@ import { cleanFacts } from "./place-facts";
 import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
+import { guyanaLocalToUtc } from "./time";
 import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
@@ -91,7 +92,24 @@ export async function agentHome(profile: Profile) {
     viewings,
     openRequests: (requests.data || []).length,
     today: actions.slice(0, 12),
+    greetingName: profile.name,
+    agency: profile.company,
   };
+}
+
+export async function agentCalendar(profile: Profile) {
+  const [rows, leads] = await Promise.all([ownListings(profile.id), ownLeads(profile.id)]);
+  const listings = rows.map((row) => mapProperty(row as Record<string, unknown>));
+  const viewings = leads
+    .filter((lead) => lead.viewing_at)
+    .map((lead) => ({
+      id: String(lead.id),
+      name: String(lead.name || "Buyer"),
+      home: titleOf(listings, String(lead.property_id || "")),
+      viewingAt: String(lead.viewing_at),
+      href: `/agent/leads/${lead.id}`,
+    }));
+  return { viewings };
 }
 
 export async function agentListings(profile: Profile) {
@@ -204,6 +222,11 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     existing = data as Record<string, unknown>;
   }
   const next = listingInput(profile, body, existing);
+  let pending = false;
+  if (next.status === "live" && profile.approved === false) {
+    next.status = "hidden";
+    pending = true;
+  }
   const savedId = existing ? id : newId("gy");
   const payload = existing ? next : { id: savedId, ...next, held_live: false };
   const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
@@ -218,7 +241,7 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
       priceGyd: next.price_gyd,
     });
   }
-  return { id: savedId };
+  return pending ? { id: savedId, pending: true } : { id: savedId };
 }
 
 function columnMissing(error: { message?: string } | null, column: string) {
@@ -343,7 +366,7 @@ export async function agentLead(profile: Profile, id: string) {
   const { db, error } = dbOrError();
   if (!db) return { error };
   const { data } = await db.from("enquiries").select("*").eq("id", id).eq("agent_id", profile.id).maybeSingle();
-  if (!data) return { error: "That lead was not found." };
+  if (!data) return { error: "Not found or not in your agency." };
   const row = data as Record<string, unknown>;
   const property = row.property_id ? await db.from("properties").select("*").eq("id", String(row.property_id)).eq("agent_id", profile.id).maybeSingle() : { data: null };
   const listing = property.data ? mapProperty(property.data as Record<string, unknown>) : undefined;
@@ -387,11 +410,11 @@ export async function updateLead(profile: Profile, body: Record<string, unknown>
     patch.viewing_at = null;
     await addEvent(id, "viewing_cleared", "The viewing time was removed.");
   } else if (typeof body.viewingAt === "string" && body.viewingAt) {
-    const time = new Date(body.viewingAt);
-    if (Number.isNaN(time.getTime())) return { error: "Enter a real date and time." };
-    patch.viewing_at = time.toISOString();
-    const draft = replyDraft({ name: String(row.name || ""), listing: title, viewingAt: time.toISOString() });
-    await addEvent(id, "viewing_set", time.toISOString());
+    const iso = guyanaLocalToUtc(body.viewingAt);
+    if (!iso) return { error: "Enter a real date and time." };
+    patch.viewing_at = iso;
+    const draft = replyDraft({ name: String(row.name || ""), listing: title, viewingAt: iso });
+    await addEvent(id, "viewing_set", iso);
     await addEvent(id, "reply_drafted", draft.message);
     if (!patch.stage && (row.stage === "new" || row.stage === "contacted")) {
       patch.stage = "viewing";

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { clientKey, tooMany } from "../../../lib/abuse";
 import { draftListing, draftReply } from "../../../lib/draft";
 export async function POST(request: Request) {
+  if (tooMany(`${clientKey(request)}:draft`, 20, 10 * 60 * 1000)) return NextResponse.json({ error: "Too many drafts. Wait and try again." }, { status: 429 });
   const body = await request.json();
   if (body.kind === "reply") return NextResponse.json({ reply: draftReply(body.name || "there", body.listing || "this listing") });
   if (!body.notes) return NextResponse.json({ error: "Paste the agent's notes." }, { status: 400 });

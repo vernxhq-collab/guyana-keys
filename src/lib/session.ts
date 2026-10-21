@@ -21,6 +21,7 @@ export type Profile = {
   listingCap: number;
   abroad: boolean;
   suspended: boolean;
+  approved: boolean;
 };
 
 export type SessionUser = { id: string; name: string; email: string };
@@ -79,6 +80,7 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     listingCap: liveCap(plan, Number(row.listing_cap ?? 3)),
     abroad: Boolean(row.abroad),
     suspended: Boolean(row.suspended),
+    approved: row.approved === undefined ? true : row.approved !== false,
   };
 }
 
@@ -129,8 +131,15 @@ async function insertProfile(user: SessionUser, role: Role) {
     listing_cap: 3,
     abroad: false,
     suspended: false,
+    approved: false,
   };
   const { error } = await db.from("profiles").insert(row);
+  if (error && String(error.message || "").toLowerCase().includes("approved")) {
+    const { approved: _approved, ...legacy } = row;
+    const again = await db.from("profiles").insert(legacy);
+    if (again.error) return null;
+    return mapProfile(legacy);
+  }
   if (error) {
     const again = await loadProfile(user.id);
     if (again) return again;

@@ -159,6 +159,7 @@ export async function adminAgent(id: string) {
       suspended: Boolean(data.suspended),
       graLicence: String(data.gra_licence || ""),
       verified: Boolean(data.verified),
+      approved: data.approved === undefined ? true : data.approved !== false,
       createdAt: String(data.created_at || ""),
     },
     listings: listings.map((row) => ({
@@ -326,6 +327,31 @@ export async function setCap(agentId: string, cap: number) {
   const { error } = await db.from("profiles").update({ listing_cap: rounded }).eq("id", agentId).eq("role", "agent");
   if (error) return { error: "The cap could not be saved." };
   await remember(db, `Set ${data.name || "an agent"}'s cap to ${rounded}.`);
+  return { ok: true };
+}
+
+export async function setApproved(agentId: string, approved: boolean) {
+  const db = serviceDb();
+  if (!db) return { error: "Approval could not be saved." };
+  const { data } = await db.from("profiles").select("name").eq("id", agentId).eq("role", "agent").maybeSingle();
+  if (!data) return { error: "That agent was not found." };
+  const { error } = await db.from("profiles").update({ approved }).eq("id", agentId).eq("role", "agent");
+  if (error && String(error.message || "").toLowerCase().includes("approved")) return { error: "Approval is not ready on this desk yet." };
+  if (error) return { error: "Approval could not be saved." };
+  await remember(db, approved ? `Approved ${data.name || "an agent"} to publish.` : `Approval removed for ${data.name || "an agent"}.`);
+  return { ok: true };
+}
+
+export async function adminPublish(propertyId: string) {
+  const db = serviceDb();
+  if (!db) return { error: "The listing could not be published." };
+  const { data } = await db.from("properties").select("title,agent_id").eq("id", propertyId).maybeSingle();
+  if (!data) return { error: "That listing was not found." };
+  const agent = data.agent_id ? await db.from("profiles").select("approved").eq("id", data.agent_id).maybeSingle() : { data: null };
+  if (agent.data && agent.data.approved === false) return { error: "Approve the agent before this listing goes live." };
+  const { error } = await db.from("properties").update({ status: "live" }).eq("id", propertyId);
+  if (error) return { error: "The listing could not be published." };
+  await remember(db, `Published ${data.title || "a listing"}.`);
   return { ok: true };
 }
 

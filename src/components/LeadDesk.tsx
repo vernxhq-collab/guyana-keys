@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "./DeskSkeleton";
 import { digits, eventLabel, stageLabel } from "../lib/labels";
+import { guyanaInputValue } from "../lib/time";
 import { whenLabel } from "../lib/assist";
 
 type Lead = {
@@ -29,6 +30,7 @@ type Lead = {
   reviewRequested: boolean;
   draft: string;
   agentReply: string;
+  preview?: boolean;
   timeline: { id: string; kind: string; detail: string; createdAt: string }[];
 };
 
@@ -53,7 +55,7 @@ export function LeadDesk({ id }: { id: string }) {
     setReply(data.lead.draft || "");
     setNote(data.lead.privateNote || "");
     setStage(data.lead.stage || "new");
-    setWhen(data.lead.viewingAt ? data.lead.viewingAt.slice(0, 16) : "");
+    setWhen(data.lead.viewingAt ? guyanaInputValue(data.lead.viewingAt) : "");
   }
 
   useEffect(() => { void load(); }, [id]);
@@ -118,13 +120,21 @@ export function LeadDesk({ id }: { id: string }) {
       <p className="quiet">Nothing is sent until you open WhatsApp yourself.</p>
       <div className="actions">
         <button className="btn ghost" type="button" onClick={async () => {
+          if (lead.preview) {
+            const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "replyDraft", id: lead.id }) });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.message) setAiNote("AI is not available, continue manually.");
+            else { setReply(data.message); setAiNote("Draft only. Nothing has been sent."); }
+            return;
+          }
           const res = await fetch("/api/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ task: "reply-draft", lead: { name: lead.name, listing: lead.home, viewingAt: lead.viewingAt || null } }) });
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.message) setAiNote("AI is not available, continue manually.");
           else { setReply(data.message); setAiNote(""); }
         }}>Draft reply</button>
         <button className="btn ghost" type="button" onClick={async () => { await navigator.clipboard.writeText(reply); await save({ reply, saveDraft: true }); setMessage("Copied."); }}>Copy</button>
-        <a className="btn" href={wa} target="_blank" rel="noreferrer" onClick={() => void save({ reply, openWhatsapp: true })}>Open WhatsApp</a>
+        {lead.preview ? null : <a className="btn" href={wa} target="_blank" rel="noreferrer" onClick={() => void save({ reply, openWhatsapp: true })}>Open WhatsApp</a>}
+        {lead.preview ? <button className="btn ghost" type="button" onClick={async () => { if (await save({ reply, saveDraft: true })) { const res = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "hold", id: lead.id, reply }) }); const data = await res.json(); setMessage(res.ok ? "Held in the outbox. Nothing was sent." : data.error || "Could not hold the reply."); } }}>Hold reply</button> : null}
       </div>
       <label>Viewing time<input type="datetime-local" value={when} onChange={(event) => setWhen(event.target.value)} /></label>
       <div className="actions">

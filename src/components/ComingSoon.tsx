@@ -22,13 +22,14 @@ export function ComingSoon({
         const res = await fetch("/api/alerts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: data.get("email"), area: data.get("area") }),
+          body: JSON.stringify({ email: data.get("email"), area: data.get("area"), website: data.get("website") || "" }),
         });
         const payload = await res.json().catch(() => ({}));
-        setSent(res.ok ? "Alert saved. Email goes out when email is connected." : payload.error || "Could not save the alert.");
+        setSent(res.ok ? "Check that email and confirm the alert. Nothing is sent until you confirm." : payload.error || "Could not save the alert.");
       }}>
         <input name="email" type="email" required placeholder="Email" />
         <input name="area" required placeholder="Area, such as Bel Air Park" />
+        <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
         <button className="btn" type="submit">Create alert</button>
       </form>
       {sent ? <p>{sent}</p> : null}

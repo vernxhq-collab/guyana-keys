@@ -38,7 +38,7 @@ export default function AdminListingsPage() {
         <article className="panel" key={row.id}>
           <strong>{row.title}</strong>
           <p className="quiet">{row.area} · {row.agentName} · {row.status === "live" ? "Live" : "Hidden"} · {row.featured ? "Featured" : "Not featured"}</p>
-          {row.status === "live" ? <button className="btn ghost" type="button" onClick={() => void act({ action: "hide", propertyId: row.id })}>Hide</button> : null}
+          {row.status === "live" ? <button className="btn ghost" type="button" onClick={() => void act({ action: "hide", propertyId: row.id })}>Hide</button> : <button className="btn ghost" type="button" onClick={() => void act({ action: "publish", propertyId: row.id })}>Publish</button>}
           {row.featured ? <button className="btn ghost" type="button" onClick={() => void act({ action: "unfeature", propertyId: row.id })}>Unfeature</button> : row.featurePaid ? <button className="btn ghost" type="button" onClick={() => void act({ action: "feature", propertyId: row.id })}>Mark featured</button> : null}
         </article>
       ))}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientKey, tooMany } from "../../../lib/abuse";
 import { newId } from "../../../lib/labels";
 import { leadIntent, notifyAgentEnquiry } from "../../../lib/notify";
 import { readSession } from "../../../lib/session";
@@ -6,6 +7,8 @@ import { serviceDb } from "../../../lib/supabase";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
+  if (String(body.website || "").trim()) return NextResponse.json({ error: "The enquiry could not be saved." }, { status: 400 });
+  if (tooMany(`${clientKey(request)}:enquiry`, 10, 10 * 60 * 1000)) return NextResponse.json({ error: "Too many enquiries. Wait and try again." }, { status: 429 });
   const name = String(body.name || "").trim();
   const phone = String(body.phone || "").trim();
   const note = String(body.note || "").trim();
