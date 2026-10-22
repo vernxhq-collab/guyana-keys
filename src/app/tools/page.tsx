@@ -10,13 +10,16 @@ export const metadata: Metadata = {
 
 export default function ToolsPage() {
   return (
-    <main className="wrap section">
+    <main className="wrap section tools-page">
       <h1>Mortgage and purchase costs</h1>
       <p className="sub">Type the rate you were quoted. Figures are estimates. Confirm them with the lender and your attorney.</p>
       <MortgageCalculator />
       <h2>Currency guide</h2>
       <CurrencyConverter />
-      <p className="meta"><Link href="/partners">Partner with us</Link> · <Link href="/guides">Safety guide</Link></p>
+      <div className="tool-cards">
+        <Link href="/partners"><strong>Partner with us</strong><span>List a property or work with the Guyana Keys desk.</span></Link>
+        <Link href="/guides"><strong>Safety guide</strong><span>Read what to check before you pay a deposit.</span></Link>
+      </div>
     </main>
   );
 }
