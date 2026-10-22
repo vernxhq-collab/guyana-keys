@@ -13,7 +13,7 @@ import { noticeAllowed, tooMany } from "../src/lib/abuse.ts";
 import { checkBadge, expireStatus } from "../src/lib/licences.ts";
 import { publishedRates } from "../src/lib/rates.ts";
 import { ID_CONSENT_VERSION, RETENTION_REVIEW_ENABLED, idConsentText, retentionReviewJob } from "../src/lib/compliance/retention.ts";
-import { codeStillCurrent, imageQuality, makeCheckCode, verificationProvider } from "../src/lib/keys-check.ts";
+import { SUBJECT_TYPES, codeStillCurrent, imageQuality, makeCheckCode, verificationProvider } from "../src/lib/keys-check.ts";
 import { guyanaInputValue, guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
 
 const world = seedWorld();
@@ -158,6 +158,10 @@ assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import
 assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("partnerSample"), true);
 assert.equal(verificationProvider().id, "manual");
 assert.equal(verificationProvider().review, "human");
+assert.equal(verificationProvider().subjectType, "agent");
+assert.equal(verificationProvider("tenant").id, "manual");
+assert.equal(verificationProvider("tenant").subjectType, "tenant");
+assert.deepEqual([...SUBJECT_TYPES], ["agent", "tenant", "purchaser", "landlord"]);
 assert.equal(makeCheckCode(() => 0), "AAAAAA");
 assert.equal(codeStillCurrent(new Date().toISOString()), true);
 assert.equal(codeStillCurrent("2020-01-01T00:00:00Z"), false);

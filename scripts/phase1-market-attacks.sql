@@ -54,7 +54,7 @@ delete from public.partners where id = 'partner-hidden';
 
 delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
 delete from public.id_documents where id in ('doc-a', 'doc-b');
-delete from public.keys_checks where id in ('chk-a', 'chk-b');
+delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord');
 
 insert into public.id_documents (id, agent_id, kind, storage_path, consent_version, consent_at, sha256)
 values
@@ -84,6 +84,17 @@ begin
   ) then
     raise exception 'duplicate flags do not run with definer rights';
   end if;
+  if not exists (select 1 from public.keys_checks where id = 'chk-a' and subject_type = 'agent') then
+    raise exception 'a keys check did not record the agent subject';
+  end if;
+  insert into public.keys_checks (id, agent_id, subject_type)
+  values
+    ('chk-tenant', '33333333-3333-4333-8333-333333333333', 'tenant'),
+    ('chk-purchaser', '33333333-3333-4333-8333-333333333333', 'purchaser'),
+    ('chk-landlord', '33333333-3333-4333-8333-333333333333', 'landlord');
+  if (select count(*) from public.keys_checks where id in ('chk-tenant', 'chk-purchaser', 'chk-landlord')) <> 3 then
+    raise exception 'tenant, purchaser, or landlord could not use the same check table';
+  end if;
   begin
     insert into public.keys_checks (id, agent_id, provider)
     values ('chk-bad', '22222222-2222-4222-8222-222222222222', 'didit');
@@ -91,8 +102,15 @@ begin
   exception when check_violation then
     null;
   end;
+  begin
+    insert into public.keys_checks (id, agent_id, subject_type)
+    values ('chk-role', '22222222-2222-4222-8222-222222222222', 'employer');
+    raise exception 'a subject outside the four roles was stored';
+  exception when check_violation then
+    null;
+  end;
 end $$;
 
 delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
 delete from public.id_documents where id in ('doc-a', 'doc-b');
-delete from public.keys_checks where id in ('chk-a', 'chk-b');
+delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord');

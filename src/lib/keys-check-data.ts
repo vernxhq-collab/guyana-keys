@@ -32,6 +32,7 @@ function viewCheck(row: Row | null) {
   return {
     id: text(row.id),
     status: text(row.status) || "collecting",
+    subjectType: text(row.subject_type) || verificationProvider().subjectType,
     provider: text(row.provider) || verificationProvider().id,
     idKind: text(row.id_kind),
     idNumber: text(row.id_number),
@@ -57,7 +58,7 @@ function viewCheck(row: Row | null) {
 async function latestCheck(agentId: string) {
   const db = serviceDb();
   if (!db) return { db: null, row: null as Row | null, missing: false };
-  const { data, error } = await db.from("keys_checks").select("*").eq("agent_id", agentId).order("created_at", { ascending: false }).limit(1);
+  const { data, error } = await db.from("keys_checks").select("*").eq("agent_id", agentId).eq("subject_type", "agent").order("created_at", { ascending: false }).limit(1);
   if (missingTable(error)) return { db, row: null, missing: true };
   return { db, row: (data?.[0] as Row | undefined) || null, missing: false };
 }
@@ -91,6 +92,7 @@ export async function issueKeysCode(agentId: string) {
   const { error } = await found.db.from("keys_checks").insert({
     id: newId("chk"),
     agent_id: agentId,
+    subject_type: "agent",
     status: "collecting",
     provider: "manual",
     code,
@@ -116,7 +118,7 @@ export async function saveKeysFile(input: {
   let check = found.row;
   if (!check || text(check.status) === "approved" || text(check.status) === "rejected") {
     const createdId = newId("chk");
-    const created = await found.db.from("keys_checks").insert({ id: createdId, agent_id: input.agentId, status: "collecting", provider: "manual" });
+    const created = await found.db.from("keys_checks").insert({ id: createdId, agent_id: input.agentId, subject_type: "agent", status: "collecting", provider: "manual" });
     if (created.error) return { error: "The check could not be opened." };
     check = { id: createdId, status: "collecting", code: "", code_issued_at: "" };
   }

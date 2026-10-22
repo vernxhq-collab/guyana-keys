@@ -272,6 +272,7 @@ $bucket$;
 create table if not exists public.keys_checks (
   id text primary key,
   agent_id uuid not null,
+  subject_type text not null default 'agent',
   status text not null default 'collecting',
   provider text not null default 'manual',
   id_kind text not null default '',
@@ -295,6 +296,10 @@ create table if not exists public.keys_checks (
   created_at timestamptz not null default now()
 );
 
+alter table public.keys_checks add column if not exists subject_type text not null default 'agent';
+comment on column public.keys_checks.agent_id is 'The account this check belongs to. The role of the check is subject_type.';
+comment on column public.keys_checks.subject_type is 'agent, tenant, purchaser, or landlord. This phase writes agent only.';
+
 alter table public.keys_checks drop constraint if exists keys_checks_status_check;
 alter table public.keys_checks add constraint keys_checks_status_check
   check (status in ('collecting', 'submitted', 'noted', 'approved', 'rejected'));
@@ -304,6 +309,9 @@ alter table public.keys_checks add constraint keys_checks_provider_check
 alter table public.keys_checks drop constraint if exists keys_checks_id_kind_check;
 alter table public.keys_checks add constraint keys_checks_id_kind_check
   check (id_kind in ('', 'national_id', 'passport', 'drivers_licence'));
+alter table public.keys_checks drop constraint if exists keys_checks_subject_type_check;
+alter table public.keys_checks add constraint keys_checks_subject_type_check
+  check (subject_type in ('agent', 'tenant', 'purchaser', 'landlord'));
 
 create table if not exists public.keys_check_flags (
   id text primary key,

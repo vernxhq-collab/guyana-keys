@@ -46,7 +46,7 @@ Approval can add "ID" to the public check line. The line still names what was ch
 - The bucket is private. The app does not build a public object URL for these files.
 - The object path starts with the agent's id.
 - Metadata is in `id_documents`: kind (`id_front`, `id_back`, `licence`, `selfie_with_id`, `code_selfie`, `code_video`), storage path, sha256, quality note, `consent_version`, `consent_at`, `retention_months` (default 24), and `deleted_at`.
-- The check itself is in `keys_checks`, including the code and `code_issued_at`. Flags are in `keys_check_flags`.
+- The check itself is in `keys_checks`, including the code, `code_issued_at`, and `subject_type`. The subject is `agent`, `tenant`, `purchaser`, or `landlord`. This phase writes `agent` only. The same table and the same manual provider are used for every subject. Flags are in `keys_check_flags`.
 - Row level security lets an agent read and insert only their own rows. An agent cannot read another agent's documents. An agent cannot set a check to approved. Anonymous users have no select grant on the document table.
 - The app uploads and opens files with the service role. A missing bucket returns "The private identity bucket is not set up yet." It does not fall back to `listing-photos`.
 

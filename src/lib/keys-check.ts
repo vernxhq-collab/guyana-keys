@@ -7,19 +7,37 @@ export type IdKind = (typeof ID_KINDS)[number];
 export const VERIFICATION_PROVIDERS = ["manual", "future_inhouse_auto", "future_eid_registry"] as const;
 export type VerificationProviderId = (typeof VERIFICATION_PROVIDERS)[number];
 
+/** Who the check is about. The same provider and the same table serve every role. */
+export const SUBJECT_TYPES = ["agent", "tenant", "purchaser", "landlord"] as const;
+export type SubjectType = (typeof SUBJECT_TYPES)[number];
+
+export function isSubjectType(value: string): value is SubjectType {
+  return (SUBJECT_TYPES as readonly string[]).includes(value);
+}
+
+export function subjectLabel(value: string) {
+  if (value === "agent") return "Agent";
+  if (value === "tenant") return "Tenant";
+  if (value === "purchaser") return "Purchaser";
+  if (value === "landlord") return "Landlord";
+  return "";
+}
+
 /**
- * The only provider this phase runs. A later open-source reader (document OCR or MRZ)
- * would be a second object with id "future_inhouse_auto" and a readDocument method.
+ * The only provider this phase runs. It does not change with the subject.
+ * A later open-source reader (document OCR or MRZ) would be a second object
+ * with id "future_inhouse_auto" and a readDocument method.
  * A Guyana Digital Identity Card registry lookup would be id "future_eid_registry".
  * Neither method exists here. There is no face-match function.
  */
 export type VerificationProvider = {
   id: VerificationProviderId;
   review: "human";
+  subjectType: SubjectType;
 };
 
-export function verificationProvider(): VerificationProvider {
-  return { id: "manual", review: "human" };
+export function verificationProvider(subjectType: SubjectType = "agent"): VerificationProvider {
+  return { id: "manual", review: "human", subjectType };
 }
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

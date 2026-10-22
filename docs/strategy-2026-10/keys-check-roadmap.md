@@ -12,6 +12,8 @@ The browser can warn that a photo looks small, soft, or very bright. Those warni
 
 An admin opens the files side by side for 60 seconds. Each open is audited. The reviewer saves a checklist and a note. A second action approves, rejects, or asks for the files again, with a reason, a name, and a time. No face-matching model runs.
 
+Each row stores `subject_type`: `agent`, `tenant`, `purchaser`, or `landlord`. The provider does not change with that value. This phase writes `agent` only. A later tenant, purchaser, or landlord check uses the same table. That later use is described in `docs/strategy-2026-10/tenancy-toolkit.md` and is not built.
+
 Retention, consent, the private `identity-documents` bucket, signed URLs, the audit log, and deletion requests are described in `docs/compliance/id-data.md`.
 
 ## Stage 2, assisted reading
