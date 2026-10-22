@@ -6,7 +6,7 @@ import { canUseAgentDesk, readSession } from "../../../lib/session";
 
 const simulated = new Set(["/agent/compose", "/agent/outbox", "/agent/agency"]);
 
-const items: [string, string][] = [["Today", "/agent"], ["Listings", "/agent/listings"], ["Leads", "/agent/leads"], ["Calendar", "/agent/calendar"], ["Plan", "/agent/plan"]];
+const items: [string, string][] = [["Today", "/agent"], ["Listings", "/agent/listings"], ["Leads", "/agent/leads"], ["Calendar", "/agent/calendar"], ["Checks", "/agent/checks"], ["Plan", "/agent/plan"]];
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
   const preview = await readPreview();

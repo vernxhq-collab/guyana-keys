@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { pageAttribution } from "../lib/page-context";
 
-export function LeadForm({ propertyId, preset, button }: { propertyId?: string; preset: string; button: string }) {
+export function LeadForm({ propertyId, preset, button, leadKind = "enquiry", partnerId = "", sample = false }: { propertyId?: string; preset: string; button: string; leadKind?: "enquiry" | "title_check" | "intro"; partnerId?: string; sample?: boolean }) {
   const [sent, setSent] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (sample) {
+      setSent("Sample preview. This does not send a lead.");
+      return;
+    }
     const data = new FormData(event.currentTarget);
     const message = String(data.get("note") || "").trim();
     setBusy(true);
@@ -20,6 +25,7 @@ export function LeadForm({ propertyId, preset, button }: { propertyId?: string; 
         phone: data.get("phone"),
         note: message ? `${preset} — ${message}` : preset,
         website: data.get("website") || "",
+        ...pageAttribution({ leadKind, partnerId }),
       }),
     });
     const body = await res.json().catch(() => ({}));

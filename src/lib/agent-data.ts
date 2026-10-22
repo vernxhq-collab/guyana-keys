@@ -8,6 +8,8 @@ import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
 import { guyanaLocalToUtc } from "./time";
+import { formatLeadSource } from "./attribution";
+import { MIN_LIVE_PHOTOS } from "./listing-rules";
 import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
@@ -87,7 +89,6 @@ export async function agentHome(profile: Profile) {
   return {
     plan: planLabel(profile.plan),
     live,
-    cap: profile.listingCap,
     unanswered,
     viewings,
     openRequests: (requests.data || []).length,
@@ -126,7 +127,6 @@ export async function agentListings(profile: Profile) {
   }
   return {
     live: listings.filter((item) => item.status === "live").length,
-    cap: profile.listingCap,
     listings: listings.map((listing) => ({ ...listing, enquiries: counts.get(listing.id) || 0 })),
   };
 }
@@ -134,7 +134,6 @@ export async function agentListings(profile: Profile) {
 export async function agentListing(profile: Profile, id: string) {
   const base = {
     live: 0,
-    cap: profile.listingCap,
     listing: null as (Listing & { priceSuggested?: boolean }) | null,
   };
   const rows = await ownListings(profile.id);
@@ -142,7 +141,9 @@ export async function agentListing(profile: Profile, id: string) {
   if (id === "new") return base;
   const row = rows.find((item) => String((item as { id?: string }).id) === id);
   if (!row) return { error: "That listing was not found." as const };
-  return { ...base, listing: mapProperty(row as Record<string, unknown>) };
+  const listing = mapProperty(row as Record<string, unknown>);
+  listing.ownerPermission = (row as { owner_permission?: boolean }).owner_permission === true;
+  return { ...base, listing };
 }
 
 function cleanPhotos(value: unknown, agentId: string) {
@@ -186,6 +187,9 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     description: String(body.description || "").slice(0, 8000),
     title_ref: String(body.titleRef || "").trim().slice(0, 160),
     title_status: cleanTitleStatus(body.titleStatus),
+    title_checked_by_lawyer: body.titleCheckedByLawyer === true,
+    title_lawyer_partner_id: body.titleCheckedByLawyer === true ? String(body.titleLawyerPartnerId || "").trim().slice(0, 80) : "",
+    title_checked_on: body.titleCheckedByLawyer === true && /^\d{4}-\d{2}-\d{2}$/.test(String(body.titleCheckedOn || "")) ? String(body.titleCheckedOn) : null,
     mobile_networks: facts.mobileNetworks,
     broadband_providers: facts.broadbandProviders,
     broadband_speed: facts.broadbandSpeed,
@@ -198,16 +202,21 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     featured: Boolean(existing?.featured),
     photo_urls: cleanPhotos(body.photos, profile.id),
     agent_id: profile.id,
+    owner_permission: body.ownerPermission === true,
+    price_reduced: false,
   };
 }
 
-export function listingChecks(input: { photos: string[]; lat: number; lng: number; price: number; area: string; description: string }) {
+export function listingChecks(input: { photos: string[]; lat: number; lng: number; price: number; area: string; description: string; status?: string; ownerPermission?: boolean; photosConfirmed?: boolean }) {
+  const live = input.status === "live";
   return [
-    { ok: input.photos.length > 0, label: "Add a photo." },
+    { ok: live ? input.photos.length >= MIN_LIVE_PHOTOS : input.photos.length > 0, label: live ? "Add at least 3 photos before this can go live." : "Add a photo." },
     { ok: Number.isFinite(input.lat) && Number.isFinite(input.lng), label: "Drop a pin on the map." },
     { ok: input.price > 0, label: "Enter a price in GYD." },
     { ok: Boolean(input.area), label: "Choose an area." },
     { ok: input.description.trim().length >= 40, label: "Write a description of 40 characters or more." },
+    { ok: !live || input.ownerPermission === true, label: "Confirm the owner allows this listing." },
+    { ok: !live || input.photosConfirmed === true, label: "Confirm the photos are landscape, with no watermark and no other agency logo." },
   ];
 }
 
@@ -222,14 +231,31 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     existing = data as Record<string, unknown>;
   }
   const next = listingInput(profile, body, existing);
+  const previousPrice = Number(existing?.price_gyd || 0);
+  next.price_reduced = previousPrice > 0 && next.price_gyd > 0 && next.price_gyd < previousPrice
+    ? true
+    : Boolean(existing?.price_reduced) && next.price_gyd > 0 && next.price_gyd <= previousPrice;
   let pending = false;
   if (next.status === "live" && profile.approved === false) {
     next.status = "hidden";
     pending = true;
   }
+  if (next.status === "live" && next.photo_urls.length < MIN_LIVE_PHOTOS) {
+    return { error: "Add at least 3 photos before a listing can go live." };
+  }
+  if (next.status === "live" && !next.owner_permission) {
+    return { error: "Confirm the owner allows this listing before it can go live." };
+  }
+  if (next.status === "live" && body.photosConfirmed !== true) {
+    return { error: "Confirm the photos are landscape, with no watermark and no other agency logo." };
+  }
+  if (next.title_checked_by_lawyer && (!next.title_lawyer_partner_id || !next.title_checked_on)) {
+    return { error: "A lawyer check needs the partner id and the date." };
+  }
   const savedId = existing ? id : newId("gy");
   const payload = existing ? next : { id: savedId, ...next, held_live: false };
   const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
+  if (writeError && String(writeError.message || "").includes("Title status Other")) return { error: writeError.message };
   if (writeError) return { error: "The listing could not be saved." };
   if (next.status === "live" && existing?.status !== "live") {
     await notifyMatches({
@@ -245,7 +271,9 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
 }
 
 function columnMissing(error: { message?: string } | null, column: string) {
-  return String(error?.message || "").toLowerCase().includes(column);
+  const message = String(error?.message || "").toLowerCase();
+  if (message.includes("check constraint") || message.includes("violates check")) return false;
+  return message.includes(column);
 }
 
 async function writeProperty(
@@ -260,11 +288,22 @@ async function writeProperty(
     : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
   let row = { ...payload };
   let result = await run(row);
-  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note"];
+  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note", "owner_permission", "price_reduced", "title_checked_by_lawyer", "title_lawyer_partner_id", "title_checked_on"];
   while (result.error) {
+    const message = String(result.error.message || "").toLowerCase();
+    const check = message.includes("check constraint") || message.includes("violates check");
+    if (check && row.title_status === "certificate_of_title") {
+      row = { ...row, title_status: "certificate" };
+      result = await run(row);
+      continue;
+    }
+    if (check && row.title_status === "other") {
+      return { message: "Title status Other is not saved until the Phase 1 SQL is applied. Choose another status, or ask for that SQL to be run." };
+    }
     const missing = optional.find((column) => column in row && columnMissing(result.error, column));
     if (!missing) return result.error;
     delete row[missing];
+    row = { ...row };
     result = await run(row);
   }
   return null;
@@ -351,7 +390,8 @@ function publicLead(row: Record<string, unknown>, listing: Listing | undefined) 
     home: listing ? listing.title : "Home removed",
     area: listing?.area || "",
     purpose: listing?.purpose || "",
-    source: "Guyana Keys",
+    source: formatLeadSource(row),
+    listingId: String(row.property_id || ""),
     intent: String(row.intent || ""),
   };
 }
@@ -518,7 +558,7 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
   const message = typed || (kind === "advertise"
     ? "Asked to advertise. Listings stay free. Payment is with the admin."
     : kind === "plan"
-    ? "Asked to upgrade the package. Payment is with the admin."
+    ? "Asked about optional extras. Listings stay free to list, with no limits. Payment is with the admin."
     : `Asked to feature ${listingTitle}. Payment is with the admin.`);
   const { error: insertError } = await db.from("requests").insert({
     id: newId("req"),
@@ -547,7 +587,6 @@ export async function agentPlan(profile: Profile) {
   const liveListings = listings.filter((item) => item.status === "live");
   return {
     plan: planLabel(profile.plan),
-    cap: profile.listingCap,
     live: liveListings.length,
     requests: (requests.data || []).map((row) => {
       const record = row as Record<string, unknown>;

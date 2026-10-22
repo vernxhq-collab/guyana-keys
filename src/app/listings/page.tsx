@@ -7,6 +7,13 @@ import { loadCatalog } from "../../lib/catalog";
 import { areaFits, areas, regionIn, regionSlug } from "../../lib/areas";
 import { searchPlaceholder } from "../../lib/search";
 
+function emptyListing(purpose?: string, type?: string) {
+  if (type === "Land") return { heading: "No land listed yet", line: "Land will appear here as it is listed." };
+  if (purpose === "Rent") return { heading: "No rentals listed yet", line: "Rentals will appear here as they are listed." };
+  if (purpose === "Sale") return { heading: "No homes for sale yet", line: "Homes for sale will appear here as they are listed." };
+  return { heading: "No homes listed yet", line: "Homes, rentals, and land will appear here as they are listed." };
+}
+
 function typeFromQuery(text: string) {
   if (/\bland|lot\b/i.test(text)) return "Land";
   if (/\bapartment|flat\b/i.test(text)) return "Apartment";
@@ -17,14 +24,16 @@ function typeFromQuery(text: string) {
 
 export const dynamic = "force-dynamic";
 
-export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string; region?: string }> }) {
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string; region?: string; budget?: string }> }) {
   const params = await searchParams;
   const { listings } = await loadCatalog();
   const text = (params.q || "").trim();
   const parsed = parseBuyerSearch(text);
-  const purpose = params.purpose || parsed.purpose;
-  const type = params.type !== undefined ? params.type : typeFromQuery(text);
+  const landSearch = params.purpose === "Land";
+  const purpose = landSearch ? "" : (params.purpose || parsed.purpose);
+  const type = landSearch ? "Land" : (params.type !== undefined ? params.type : typeFromQuery(text));
   const beds = params.beds && params.beds !== "0" ? Number(params.beds) : parsed.beds;
+  const budget = Number(params.budget || 0);
   const regions = Array.from(new Set(areas.map((area) => area.region)));
   const regionName = regions.find((item) => regionSlug(item) === params.region) || "";
   const region = regionName || (parsed.area ? "" : regionIn(text));
@@ -33,6 +42,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
     if (type && item.type !== type) return false;
     if (beds && item.beds < beds) return false;
     if (parsed.maxPrice && item.priceGyd > parsed.maxPrice) return false;
+    if (budget > 0 && item.priceGyd > budget) return false;
     if (parsed.area && !areaFits(item.area, parsed.area)) return false;
     if (region && item.region !== region) return false;
     const structured = Boolean(parsed.purpose || parsed.area || parsed.beds || parsed.maxPrice || region);
@@ -53,7 +63,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           <button className="btn">Search</button>
         </div>
       </form>
-      {listings.length === 0 ? <ComingSoon /> : (
+      {listings.length === 0 ? <ComingSoon {...emptyListing(purpose, type)} /> : (
         <>
           <p className="sub">{shown.length} homes · Listed on Guyana Keys · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
           <div className="split">{shown.length === 0 ? <p>No home matches. Try a neighbourhood, or clear a filter.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}<MapView listings={shown} /></div>

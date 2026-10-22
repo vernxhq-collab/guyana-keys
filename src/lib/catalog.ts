@@ -1,7 +1,9 @@
 import { type Agent, type Listing } from "./data";
+import { badgesFor } from "./phase1-desk";
 import { factsFromRow } from "./place-facts";
 import { sampleAgents, sampleListingById, sampleListings } from "./sample-data";
 import { serviceDb } from "./supabase";
+import { cleanTitleStatus } from "./trust";
 
 /** Sample homes and agents are for local dev only. Production never uses them, even if the flag is set. */
 export function sampleDataEnabled() {
@@ -40,8 +42,13 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     featured: Boolean(row.featured),
     status,
     titleRef: text(row.title_ref),
-    titleStatus: text(row.title_status),
+    titleStatus: cleanTitleStatus(row.title_status),
+    titleCheckedByLawyer: row.title_checked_by_lawyer === true,
+    titleLawyerPartnerId: text(row.title_lawyer_partner_id),
+    titleCheckedOn: text(row.title_checked_on).slice(0, 10),
     facts: factsFromRow(row),
+    createdAt: text(row.created_at),
+    priceReduced: row.price_reduced === true,
   };
 }
 
@@ -114,6 +121,7 @@ function mapAgent(data: Record<string, unknown>): Agent | null {
     image: text(data.photo_url),
     graLicence: text(data.gra_licence),
     verified: Boolean(data.verified),
+    founding: data.founding_agent === true,
   };
 }
 
@@ -124,7 +132,10 @@ export async function loadPublicAgents(): Promise<Agent[]> {
       const { data, error } = await db.from("profiles").select("*").eq("role", "agent").eq("suspended", false);
       if (!error && data?.length) {
         const people = data.map((row) => mapAgent(row as Record<string, unknown>)).filter((agent): agent is Agent => agent !== null);
-        if (people.length) return people;
+        if (people.length) {
+          const badges = await badgesFor(people.map((agent) => agent.id)).catch(() => ({} as Record<string, string>));
+          return people.map((agent) => ({ ...agent, checkBadge: badges[agent.id] || "" }));
+        }
       }
     }
   } catch {
@@ -154,6 +165,8 @@ export async function publicAgent(agentId: string): Promise<Agent | null> {
       image: String(data.photo_url || ""),
       graLicence: String(data.gra_licence || ""),
       verified: Boolean(data.verified),
+      founding: data.founding_agent === true,
+      checkBadge: (await badgesFor([String(data.id)]).catch(() => ({} as Record<string, string>)))[String(data.id)] || "",
     };
   } catch {
     return null;
