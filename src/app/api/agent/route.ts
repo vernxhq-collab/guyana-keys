@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { agentCalendar, agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
 import { agentChecks, requestIdDeletion, saveAgentLicence } from "../../../lib/phase1-desk";
+import { issueKeysCode, submitKeysCheck } from "../../../lib/keys-check-data";
 import { encodeWorld, fitWorld, readPreview, WORLD_COOKIE } from "../../../lib/preview/http";
 import { previewGet, previewPost } from "../../../lib/preview/handle";
 import type { World } from "../../../lib/preview/world";
@@ -89,6 +90,8 @@ export async function POST(request: Request) {
   else if (action === "profile") result = await saveAgentProfile(gate.profile, body);
   else if (action === "saveLicence") result = await saveAgentLicence(gate.profile.id, body);
   else if (action === "requestDeletion") result = await requestIdDeletion(gate.profile.id, String(body.documentId || ""), String(body.note || ""));
+  else if (action === "issueCode") result = await issueKeysCode(gate.profile.id);
+  else if (action === "submitKeysCheck") result = await submitKeysCheck(gate.profile.id, body);
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json(result);
 }

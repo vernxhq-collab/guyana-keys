@@ -145,6 +145,10 @@ body:has(.agent-desk) .brand span { color: #7ed6a8; }
   .location-map .maplibregl-ctrl-attrib { max-width: 100%; }
 }
 .tool-form label { display: grid; gap: 6px; }
+.keys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.keys-grid img, .keys-grid video { width: 100%; max-height: 280px; object-fit: contain; background: #e7eeea; border-radius: 12px; }
+.keys-code { font-size: 32px; letter-spacing: .18em; font-weight: 750; margin: 8px 0; }
+@media (max-width: 900px) { .keys-grid { grid-template-columns: 1fr; } .keys-code { font-size: 28px; } }
 .market { background: #f4f7f5; color: var(--ink); }
 .market-banner { margin: 0; padding: 12px 16px; background: #3d2a12; color: #fff8ee; text-align: center; font-size: 14px; }
 .market-hero { background: linear-gradient(165deg, #0c3d2c 0%, #157a55 100%); color: #f4fff8; padding: 28px 0 32px; }

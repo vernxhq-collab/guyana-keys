@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
-import { idConsentText } from "../../../../lib/compliance/retention";
+import { KeysCapture } from "../../../../components/KeysCapture";
+import { documentLabel } from "../../../../lib/keys-check";
 import { LICENCE_TYPES, licenceLabel } from "../../../../lib/licences";
 
 type Licence = {
@@ -17,13 +18,15 @@ type Licence = {
 };
 
 type DocumentRow = { id: string; kind: string; createdAt: string; deletedAt: string; consentVersion: string };
+type KeysState = { status: string; code: string; codeIssuedAt: string; idKind: string; idNumber: string; decisionReason: string } | null;
 
 export default function ChecksPage() {
   const [ready, setReady] = useState(true);
   const [licences, setLicences] = useState<Licence[] | null>(null);
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
+  const [keysCheck, setKeysCheck] = useState<KeysState>(null);
+  const [flags, setFlags] = useState<string[]>([]);
   const [identity, setIdentity] = useState("");
-  const [consent, setConsent] = useState(false);
   const [consentVersion, setConsentVersion] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
@@ -37,6 +40,8 @@ export default function ChecksPage() {
           setReady(data.ready !== false);
           setLicences(data.licences || []);
           setDocuments(data.documents || []);
+          setKeysCheck(data.keysCheck || null);
+          setFlags(data.flags || []);
           setIdentity(data.identity?.status || "not submitted");
           setConsentVersion(data.consentVersion || "");
         }
@@ -66,17 +71,6 @@ export default function ChecksPage() {
     if (res.ok) load();
   }
 
-  async function upload(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const body = new FormData(event.currentTarget);
-    body.set("consent", consent ? "yes" : "");
-    body.set("consentVersion", consentVersion);
-    const res = await fetch("/api/agent/identity", { method: "POST", body });
-    const data = await res.json().catch(() => ({}));
-    setNote(res.ok ? "Stored in the private bucket. There is no public link." : data.error || "The file could not be saved.");
-    if (res.ok) load();
-  }
-
   async function askDelete(id: string) {
     const res = await fetch("/api/agent", {
       method: "POST",
@@ -95,7 +89,7 @@ export default function ChecksPage() {
       <p className="quiet">Submit a licence for Guyana Keys to check. The public line names exactly what was checked. It never says only “Verified”.</p>
       {!ready ? <p>Licence checks are not ready on this desk yet.</p> : null}
       {note ? <p>{note}</p> : null}
-      <p className="quiet">ID check status: {identity}. A selfie does not start a liveness check. No provider is connected.</p>
+      <p className="quiet">ID check status: {identity}. Keys Check is reviewed by a person. No outside company and no face-matching software is used.</p>
       {LICENCE_TYPES.map((type) => {
         const current = licences.find((item) => item.type === type);
         return (
@@ -112,24 +106,10 @@ export default function ChecksPage() {
           </form>
         );
       })}
-      <form className="panel tool-form" onSubmit={(event) => void upload(event)}>
-        <h2>Identity file</h2>
-        <p>{idConsentText}</p>
-        <label><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} /> I have read this and I agree to this version ({consentVersion || "not loaded"}).</label>
-        <label>File
-          <input name="file" type="file" accept="image/jpeg,image/png,application/pdf" required disabled={!consent} />
-        </label>
-        <label>Kind
-          <select name="kind" defaultValue="id_scan" disabled={!consent}>
-            <option value="id_scan">ID scan</option>
-            <option value="selfie">Selfie file only. No liveness check.</option>
-          </select>
-        </label>
-        <button className="btn" type="submit" disabled={!consent}>Store in the private bucket</button>
-      </form>
-      {documents.length === 0 ? <p className="quiet">No identity file stored.</p> : documents.map((row) => (
+      <KeysCapture consentVersion={consentVersion} documents={documents} keysCheck={keysCheck} flags={flags} onDone={(message) => { setNote(message); load(); }} />
+      {documents.length === 0 ? null : documents.map((row) => (
         <p className="quiet-row" key={row.id}>
-          <span>{row.kind === "selfie" ? "Selfie" : "ID scan"} · {row.deletedAt ? "Deleted" : "Stored"} · consent {row.consentVersion}</span>
+          <span>{documentLabel(row.kind)} · {row.deletedAt ? "Deleted" : "Stored"} · consent {row.consentVersion}</span>
           {row.deletedAt ? null : <button className="btn ghost" type="button" onClick={() => void askDelete(row.id)}>Ask for this file to be deleted</button>}
         </p>
       ))}

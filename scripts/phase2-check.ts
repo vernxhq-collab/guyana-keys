@@ -12,7 +12,8 @@ import { actors, buyerView, holdReply, matchesFor, performanceFor, saveDescripti
 import { noticeAllowed, tooMany } from "../src/lib/abuse.ts";
 import { checkBadge, expireStatus } from "../src/lib/licences.ts";
 import { publishedRates } from "../src/lib/rates.ts";
-import { RETENTION_REVIEW_ENABLED, retentionReviewJob } from "../src/lib/compliance/retention.ts";
+import { ID_CONSENT_VERSION, RETENTION_REVIEW_ENABLED, idConsentText, retentionReviewJob } from "../src/lib/compliance/retention.ts";
+import { codeStillCurrent, imageQuality, makeCheckCode, verificationProvider } from "../src/lib/keys-check.ts";
 import { guyanaInputValue, guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
 
 const world = seedWorld();
@@ -155,5 +156,28 @@ assert.equal(calculator.includes("1.5%"), false);
 assert.equal(readFileSync(new URL("../src/app/agents/[id]/page.tsx", import.meta.url), "utf8").includes("Verified on Guyana Keys"), false);
 assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
 assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("partnerSample"), true);
+assert.equal(verificationProvider().id, "manual");
+assert.equal(verificationProvider().review, "human");
+assert.equal(makeCheckCode(() => 0), "AAAAAA");
+assert.equal(codeStillCurrent(new Date().toISOString()), true);
+assert.equal(codeStillCurrent("2020-01-01T00:00:00Z"), false);
+assert.equal(ID_CONSENT_VERSION, "2026-10-22-keys");
+assert.match(idConsentText, /one-time code/);
+assert.match(idConsentText, /short video/);
+const tiny = imageQuality({ width: 40, height: 40, sampleWidth: 4, sampleHeight: 4, luminance: Array.from({ length: 16 }, () => 255) });
+assert.equal(tiny.some((line) => line.includes("small")), true);
+assert.equal(tiny.some((line) => line.includes("bright")), true);
+const sharp = imageQuality({
+  width: 1200,
+  height: 800,
+  sampleWidth: 8,
+  sampleHeight: 8,
+  luminance: Array.from({ length: 64 }, (_, index) => (index % 2 ? 20 : 180)),
+});
+assert.equal(sharp.length, 0);
+const keysUi = readFileSync(new URL("../src/components/KeysCapture.tsx", import.meta.url), "utf8")
+  + readFileSync(new URL("../src/app/admin/(desk)/keys-check/page.tsx", import.meta.url), "utf8");
+assert.equal(/didit|certified|face recognition|accuracy/i.test(keysUi), false);
+assert.equal(readFileSync(new URL("../src/app/preview/keys-check/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
 
 console.log("phase 2 checks passed");

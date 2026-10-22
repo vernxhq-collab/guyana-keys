@@ -1,25 +1,53 @@
-# Identity documents
+# Identity documents and Keys Check
 
-Facial images and ID scans are sensitive personal data, and a face image is biometric data, under Guyana's Data Protection Act 18 of 2023. Guyana Keys keeps them only for identity and licence checks. This file describes what the app does. It is not a legal opinion.
+Facial images, ID scans, and a short code clip are sensitive personal data. A face image is biometric data under Guyana's Data Protection Act 18 of 2023. Guyana Keys keeps them only so a person can check identity and a licence. This file describes what the app does. It is not a legal opinion, and it does not claim that a check is accurate or certified.
+
+## Keys Check
+
+Keys Check is the in-house check. A person reviews the files. There is no Didit integration and no other identity company. The running provider is `manual`.
+
+`src/lib/keys-check.ts` exports `verificationProvider()`. Its id is `manual` and its review is `human`. The same file names two ids that are not implemented:
+
+- `future_inhouse_auto` is the slot for a later open-source document reader, such as OCR or MRZ reading, if Boss asks for it. There is no `readDocument` method in this phase.
+- `future_eid_registry` is the slot for a later lookup against Guyana's Digital Identity Card registry, if government access exists. There is no registry client in this phase.
+
+There is no face-recognition function and no face-match model. The reviewer checkbox that asks whether the face looks like the ID photo is a human note. The words on that checkbox say that software did not compare the photos.
 
 ## What is collected
 
-- An ID scan (JPEG, PNG, or PDF), uploaded by the signed-in agent after they confirm the consent text.
-- An optional selfie. The selfie box stores a file the agent chooses. No liveness provider is connected. Didit is not integrated. A liveness provider is paid and stays out until Boss approves it.
+After the agent confirms the consent text, Keys Check can store:
 
-The public profile photo is a different file. It goes in the public `listing-photos` bucket. An ID scan or selfie never goes there.
+- The front and the back of a national ID, a passport, or a driver's licence.
+- One or more licence documents.
+- A selfie of the agent holding the ID next to their face.
+- A one-time code, the time it was issued, and either a photo of the agent holding paper with that code or a short clip of them saying it. The code expires after 30 minutes.
+
+The browser warns about a small photo, a soft photo, or a very bright photo. Those warnings use a canvas sample in the browser. They are warnings, not a score, and they are not a decision. A short clip is not scored.
+
+Each stored file has a sha256 hash. If the same hash, or the same ID number, is already on another account, the check is flagged. The agent sees that fact and not the other account's files.
+
+The public profile photo is a different file. It goes in the public `listing-photos` bucket. A Keys Check file never goes there.
 
 ## Why
 
-The file is used to check identity and a licence, to reduce fraud, and to keep Guyana Keys' own record of that check for a later review. It is not used for marketing or profiling. The upload route does not send the bytes to an AI model, a chat route, or an assist route.
+The files are used so a person can check identity and a licence, to reduce fraud, and to keep Guyana Keys' own record of that check. They are not used for marketing or profiling. The upload route does not send the bytes to an AI model, a chat route, or an assist route.
+
+## Review
+
+The admin page shows the ID, the selfie, the code photo or clip, and the licence. Opening the set writes one audit row per file before any 60-second link is created. If an audit insert fails, no link is returned.
+
+The reviewer saves a checklist and a note. That step does not approve the check. A second step approves, rejects, or asks for the files again, and that step stores the reason, the person, and the time. Both steps are written to `audit_events`. This desk has one admin role, so the two steps are two actions rather than two logins.
+
+Approval can add "ID" to the public check line. The line still names what was checked. It does not say only "Verified".
 
 ## Where it lives
 
 - Bucket name: `identity-documents`.
 - The bucket is private. The app does not build a public object URL for these files.
 - The object path starts with the agent's id.
-- Metadata is in `id_documents`: kind (`id_scan` or `selfie`), storage path, `consent_version`, `consent_at`, `retention_months` (default 24), and `deleted_at`.
-- Row level security lets an agent read and insert only their own metadata. An agent cannot read another agent's row. Anonymous users have no select grant.
+- Metadata is in `id_documents`: kind (`id_front`, `id_back`, `licence`, `selfie_with_id`, `code_selfie`, `code_video`), storage path, sha256, quality note, `consent_version`, `consent_at`, `retention_months` (default 24), and `deleted_at`.
+- The check itself is in `keys_checks`, including the code and `code_issued_at`. Flags are in `keys_check_flags`.
+- Row level security lets an agent read and insert only their own rows. An agent cannot read another agent's documents. An agent cannot set a check to approved. Anonymous users have no select grant on the document table.
 - The app uploads and opens files with the service role. A missing bucket returns "The private identity bucket is not set up yet." It does not fall back to `listing-photos`.
 
 ## Who can see a file
@@ -27,11 +55,11 @@ The file is used to check identity and a licence, to reduce fraud, and to keep G
 - The agent can see that a file is on their account. They do not get a stored public link.
 - An admin can open a file only through a signed URL that lasts 60 seconds.
 - Before that URL is created, the app writes `audit_events` with action `id_document_view` or `id_document_download`. If the audit insert fails, the URL is not created.
-- A purge writes `id_document_purge`.
+- A purge writes `id_document_purge`. A review note writes `keys_check_noted`. A decision writes `keys_check_approve`, `keys_check_reject`, or `keys_check_resubmit`.
 
 ## Consent
 
-The checks page shows the consent text in `src/lib/compliance/retention.ts` before the file input can be used. The text covers what is collected, why, how long it is kept, who can see it, and the right to ask for access or deletion. The stored version is `2026-10-22` (`ID_CONSENT_VERSION`). A file without that version and a timestamp is rejected.
+The checks page shows the consent text in `src/lib/compliance/retention.ts` before a file input can be used. The text covers the ID photos, the licence, the selfie holding the ID, the code photo or code video, why the files are kept, how long they are kept, who can see them, and the right to ask for access or deletion. The stored version is `2026-10-22-keys` (`ID_CONSENT_VERSION`). A file without that version and a timestamp is rejected.
 
 ## How long it is kept
 
@@ -58,4 +86,4 @@ The migration file can insert the bucket when `storage.buckets` exists. Confirm 
 
 ## What is mocked
 
-Sample partners and sample listings are preview-only. Identity files are not mocked. If the bucket or the table is missing, the desk says so and stores nothing.
+`/preview/keys-check` shows the form and empty reviewer boxes when `PREVIEW_DESK=1`. It does not store a file, a code, or a decision, and it has no sample ID image. Sample partners and sample listings stay on their own preview routes. If the bucket or the table is missing, the desk says so and stores nothing.

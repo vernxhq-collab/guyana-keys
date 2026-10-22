@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminAgent, adminApplications, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, reviewApplication, saveInstructions, setApproved, setCap, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { adminCheckQueue, declineDeletion, openIdentityFile, purgeIdentityFile, reviewIdentity, reviewLicence } from "../../../lib/phase1-desk";
+import { adminKeysQueue, decideKeysCheck, openKeysFiles, saveKeysNotes } from "../../../lib/keys-check-data";
 import { isAdminEmail, readSession } from "../../../lib/session";
 
 async function admin() {
@@ -29,6 +30,12 @@ export async function GET(request: Request) {
   if (part === "lead") return NextResponse.json(await adminLead(id));
   if (part === "applications") return NextResponse.json(await adminApplications());
   if (part === "licences") return NextResponse.json(await adminCheckQueue());
+  if (part === "keys") return NextResponse.json(await adminKeysQueue());
+  if (part === "keysFiles") {
+    const opened = await openKeysFiles(gate.profile.id, id);
+    if ("error" in opened && opened.error) return NextResponse.json(opened, { status: 400 });
+    return NextResponse.json(opened);
+  }
   if (part === "document") {
     const opened = await openIdentityFile(gate.profile.id, id, url.searchParams.get("intent") === "download");
     if ("error" in opened && opened.error) return NextResponse.json(opened, { status: 400 });
@@ -58,6 +65,8 @@ export async function POST(request: Request) {
   else if (action === "reviewIdentity") result = await reviewIdentity(gate.profile.name || gate.profile.email || "Admin", body);
   else if (action === "purgeDocument") result = await purgeIdentityFile(gate.profile.id, String(body.documentId || ""));
   else if (action === "declineDeletion") result = await declineDeletion(gate.profile.id, String(body.requestId || ""));
+  else if (action === "keysNotes") result = await saveKeysNotes(gate.profile.name || gate.profile.email || "Admin", { ...body, actorId: gate.profile.id });
+  else if (action === "keysDecision") result = await decideKeysCheck(gate.profile.name || gate.profile.email || "Admin", gate.profile.id, body);
   else if (action === "feature") result = await adminFeature(String(body.propertyId || ""), true);
   else if (action === "unfeature") result = await adminFeature(String(body.propertyId || ""), false);
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });

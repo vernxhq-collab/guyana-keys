@@ -75,8 +75,17 @@ create table if not exists public.id_documents (
   created_at timestamptz not null default now()
 );
 
+alter table public.id_documents add column if not exists sha256 text not null default '';
+alter table public.id_documents add column if not exists quality_note text not null default '';
+alter table public.id_documents add column if not exists check_id text not null default '';
+
 alter table public.id_documents drop constraint if exists id_documents_kind_check;
-alter table public.id_documents add constraint id_documents_kind_check check (kind in ('id_scan', 'selfie'));
+alter table public.id_documents add constraint id_documents_kind_check check (kind in (
+  'id_scan', 'selfie',
+  'id_front', 'id_back', 'licence', 'selfie_with_id', 'code_selfie', 'code_video'
+));
+alter table public.id_documents drop constraint if exists id_documents_sha256_check;
+alter table public.id_documents add constraint id_documents_sha256_check check (sha256 = '' or sha256 ~ '^[0-9a-f]{64}$');
 
 create table if not exists public.id_deletion_requests (
   id text primary key,
@@ -259,5 +268,136 @@ begin
   end;
 end
 $bucket$;
+
+create table if not exists public.keys_checks (
+  id text primary key,
+  agent_id uuid not null,
+  status text not null default 'collecting',
+  provider text not null default 'manual',
+  id_kind text not null default '',
+  id_number text not null default '',
+  code text not null default '',
+  code_issued_at timestamptz,
+  submitted_at timestamptz,
+  reviewer_name text not null default '',
+  reviewer_notes text not null default '',
+  reviewed_at timestamptz,
+  name_matches boolean,
+  face_matches boolean,
+  code_matches boolean,
+  document_not_expired boolean,
+  licence_recorded boolean,
+  licence_expiry_ok boolean,
+  decision text not null default '',
+  decision_reason text not null default '',
+  decided_by text not null default '',
+  decided_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.keys_checks drop constraint if exists keys_checks_status_check;
+alter table public.keys_checks add constraint keys_checks_status_check
+  check (status in ('collecting', 'submitted', 'noted', 'approved', 'rejected'));
+alter table public.keys_checks drop constraint if exists keys_checks_provider_check;
+alter table public.keys_checks add constraint keys_checks_provider_check
+  check (provider in ('manual', 'future_inhouse_auto', 'future_eid_registry'));
+alter table public.keys_checks drop constraint if exists keys_checks_id_kind_check;
+alter table public.keys_checks add constraint keys_checks_id_kind_check
+  check (id_kind in ('', 'national_id', 'passport', 'drivers_licence'));
+
+create table if not exists public.keys_check_flags (
+  id text primary key,
+  agent_id uuid not null,
+  check_id text not null default '',
+  flag text not null,
+  detail text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.keys_check_flags drop constraint if exists keys_check_flags_flag_check;
+alter table public.keys_check_flags add constraint keys_check_flags_flag_check
+  check (flag in ('duplicate_file', 'duplicate_id_number'));
+
+alter table public.keys_checks enable row level security;
+alter table public.keys_check_flags enable row level security;
+revoke all on table public.keys_checks from public, anon, authenticated;
+revoke all on table public.keys_check_flags from public, anon, authenticated;
+grant select, insert, update on table public.keys_checks to authenticated;
+grant select on table public.keys_check_flags to authenticated;
+
+drop policy if exists keys_checks_own on public.keys_checks;
+create policy keys_checks_own on public.keys_checks
+for select to authenticated using (agent_id = auth.uid());
+
+drop policy if exists keys_checks_own_insert on public.keys_checks;
+create policy keys_checks_own_insert on public.keys_checks
+for insert to authenticated with check (agent_id = auth.uid() and status = 'collecting' and provider = 'manual');
+
+drop policy if exists keys_checks_own_update on public.keys_checks;
+create policy keys_checks_own_update on public.keys_checks
+for update to authenticated
+using (agent_id = auth.uid())
+with check (agent_id = auth.uid() and status in ('collecting', 'submitted') and provider = 'manual');
+
+drop policy if exists keys_flags_own on public.keys_check_flags;
+create policy keys_flags_own on public.keys_check_flags
+for select to authenticated using (agent_id = auth.uid());
+
+create or replace function private.flag_duplicate_id_file()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.sha256 ~ '^[0-9a-f]{64}$' and exists (
+    select 1 from public.id_documents
+    where sha256 = new.sha256
+      and agent_id is distinct from new.agent_id
+      and deleted_at is null
+      and id is distinct from new.id
+  ) then
+    insert into public.keys_check_flags (id, agent_id, check_id, flag, detail)
+    values ('flg-' || new.id, new.agent_id, coalesce(new.check_id, ''), 'duplicate_file', 'same sha256 on another account')
+    on conflict (id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.flag_duplicate_id_file() from public, anon, authenticated;
+
+drop trigger if exists flag_duplicate_id_file on public.id_documents;
+create trigger flag_duplicate_id_file
+after insert on public.id_documents
+for each row execute function private.flag_duplicate_id_file();
+
+create or replace function private.flag_duplicate_id_number()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.id_number <> '' and exists (
+    select 1 from public.keys_checks
+    where id_number = new.id_number
+      and agent_id is distinct from new.agent_id
+      and id is distinct from new.id
+  ) then
+    insert into public.keys_check_flags (id, agent_id, check_id, flag, detail)
+    values ('idn-' || new.id, new.agent_id, new.id, 'duplicate_id_number', 'same id number on another account')
+    on conflict (id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.flag_duplicate_id_number() from public, anon, authenticated;
+
+drop trigger if exists flag_duplicate_id_number on public.keys_checks;
+create trigger flag_duplicate_id_number
+after insert or update of id_number on public.keys_checks
+for each row execute function private.flag_duplicate_id_number();
 
 commit;

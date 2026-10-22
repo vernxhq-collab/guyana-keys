@@ -51,3 +51,48 @@ end $$;
 
 delete from public.agent_licences where id = 'lic-expire';
 delete from public.partners where id = 'partner-hidden';
+
+delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
+delete from public.id_documents where id in ('doc-a', 'doc-b');
+delete from public.keys_checks where id in ('chk-a', 'chk-b');
+
+insert into public.id_documents (id, agent_id, kind, storage_path, consent_version, consent_at, sha256)
+values
+  ('doc-a', '22222222-2222-4222-8222-222222222222', 'id_front', '22222222-2222-4222-8222-222222222222/a.jpg', '2026-10-22-keys', now(), 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+  ('doc-b', '33333333-3333-4333-8333-333333333333', 'id_front', '33333333-3333-4333-8333-333333333333/b.jpg', '2026-10-22-keys', now(), 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+
+insert into public.keys_checks (id, agent_id, id_number)
+values
+  ('chk-a', '22222222-2222-4222-8222-222222222222', 'ID-100'),
+  ('chk-b', '33333333-3333-4333-8333-333333333333', 'ID-100');
+
+do $$
+begin
+  if not exists (select 1 from public.keys_check_flags where id = 'flg-doc-b' and flag = 'duplicate_file') then
+    raise exception 'the same file hash was not flagged';
+  end if;
+  if not exists (select 1 from public.keys_check_flags where id = 'idn-chk-b' and flag = 'duplicate_id_number') then
+    raise exception 'the same id number was not flagged';
+  end if;
+  if not exists (
+    select 1 from pg_proc
+    join pg_namespace on pg_namespace.oid = pg_proc.pronamespace
+    where pg_namespace.nspname = 'private'
+      and pg_proc.proname in ('flag_duplicate_id_file', 'flag_duplicate_id_number')
+      and pg_proc.prosecdef
+    having count(*) = 2
+  ) then
+    raise exception 'duplicate flags do not run with definer rights';
+  end if;
+  begin
+    insert into public.keys_checks (id, agent_id, provider)
+    values ('chk-bad', '22222222-2222-4222-8222-222222222222', 'didit');
+    raise exception 'a third-party provider was stored';
+  exception when check_violation then
+    null;
+  end;
+end $$;
+
+delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
+delete from public.id_documents where id in ('doc-a', 'doc-b');
+delete from public.keys_checks where id in ('chk-a', 'chk-b');

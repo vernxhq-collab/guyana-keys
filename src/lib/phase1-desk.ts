@@ -2,6 +2,7 @@ import { checkBadge, expireStatus, licenceLabel, LICENCE_TYPES, type LicenceType
 import { newId } from "./labels";
 import { publishedRates, type MortgageRate } from "./rates";
 import { ID_CONSENT_VERSION, RETENTION_MONTHS } from "./compliance/retention";
+import { loadAgentKeysCheck } from "./keys-check-data";
 import { serviceDb } from "./supabase";
 
 type Row = Record<string, unknown>;
@@ -79,9 +80,12 @@ export async function agentChecks(agentId: string) {
   }
   const rows = (licences.data || []) as Row[];
   await flagExpired(rows);
+  const keys = await loadAgentKeysCheck(agentId);
   return {
     ready: true,
     consentVersion: ID_CONSENT_VERSION,
+    keysCheck: keys.check,
+    flags: keys.flags,
     licences: rows.map(licenceView),
     identity: identity.data ? {
       status: text(identity.data.id_status) || "pending",
