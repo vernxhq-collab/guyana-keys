@@ -7,6 +7,13 @@ import { loadCatalog } from "../../lib/catalog";
 import { areaFits, areas, regionIn, regionSlug } from "../../lib/areas";
 import { searchPlaceholder } from "../../lib/search";
 
+function emptyListing(purpose?: string, type?: string) {
+  if (type === "Land") return { heading: "No land listed yet", line: "Land will appear here as it is listed." };
+  if (purpose === "Rent") return { heading: "No rentals listed yet", line: "Rentals will appear here as they are listed." };
+  if (purpose === "Sale") return { heading: "No homes for sale yet", line: "Homes for sale will appear here as they are listed." };
+  return { heading: "No homes listed yet", line: "Homes, rentals, and land will appear here as they are listed." };
+}
+
 function typeFromQuery(text: string) {
   if (/\bland|lot\b/i.test(text)) return "Land";
   if (/\bapartment|flat\b/i.test(text)) return "Apartment";
@@ -56,7 +63,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           <button className="btn">Search</button>
         </div>
       </form>
-      {listings.length === 0 ? <ComingSoon /> : (
+      {listings.length === 0 ? <ComingSoon {...emptyListing(purpose, type)} /> : (
         <>
           <p className="sub">{shown.length} homes · Listed on Guyana Keys · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
           <div className="split">{shown.length === 0 ? <p>No home matches. Try a neighbourhood, or clear a filter.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}<MapView listings={shown} /></div>

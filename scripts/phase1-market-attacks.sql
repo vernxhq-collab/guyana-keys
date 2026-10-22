@@ -54,7 +54,7 @@ delete from public.partners where id = 'partner-hidden';
 
 delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
 delete from public.id_documents where id in ('doc-a', 'doc-b');
-delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord');
+delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord', 'chk-guard', 'chk-submitted');
 
 insert into public.id_documents (id, agent_id, kind, storage_path, consent_version, consent_at, sha256)
 values
@@ -111,6 +111,144 @@ begin
   end;
 end $$;
 
+-- An agent cannot write reviewer columns or change a decision, including on their own collecting row.
+do $$
+declare
+  agent uuid := '22222222-2222-4222-8222-222222222222';
+  failed boolean;
+begin
+  insert into public.keys_checks (id, agent_id, status, provider, subject_type, id_number)
+  values ('chk-guard', agent, 'collecting', 'manual', 'agent', 'ID-GUARD');
+  insert into public.keys_checks (id, agent_id, status, provider, subject_type, id_number, decision)
+  values ('chk-submitted', agent, 'submitted', 'manual', 'agent', 'ID-SUBMITTED', '');
+
+  if has_column_privilege('authenticated', 'public.keys_checks', 'face_matches', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'name_matches', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'code_matches', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'document_not_expired', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'licence_recorded', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'licence_expiry_ok', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'reviewer_notes', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'reviewer_name', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'reviewed_at', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'decision', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'decision_reason', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'decided_by', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'decided_at', 'UPDATE')
+    or has_column_privilege('authenticated', 'public.keys_checks', 'status', 'UPDATE')
+  then
+    raise exception 'an agent can update a reviewer column';
+  end if;
+  if has_column_privilege('authenticated', 'public.keys_checks', 'id_number', 'UPDATE') = false
+    or has_column_privilege('authenticated', 'public.keys_checks', 'id_kind', 'UPDATE') = false
+    or has_column_privilege('authenticated', 'public.keys_checks', 'code', 'UPDATE') = false
+    or has_column_privilege('authenticated', 'public.keys_checks', 'code_issued_at', 'UPDATE') = false
+  then
+    raise exception 'an agent cannot update their own upload reference while collecting';
+  end if;
+  if has_function_privilege('authenticated', 'private.guard_keys_check_write()', 'EXECUTE')
+    or has_function_privilege('anon', 'private.guard_keys_check_write()', 'EXECUTE')
+  then
+    raise exception 'the keys check guard can be executed directly';
+  end if;
+
+  perform set_config('request.jwt.claim.sub', agent::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  set local role authenticated;
+
+  failed := false;
+  begin
+    update public.keys_checks set face_matches = true where id = 'chk-guard';
+  exception when others then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'an agent set face_matches on their own collecting row';
+  end if;
+
+  failed := false;
+  begin
+    update public.keys_checks set name_matches = true, code_matches = true, reviewer_notes = 'forged', reviewer_name = 'agent' where id = 'chk-guard';
+  exception when others then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'an agent set reviewer notes on their own collecting row';
+  end if;
+
+  failed := false;
+  begin
+    update public.keys_checks set decision = 'approved', decision_reason = 'forged', decided_by = 'agent' where id = 'chk-guard';
+  exception when others then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'an agent changed the decision on their own collecting row';
+  end if;
+
+  failed := false;
+  begin
+    update public.keys_checks set status = 'approved' where id = 'chk-guard';
+  exception when others then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'an agent moved their own check out of collecting';
+  end if;
+
+  failed := false;
+  begin
+    update public.keys_checks set decision = 'approved' where id = 'chk-submitted';
+  exception when others then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'an agent changed the decision on a submitted row';
+  end if;
+
+  failed := false;
+  begin
+    insert into public.keys_checks (id, agent_id, status, decision)
+    values ('chk-forged', agent, 'collecting', 'approved');
+  exception when others then
+    failed := true;
+  end;
+  if not failed then
+    raise exception 'an agent inserted a decision';
+  end if;
+
+  update public.keys_checks
+  set id_number = 'ID-GUARD-OK', id_kind = 'passport'
+  where id = 'chk-guard';
+  reset role;
+
+  if not exists (
+    select 1 from public.keys_checks
+    where id = 'chk-guard'
+      and id_number = 'ID-GUARD-OK'
+      and id_kind = 'passport'
+      and status = 'collecting'
+      and face_matches is null
+      and name_matches is null
+      and code_matches is null
+      and reviewer_notes = ''
+      and reviewer_name = ''
+      and decision = ''
+      and decision_reason = ''
+      and decided_by = ''
+  ) then
+    raise exception 'the allowed collecting update did not keep the review fields clear';
+  end if;
+  if exists (select 1 from public.keys_checks where id = 'chk-submitted' and decision <> '') then
+    raise exception 'a submitted decision was changed';
+  end if;
+  if exists (select 1 from public.keys_checks where id = 'chk-forged') then
+    raise exception 'a forged decision insert was stored';
+  end if;
+
+  delete from public.keys_checks where id in ('chk-guard', 'chk-submitted', 'chk-forged');
+end $$;
+
 delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
 delete from public.id_documents where id in ('doc-a', 'doc-b');
-delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord');
+delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord', 'chk-guard', 'chk-submitted');

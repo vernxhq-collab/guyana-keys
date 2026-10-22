@@ -23,7 +23,7 @@ export default function PreviewKeysCheckPage() {
           {["ID photo", "Selfie with ID", "Code photo", "Licence"].map((label) => (
             <figure className="panel" key={label}>
               <figcaption>{label}</figcaption>
-              <p>{SAMPLE_LABEL}</p>
+              <p>Sample preview</p>
             </figure>
           ))}
         </div>

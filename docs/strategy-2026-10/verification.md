@@ -1,17 +1,15 @@
 # Founding agent verification
 
-This is the checklist for the first applications. Record the outcome. Do not store an ID image, a licence scan, or a registration document in the app. There is no private bucket for those files yet.
-
-Proposed later, and not built here: a private Supabase Storage bucket that only the service role can read, with a short retention rule, and no public URL. Until that exists, keep documents outside the app.
+This is the checklist for the first applications. Record the outcome. Keys Check keeps the ID images, the selfie, the code photo or short clip, and the licence scan in the private `identity-documents` bucket. The bucket is not public. A file is stored only with consent, an audit row before any signed link, and a deletion request. See `docs/compliance/id-data.md`.
 
 ## Before anyone is approved to publish
 
-1. Identity, where it applies. Look at a government ID. Tick "ID checked" only after that look. Do not upload the image.
-2. Licence or business registration, where it applies. Tick "Licence or business registration checked" only after that look. Some applicants will not have one. Leave it unticked and say why in the notes.
+1. Identity, where it applies. The person uploads the ID images in Keys Check and consents to Boss keeping them for the review. Tick "ID checked" only after a person has looked. The app does not compare faces and does not score the photo.
+2. Licence or business registration, where it applies. Keys Check can keep that scan in the same private bucket. Tick "Licence or business registration checked" only after a person has looked. Some applicants will not have one. Leave it unticked and say why in the notes.
 3. Phone. Call or message the number on the application and confirm the person applied. Tick "Phone checked".
 4. A reference, or proof they can list. One of: a named person who will confirm they work with the applicant, or a property the applicant can show they are allowed to list. Tick "A reference or a listing proof checked".
 
-Notes are for the outcome, not for copying an ID number into the database.
+Notes are for the review outcome. The ID number sits on the Keys Check row so a repeat across accounts can be flagged. It is not copied into the public listing.
 
 ## What approval means
 

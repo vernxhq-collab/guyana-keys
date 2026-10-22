@@ -34,7 +34,7 @@ These are targets for the person doing outreach, not a commitment the site will 
 
 - Ask before using a photo, a price, or a description from Facebook, WhatsApp, or another site.
 - Record the yes on the listing. If permission is refused or unclear, do not publish.
-- Do not store ID images in the app. Record the check only. See `verification.md`.
+- Keys Check retains ID images, the selfie, the code photo or clip, and the licence scan in the private identity-documents bucket, with consent, an audit row, and a deletion request. See `verification.md` and `docs/compliance/id-data.md`.
 - Do not present sample cards, invented agents, reviews, or testimonials as real.
 
 ## What to track

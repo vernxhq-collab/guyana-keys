@@ -39,3 +39,33 @@ export function rateLine(rate: MortgageRate) {
   const checked = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${rate.checkedOn}T00:00:00Z`));
   return `Rate from ${rate.bank}, checked ${checked}`;
 }
+
+/** Inclusive loan bounds, in GYD, taken from each bank's published bands. A null max has no ceiling. */
+const loanBands: Record<string, { minLoan: number; maxLoan: number | null }> = {
+  "gbti-4m": { minLoan: 0, maxLoan: 4_000_000 },
+  "gbti-9m": { minLoan: 4_000_001, maxLoan: 9_000_000 },
+  "gbti-20m": { minLoan: 9_000_001, maxLoan: 20_000_000 },
+  "gbti-40m": { minLoan: 20_000_001, maxLoan: 40_000_000 },
+  "gbti-60m": { minLoan: 40_000_001, maxLoan: 60_000_000 },
+  "demerara-4m": { minLoan: 0, maxLoan: 4_000_000 },
+  "demerara-9m": { minLoan: 4_000_001, maxLoan: 9_000_000 },
+  "demerara-15m": { minLoan: 9_000_001, maxLoan: 15_000_000 },
+  "demerara-40m": { minLoan: 15_000_001, maxLoan: 40_000_000 },
+  "demerara-above": { minLoan: 40_000_001, maxLoan: null },
+  "citizens-10m": { minLoan: 0, maxLoan: 10_000_000 },
+  "citizens-20m": { minLoan: 10_000_001, maxLoan: 20_000_000 },
+  "citizens-30m": { minLoan: 20_000_001, maxLoan: 30_000_000 },
+  "citizens-50m": { minLoan: 30_000_001, maxLoan: 50_000_000 },
+  "scotia-floor": { minLoan: 0, maxLoan: null },
+};
+
+export function rateForLoan(rates: MortgageRate[], bank: string, loan: number) {
+  if (!Number.isFinite(loan) || loan < 0) return null;
+  const matches = rates.filter((rate) => {
+    if (rate.bank !== bank) return false;
+    const band = loanBands[rate.id];
+    if (!band) return false;
+    return loan >= band.minLoan && (band.maxLoan === null || loan <= band.maxLoan);
+  });
+  return matches.length === 1 ? matches[0] : null;
+}

@@ -330,7 +330,18 @@ alter table public.keys_checks enable row level security;
 alter table public.keys_check_flags enable row level security;
 revoke all on table public.keys_checks from public, anon, authenticated;
 revoke all on table public.keys_check_flags from public, anon, authenticated;
-grant select, insert, update on table public.keys_checks to authenticated;
+-- Agents can read their own row. They can insert a collecting check, and they can
+-- update only the upload references on that row. Reviewer columns stay revoked.
+grant select (
+  id, agent_id, subject_type, status, provider, id_kind, id_number, code, code_issued_at, submitted_at,
+  reviewer_name, reviewer_notes, reviewed_at, name_matches, face_matches, code_matches,
+  document_not_expired, licence_recorded, licence_expiry_ok, decision, decision_reason,
+  decided_by, decided_at, created_at
+) on table public.keys_checks to authenticated;
+grant insert (id, agent_id, subject_type, status, provider, id_kind, id_number, code, code_issued_at)
+  on table public.keys_checks to authenticated;
+grant update (id_kind, id_number, code, code_issued_at)
+  on table public.keys_checks to authenticated;
 grant select on table public.keys_check_flags to authenticated;
 
 drop policy if exists keys_checks_own on public.keys_checks;
@@ -339,13 +350,51 @@ for select to authenticated using (agent_id = auth.uid());
 
 drop policy if exists keys_checks_own_insert on public.keys_checks;
 create policy keys_checks_own_insert on public.keys_checks
-for insert to authenticated with check (agent_id = auth.uid() and status = 'collecting' and provider = 'manual');
+for insert to authenticated with check (
+  agent_id = auth.uid()
+  and status = 'collecting'
+  and provider = 'manual'
+  and subject_type = 'agent'
+  and decision = ''
+  and decision_reason = ''
+  and reviewer_notes = ''
+  and reviewer_name = ''
+  and decided_by = ''
+  and name_matches is null
+  and face_matches is null
+  and code_matches is null
+  and document_not_expired is null
+  and licence_recorded is null
+  and licence_expiry_ok is null
+  and reviewed_at is null
+  and decided_at is null
+  and submitted_at is null
+);
 
 drop policy if exists keys_checks_own_update on public.keys_checks;
 create policy keys_checks_own_update on public.keys_checks
 for update to authenticated
-using (agent_id = auth.uid())
-with check (agent_id = auth.uid() and status in ('collecting', 'submitted') and provider = 'manual');
+using (agent_id = auth.uid() and status = 'collecting')
+with check (
+  agent_id = auth.uid()
+  and status = 'collecting'
+  and provider = 'manual'
+  and subject_type = 'agent'
+  and decision = ''
+  and decision_reason = ''
+  and reviewer_notes = ''
+  and reviewer_name = ''
+  and decided_by = ''
+  and name_matches is null
+  and face_matches is null
+  and code_matches is null
+  and document_not_expired is null
+  and licence_recorded is null
+  and licence_expiry_ok is null
+  and reviewed_at is null
+  and decided_at is null
+  and submitted_at is null
+);
 
 drop policy if exists keys_flags_own on public.keys_check_flags;
 create policy keys_flags_own on public.keys_check_flags
@@ -402,6 +451,87 @@ end;
 $$;
 
 revoke all on function private.flag_duplicate_id_number() from public, anon, authenticated;
+
+-- Signed-in agents cannot write reviewer columns, even on their own collecting row.
+-- The service role and a session with no user (the migration owner) pass through.
+-- Triggers fire as the function owner. EXECUTE stays revoked, as on the profile guard.
+create or replace function private.guard_keys_check_write()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  jwt_role text;
+begin
+  begin
+    jwt_role := auth.role();
+  exception when others then
+    return new;
+  end;
+  if coalesce(jwt_role, '') = 'service_role' or auth.uid() is null then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    if new.agent_id is distinct from auth.uid()
+      or new.status is distinct from 'collecting'
+      or new.provider is distinct from 'manual'
+      or new.subject_type is distinct from 'agent'
+      or new.decision is distinct from ''
+      or new.decision_reason is distinct from ''
+      or new.reviewer_notes is distinct from ''
+      or new.reviewer_name is distinct from ''
+      or new.decided_by is distinct from ''
+      or new.name_matches is not null
+      or new.face_matches is not null
+      or new.code_matches is not null
+      or new.document_not_expired is not null
+      or new.licence_recorded is not null
+      or new.licence_expiry_ok is not null
+      or new.reviewed_at is not null
+      or new.decided_at is not null
+      or new.submitted_at is not null
+    then
+      raise exception 'A Keys Check review field cannot be set here';
+    end if;
+    return new;
+  end if;
+  if old.status is distinct from 'collecting'
+    or new.status is distinct from 'collecting'
+    or new.agent_id is distinct from old.agent_id
+    or new.agent_id is distinct from auth.uid()
+    or new.subject_type is distinct from old.subject_type
+    or new.provider is distinct from old.provider
+    or new.provider is distinct from 'manual'
+    or new.id is distinct from old.id
+    or new.submitted_at is distinct from old.submitted_at
+    or new.reviewer_name is distinct from old.reviewer_name
+    or new.reviewer_notes is distinct from old.reviewer_notes
+    or new.reviewed_at is distinct from old.reviewed_at
+    or new.name_matches is distinct from old.name_matches
+    or new.face_matches is distinct from old.face_matches
+    or new.code_matches is distinct from old.code_matches
+    or new.document_not_expired is distinct from old.document_not_expired
+    or new.licence_recorded is distinct from old.licence_recorded
+    or new.licence_expiry_ok is distinct from old.licence_expiry_ok
+    or new.decision is distinct from old.decision
+    or new.decision_reason is distinct from old.decision_reason
+    or new.decided_by is distinct from old.decided_by
+    or new.decided_at is distinct from old.decided_at
+    or new.created_at is distinct from old.created_at
+  then
+    raise exception 'A Keys Check review field cannot be changed here';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.guard_keys_check_write() from public, anon, authenticated;
+
+drop trigger if exists guard_keys_check_write on public.keys_checks;
+create trigger guard_keys_check_write
+before insert or update on public.keys_checks
+for each row execute function private.guard_keys_check_write();
 
 drop trigger if exists flag_duplicate_id_number on public.keys_checks;
 create trigger flag_duplicate_id_number
