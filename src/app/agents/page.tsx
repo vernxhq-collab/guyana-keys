@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ComingSoon } from "../../components/ComingSoon";
 import { loadPublicAgents } from "../../lib/catalog";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +9,13 @@ export default async function AgentsPage() {
     <main className="wrap section">
       <h1>Agents</h1>
       {people.length === 0 ? (
-        <ComingSoon heading="Agents coming soon" line="No agents are listed yet. New listings coming soon. Be first to see them." />
+        <div className="empty-board solo">
+          <div className="empty-copy">
+            <h2>No agents listed yet</h2>
+            <p>Are you an agent? Join Guyana Keys.</p>
+            <Link className="btn" href="/advertise">For agents</Link>
+          </div>
+        </div>
       ) : (
         <div className="grid">
           {people.map((agent) => (
