@@ -1,5 +1,7 @@
 import { replyDraft, type LeadInput } from "./assist";
+import type { LeadAttribution } from "./attribution";
 import { newId } from "./labels";
+import { writeFlexible } from "./rows";
 import { serviceDb } from "./supabase";
 
 export async function addEvent(enquiryId: string, kind: string, detail = "") {
@@ -35,6 +37,7 @@ export async function openEnquiry(input: {
   viewingRequest?: string;
   title?: string;
   intent?: string;
+  attribution?: LeadAttribution;
 }) {
   const db = serviceDb();
   if (!db) return { error: "The enquiry could not be saved." as const };
@@ -68,16 +71,13 @@ export async function openEnquiry(input: {
     private_note: "",
     source: "guyana_keys",
     intent: input.intent || "",
+    source_page: input.attribution?.source_page || "",
+    utm: input.attribution?.utm || {},
+    lead_channel: input.attribution?.lead_channel || "web",
+    lead_kind: input.attribution?.lead_kind || "enquiry",
+    partner_id: input.attribution?.partner_id || "",
   };
-  let { error } = await db.from("enquiries").insert(row);
-  if (error && String(error.message || "").toLowerCase().includes("source")) {
-    const { source: _source, ...rest } = row;
-    ({ error } = await db.from("enquiries").insert(rest));
-  }
-  if (error && String(error.message || "").toLowerCase().includes("intent")) {
-    const { intent: _intent, source: _source, ...rest } = row;
-    ({ error } = await db.from("enquiries").insert(rest));
-  }
+  const error = await writeFlexible((payload) => db.from("enquiries").insert(payload), row, ["source", "intent", "source_page", "utm", "lead_channel", "lead_kind", "partner_id"]);
   if (error) return { error: "The enquiry could not be saved." as const };
   await addEvent(id, "enquiry_received", input.note || "");
   await addEvent(id, "reply_drafted", draft.message);

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { whenLabel } from "../../../../lib/assist";
 
-type Lead = { id: string; name: string; home: string; stage: string; stageLabel: string; phone: string; note: string; source: string; intent: string; viewingRequest: string; viewingAt: string; agentReply: string; createdAt: string };
+type Lead = { id: string; name: string; home: string; stage: string; stageLabel: string; phone: string; note: string; source: string; listingId: string; intent: string; viewingRequest: string; viewingAt: string; agentReply: string; createdAt: string };
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[] | null>(null);
@@ -63,7 +63,7 @@ export default function LeadsPage() {
         <a className="quiet-row" key={lead.id} href={`/agent/leads/${lead.id}`}>
           <span>
             <strong>{lead.name || "Lead"}</strong> · {lead.home}
-            <span className="quiet">{lead.source || "Guyana Keys"}{lead.note ? ` · ${lead.note}` : ""}{lead.intent ? ` · ${lead.intent}` : ""}</span>
+            <span className="quiet">Listing {lead.listingId || "none"} · {lead.source || "Guyana Keys"}{lead.note ? ` · ${lead.note}` : ""}{lead.intent ? ` · ${lead.intent}` : ""}</span>
           </span>
           <span className="quiet">{whenLabel(lead.createdAt) || "New"} · {lead.stageLabel} · {lead.phone}</span>
         </a>

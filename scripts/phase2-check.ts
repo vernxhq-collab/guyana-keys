@@ -10,6 +10,9 @@ import { FREE_LIVE_CAP, liveCap, MIN_LIVE_PHOTOS, withinLiveCap } from "../src/l
 import { decodeWorld, encodeWorld } from "../src/lib/preview/codec.ts";
 import { actors, buyerView, holdReply, matchesFor, performanceFor, saveDescription, seedWorld, todayFor, updateLead } from "../src/lib/preview/world.ts";
 import { noticeAllowed, tooMany } from "../src/lib/abuse.ts";
+import { checkBadge, expireStatus } from "../src/lib/licences.ts";
+import { publishedRates } from "../src/lib/rates.ts";
+import { RETENTION_REVIEW_ENABLED, retentionReviewJob } from "../src/lib/compliance/retention.ts";
 import { guyanaInputValue, guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
 
 const world = seedWorld();
@@ -109,5 +112,48 @@ assert.equal(apiSource.includes("lib/market-sample"), false);
 assert.equal(readFileSync(new URL("../src/lib/sample-label.ts", import.meta.url), "utf8").includes("Sample preview — not a real listing"), true);
 assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("marketSample"), true);
 assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
+
+const badge = checkBadge({
+  idStatus: "checked",
+  idCheckedAt: "2026-10-02T00:00:00Z",
+  licences: [{ type: "gra_house_agent", status: "checked", checkedAt: "2026-10-02", expiry: "2027-01-01" }],
+  today: "2026-10-22",
+});
+assert.equal(badge, "ID and GRA House Agent licence checked by Guyana Keys · Oct 2026");
+assert.equal(badge.includes("Verified"), false);
+assert.equal(checkBadge({
+  idStatus: "checked",
+  idCheckedAt: "2026-10-02T00:00:00Z",
+  licences: [{ type: "gra_house_agent", status: "checked", checkedAt: "2026-10-02", expiry: "2026-10-01" }],
+  today: "2026-10-22",
+}), "ID checked by Guyana Keys · Oct 2026");
+assert.equal(checkBadge({ licences: [], today: "2026-10-22" }), "");
+assert.equal(expireStatus("rejected", "2020-01-01", "2026-10-22"), "rejected");
+assert.equal(expireStatus("checked", "2026-10-01", "2026-10-22"), "expired");
+const notifySource = readFileSync(new URL("../src/lib/notify.ts", import.meta.url), "utf8");
+assert.match(notifySource, /🔑 Guyana Keys Lead/);
+assert.match(notifySource, /Listing id:/);
+assert.match(notifySource, /Page:/);
+assert.match(notifySource, /Channel:/);
+const enquiryStart = notifySource.indexOf("export async function notifyAgentEnquiry");
+const enquiryNotice = notifySource.slice(enquiryStart, notifySource.indexOf("export async function notifyBuyer"));
+assert.match(enquiryNotice, /channelSenders\.whatsapp\.send/);
+assert.equal(enquiryNotice.includes("sendWhatsApp("), false);
+assert.match(readFileSync(new URL("../src/lib/ai/channel.ts", import.meta.url), "utf8"), /whatsapp sender is not connected/);
+assert.equal(RETENTION_REVIEW_ENABLED, false);
+assert.deepEqual(retentionReviewJob(), { ran: false, reason: "disabled" });
+assert.equal(publishedRates.some((rate) => /republic/i.test(rate.bank)), false);
+const mortgageSource = readFileSync(new URL("../src/lib/mortgage.ts", import.meta.url), "utf8");
+assert.match(mortgageSource, /return \{ stamp, legal, fees: stamp \+ legal \}/);
+assert.equal(mortgageSource.includes("1.5"), false);
+assert.equal(mortgageSource.includes("0.015"), false);
+const partnersPage = readFileSync(new URL("../src/app/partners/page.tsx", import.meta.url), "utf8");
+const calculator = readFileSync(new URL("../src/components/MortgageCalculator.tsx", import.meta.url), "utf8");
+assert.equal(partnersPage.includes("partner-sample"), false);
+assert.equal(calculator.includes("About 2%"), false);
+assert.equal(calculator.includes("1.5%"), false);
+assert.equal(readFileSync(new URL("../src/app/agents/[id]/page.tsx", import.meta.url), "utf8").includes("Verified on Guyana Keys"), false);
+assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
+assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("partnerSample"), true);
 
 console.log("phase 2 checks passed");

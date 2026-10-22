@@ -25,6 +25,7 @@ type Lead = {
   home: string;
   area: string;
   source: string;
+  listingId: string;
   intent: string;
   privateNote: string;
   reviewRequested: boolean;
@@ -102,6 +103,7 @@ export function LeadDesk({ id }: { id: string }) {
         {lead.reminder ? <span className="quiet">No reply for over 24 hours.</span> : null}
       </div>
       <article className="panel">
+        <p>Listing id: {lead.listingId || "none"}</p>
         <p>Source: {lead.source || "Guyana Keys"}</p>
         <p>WhatsApp {lead.phone || "not given"}</p>
         <p>{lead.note || "No message"}</p>

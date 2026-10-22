@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { agentCalendar, agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
+import { agentChecks, requestIdDeletion, saveAgentLicence } from "../../../lib/phase1-desk";
 import { encodeWorld, fitWorld, readPreview, WORLD_COOKIE } from "../../../lib/preview/http";
 import { previewGet, previewPost } from "../../../lib/preview/handle";
 import type { World } from "../../../lib/preview/world";
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
   }
   if (part === "outbox") return NextResponse.json({ messages: [] });
   if (part === "plan") return NextResponse.json(await agentPlan(gate.profile));
+  if (part === "checks") return NextResponse.json(await agentChecks(gate.profile.id));
   if (part === "profile") {
     return NextResponse.json({
       profile: { id: gate.profile.id, name: gate.profile.name, email: gate.profile.email, phone: gate.profile.phone, company: gate.profile.company, address: gate.profile.address, areas: gate.profile.areas, photoUrl: gate.profile.photoUrl, graLicence: gate.profile.graLicence, verified: gate.profile.verified },
@@ -85,6 +87,8 @@ export async function POST(request: Request) {
   else if (action === "lead") result = await updateLead(gate.profile, body);
   else if (action === "request") result = await createRequest(gate.profile, body);
   else if (action === "profile") result = await saveAgentProfile(gate.profile, body);
+  else if (action === "saveLicence") result = await saveAgentLicence(gate.profile.id, body);
+  else if (action === "requestDeletion") result = await requestIdDeletion(gate.profile.id, String(body.documentId || ""), String(body.note || ""));
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json(result);
 }

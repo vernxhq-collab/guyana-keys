@@ -24,6 +24,9 @@ type Draft = {
   description: string;
   titleRef: string;
   titleStatus: string;
+  titleCheckedByLawyer: boolean;
+  titleLawyerPartnerId: string;
+  titleCheckedOn: string;
   mobileNetworks: string[];
   broadbandProviders: string[];
   broadbandSpeed: string;
@@ -41,7 +44,7 @@ type Draft = {
   photosConfirmed: boolean;
 };
 
-const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false, ownerPermission: false, photosConfirmed: false };
+const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", titleCheckedByLawyer: false, titleLawyerPartnerId: "", titleCheckedOn: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false, ownerPermission: false, photosConfirmed: false };
 
 export function ListingEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -80,6 +83,9 @@ export function ListingEditor({ id }: { id: string }) {
             description: listing.description || "",
             titleRef: listing.titleRef || "",
             titleStatus: listing.titleStatus || "",
+            titleCheckedByLawyer: listing.titleCheckedByLawyer === true,
+            titleLawyerPartnerId: listing.titleLawyerPartnerId || "",
+            titleCheckedOn: listing.titleCheckedOn || "",
             mobileNetworks: listing.facts?.mobileNetworks || [],
             broadbandProviders: listing.facts?.broadbandProviders || [],
             broadbandSpeed: listing.facts?.broadbandSpeed || "",
@@ -250,6 +256,15 @@ export function ListingEditor({ id }: { id: string }) {
           {titleStatuses.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
         </select>
       </label>
+      <p className="quiet">{draft.titleStatus ? titleStatuses.find((item) => item.id === draft.titleStatus)?.plain : "Choose the document the owner or agent holds. Buyers see this in plain language."}</p>
+      <p className="quiet">The public line says “Stated by agent/owner” unless a lawyer partner has checked it.</p>
+      <label><input type="checkbox" checked={draft.titleCheckedByLawyer} onChange={(event) => setDraft({ ...draft, titleCheckedByLawyer: event.target.checked })} /> Title checked by a lawyer partner</label>
+      {draft.titleCheckedByLawyer ? (
+        <>
+          <label>Lawyer partner id<input value={draft.titleLawyerPartnerId} onChange={(event) => setDraft({ ...draft, titleLawyerPartnerId: event.target.value })} /></label>
+          <label>Date checked<input type="date" value={draft.titleCheckedOn} onChange={(event) => setDraft({ ...draft, titleCheckedOn: event.target.value })} /></label>
+        </>
+      ) : null}
       <p className="quiet">A listing is not proof of title. Status is what the agent has on file. Buyers can request a title check.</p>
       <div className="panel">
         <strong>Services at the property</strong>

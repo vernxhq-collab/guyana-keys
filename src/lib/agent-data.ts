@@ -8,6 +8,7 @@ import { digits, hoursSince, newId, planLabel, stageLabel } from "./labels";
 import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
 import { guyanaLocalToUtc } from "./time";
+import { formatLeadSource } from "./attribution";
 import { MIN_LIVE_PHOTOS, withinLiveCap } from "./listing-rules";
 import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
@@ -189,6 +190,9 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     description: String(body.description || "").slice(0, 8000),
     title_ref: String(body.titleRef || "").trim().slice(0, 160),
     title_status: cleanTitleStatus(body.titleStatus),
+    title_checked_by_lawyer: body.titleCheckedByLawyer === true,
+    title_lawyer_partner_id: body.titleCheckedByLawyer === true ? String(body.titleLawyerPartnerId || "").trim().slice(0, 80) : "",
+    title_checked_on: body.titleCheckedByLawyer === true && /^\d{4}-\d{2}-\d{2}$/.test(String(body.titleCheckedOn || "")) ? String(body.titleCheckedOn) : null,
     mobile_networks: facts.mobileNetworks,
     broadband_providers: facts.broadbandProviders,
     broadband_speed: facts.broadbandSpeed,
@@ -248,6 +252,9 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
   if (next.status === "live" && body.photosConfirmed !== true) {
     return { error: "Confirm the photos are landscape, with no watermark and no other agency logo." };
   }
+  if (next.title_checked_by_lawyer && (!next.title_lawyer_partner_id || !next.title_checked_on)) {
+    return { error: "A lawyer check needs the partner id and the date." };
+  }
   const savedId = existing ? id : newId("gy");
   if (next.status === "live" && existing?.status !== "live") {
     const counted = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", profile.id).eq("status", "live");
@@ -261,6 +268,7 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
   if (writeError && String(writeError.message || "").toLowerCase().includes("live listing cap")) {
     return { error: "This account is at its live listing cap. Hide one before another goes live." };
   }
+  if (writeError && String(writeError.message || "").includes("Title status Other")) return { error: writeError.message };
   if (writeError) return { error: "The listing could not be saved." };
   if (next.status === "live" && existing?.status !== "live") {
     await notifyMatches({
@@ -276,7 +284,9 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
 }
 
 function columnMissing(error: { message?: string } | null, column: string) {
-  return String(error?.message || "").toLowerCase().includes(column);
+  const message = String(error?.message || "").toLowerCase();
+  if (message.includes("check constraint") || message.includes("violates check")) return false;
+  return message.includes(column);
 }
 
 async function writeProperty(
@@ -291,11 +301,22 @@ async function writeProperty(
     : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
   let row = { ...payload };
   let result = await run(row);
-  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note", "owner_permission", "price_reduced"];
+  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note", "owner_permission", "price_reduced", "title_checked_by_lawyer", "title_lawyer_partner_id", "title_checked_on"];
   while (result.error) {
+    const message = String(result.error.message || "").toLowerCase();
+    const check = message.includes("check constraint") || message.includes("violates check");
+    if (check && row.title_status === "certificate_of_title") {
+      row = { ...row, title_status: "certificate" };
+      result = await run(row);
+      continue;
+    }
+    if (check && row.title_status === "other") {
+      return { message: "Title status Other is not saved until the Phase 1 SQL is applied. Choose another status, or ask for that SQL to be run." };
+    }
     const missing = optional.find((column) => column in row && columnMissing(result.error, column));
     if (!missing) return result.error;
     delete row[missing];
+    row = { ...row };
     result = await run(row);
   }
   return null;
@@ -382,7 +403,8 @@ function publicLead(row: Record<string, unknown>, listing: Listing | undefined) 
     home: listing ? listing.title : "Home removed",
     area: listing?.area || "",
     purpose: listing?.purpose || "",
-    source: "Guyana Keys",
+    source: formatLeadSource(row),
+    listingId: String(row.property_id || ""),
     intent: String(row.intent || ""),
   };
 }

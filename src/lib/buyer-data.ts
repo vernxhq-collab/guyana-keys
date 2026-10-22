@@ -2,6 +2,7 @@ import { leadScore } from "./assist";
 import { loadCatalog, resolveTouched } from "./catalog";
 import type { Listing } from "./data";
 import { newId, stageLabel } from "./labels";
+import { attributionFromBody } from "./attribution";
 import { leadIntent, notifyAgentEnquiry } from "./notify";
 import { addEvent, leadFromEnquiry, openEnquiry } from "./records";
 import type { Profile } from "./session";
@@ -147,13 +148,14 @@ export async function unsaveHome(profile: Profile, propertyId: string) {
   return { ok: true };
 }
 
-export async function sendEnquiry(profile: Profile, input: { propertyId: string; name: string; phone: string; note: string; abroad: boolean; moveIn: string; occupants: number | null; viewingRequest?: string }) {
+export async function sendEnquiry(profile: Profile, input: { propertyId: string; name: string; phone: string; note: string; abroad: boolean; moveIn: string; occupants: number | null; viewingRequest?: string; page?: string; channel?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmTerm?: string; utmContent?: string; leadKind?: string; partnerId?: string }) {
   if (!input.name.trim() || !input.phone.trim()) return { error: "Name and WhatsApp are required." };
   const home = await publicHome(input.propertyId);
   if (!home) return { error: "That home was not found." };
   const purpose = home.purpose || "Sale";
   const title = home.title || "this home";
   const intent = await leadIntent(profile.id, input.propertyId, home.area || "");
+  const attribution = attributionFromBody(input, `/listings/${input.propertyId}`);
   const opened = await openEnquiry({
     buyerId: profile.id,
     propertyId: input.propertyId,
@@ -167,6 +169,7 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
     viewingRequest: input.viewingRequest,
     title,
     intent,
+    attribution,
   });
   if ("error" in opened && opened.error) return { error: opened.error };
   const row = opened.row;
@@ -200,6 +203,9 @@ export async function sendEnquiry(profile: Profile, input: { propertyId: string;
       intent,
       propertyId: input.propertyId,
       enquiryId: text(row.id),
+      page: attribution.source_page,
+      channel: attribution.lead_channel,
+      utm: attribution.utm,
     });
   }
   return { ok: true, viewing: Boolean(input.viewingRequest) };

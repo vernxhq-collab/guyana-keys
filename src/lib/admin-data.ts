@@ -400,7 +400,7 @@ export async function setVerified(agentId: string, verified: boolean) {
   const { error } = await db.from("profiles").update({ verified }).eq("id", agentId).eq("role", "agent");
   if (error && String(error.message || "").toLowerCase().includes("verified")) return { error: "Verification is not ready on this desk yet." };
   if (error) return { error: "Verification could not be saved." };
-  await remember(db, verified ? `Marked ${data.name || "an agent"} verified on Guyana Keys.` : `Removed the verified badge for ${data.name || "an agent"}.`);
+  await remember(db, verified ? `Set an internal flag for ${data.name || "an agent"}. This is not a public badge.` : `Cleared the internal flag for ${data.name || "an agent"}.`);
   return { ok: true };
 }
 

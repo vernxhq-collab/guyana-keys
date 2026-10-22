@@ -19,6 +19,7 @@ export default async function AgentsPage() {
               <div className="card-body">
                 <strong>{agent.name}</strong>
                 {agent.founding ? <p className="chip">Founding agent</p> : null}
+                {agent.checkBadge ? <p className="meta">{agent.checkBadge}</p> : null}
                 <p className="meta">{[agent.company, agent.areas.join(", ")].filter(Boolean).join(" · ")}</p>
                 <span className="btn ghost">View agent</span>
               </div>

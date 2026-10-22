@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Agent, Listing } from "../lib/data";
+import { pageAttribution } from "../lib/page-context";
 
 export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing: Listing; agent: Agent | null; viewer: { name: string; abroad: boolean } | null; initialSaved: boolean }) {
   const [saved, setSaved] = useState(initialSaved);
@@ -45,6 +46,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
         occupants: data.get("occupants") || "",
         day,
         timeOfDay,
+        ...pageAttribution(),
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -59,7 +61,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
     const res = await fetch("/api/enquiries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ propertyId: listing.id, name: data.get("name"), phone: data.get("phone"), note: data.get("note"), website: data.get("website") || "" }),
+      body: JSON.stringify({ propertyId: listing.id, name: data.get("name"), phone: data.get("phone"), note: data.get("note"), website: data.get("website") || "", ...pageAttribution() }),
     });
     const body = await res.json().catch(() => ({}));
     setBusy(false);
@@ -71,6 +73,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
       <p className="chip">Listed on Guyana Keys</p>
       {agent ? <h2><Link href={`/agents/${agent.id}`}>{agent.name}</Link></h2> : <h2>The agent has not added a name yet.</h2>}
       {agent?.founding ? <p className="chip">Founding agent</p> : null}
+      {agent?.checkBadge ? <p>{agent.checkBadge}</p> : null}
       {agent ? <p className="meta">{[agent.company, agent.areas.join(", ")].filter(Boolean).join(" · ")}</p> : null}
       <form style={{ display: "grid", gap: 10 }} onSubmit={(event) => void contactAgent(event)}>
         <strong>Contact agent</strong>

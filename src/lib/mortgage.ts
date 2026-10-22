@@ -12,12 +12,18 @@ export function amortise(loan: number, annualPercent: number, years: number) {
   return { monthly, totalInterest: Math.max(0, totalPaid - principal), totalPaid };
 }
 
-export function purchaseEstimate(price: number, stampPercent: number) {
-  const base = Number.isFinite(price) && price > 0 ? price : 0;
-  const stampRate = stampPercent === 2.5 ? 2.5 : 2;
-  const stamp = base * (stampRate / 100);
-  const legal = base * 0.015;
-  return { stamp, legal, fees: stamp + legal, stampRate };
+export function purchaseEstimate(stampGyd: number, legalGyd: number) {
+  const stamp = Number.isFinite(stampGyd) && stampGyd > 0 ? stampGyd : 0;
+  const legal = Number.isFinite(legalGyd) && legalGyd > 0 ? legalGyd : 0;
+  return { stamp, legal, fees: stamp + legal };
+}
+
+export function groupAmount(raw: string) {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  if (!cleaned) return "";
+  const [whole, frac] = cleaned.split(".");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return frac !== undefined ? `${grouped}.${frac.slice(0, 2)}` : grouped;
 }
 
 export function gyd(amount: number) {

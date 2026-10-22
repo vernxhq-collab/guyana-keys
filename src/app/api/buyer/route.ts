@@ -37,6 +37,15 @@ export async function POST(request: Request) {
       moveIn: String(body.moveIn || ""),
       occupants: body.occupants ? Number(body.occupants) : null,
       viewingRequest: action === "viewing" ? `${String(body.day || "").trim()} ${String(body.timeOfDay || "").trim()}`.trim() : undefined,
+      page: String(body.page || ""),
+      channel: String(body.channel || ""),
+      utmSource: String(body.utmSource || ""),
+      utmMedium: String(body.utmMedium || ""),
+      utmCampaign: String(body.utmCampaign || ""),
+      utmTerm: String(body.utmTerm || ""),
+      utmContent: String(body.utmContent || ""),
+      leadKind: String(body.leadKind || ""),
+      partnerId: String(body.partnerId || ""),
     });
   } else if (action === "search") {
     result = await saveSearch(gate.profile, {

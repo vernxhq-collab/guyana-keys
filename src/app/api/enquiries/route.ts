@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { clientKey, tooMany } from "../../../lib/abuse";
+import { attributionFromBody } from "../../../lib/attribution";
 import { newId } from "../../../lib/labels";
 import { leadIntent, notifyAgentEnquiry } from "../../../lib/notify";
+import { writeFlexible } from "../../../lib/rows";
 import { readSession } from "../../../lib/session";
 import { serviceDb } from "../../../lib/supabase";
 
@@ -25,6 +27,7 @@ export async function POST(request: Request) {
   const title = String(property.data?.title || "a home");
   const intent = buyerId ? await leadIntent(buyerId, listingId, String(property.data?.area || "")) : "";
   const id = newId("enq");
+  const attribution = attributionFromBody(body, property.data ? `/listings/${listingId}` : "");
   const row: Record<string, unknown> = {
     id,
     property_id: property.data ? listingId : null,
@@ -36,16 +39,13 @@ export async function POST(request: Request) {
     stage: "new",
     source: "guyana_keys",
     intent,
+    source_page: attribution.source_page,
+    utm: attribution.utm,
+    lead_channel: attribution.lead_channel,
+    lead_kind: attribution.lead_kind,
+    partner_id: attribution.partner_id,
   };
-  let { error } = await client.from("enquiries").insert(row);
-  if (error && String(error.message || "").toLowerCase().includes("source")) {
-    delete row.source;
-    ({ error } = await client.from("enquiries").insert(row));
-  }
-  if (error && String(error.message || "").toLowerCase().includes("intent")) {
-    delete row.intent;
-    ({ error } = await client.from("enquiries").insert(row));
-  }
+  const error = await writeFlexible((payload) => client.from("enquiries").insert(payload), row, ["source", "intent", "source_page", "utm", "lead_channel", "lead_kind", "partner_id"]);
   if (error) return NextResponse.json({ error: "The enquiry could not be saved." }, { status: 500 });
   if (agentId && property.data) {
     await notifyAgentEnquiry({
@@ -57,6 +57,9 @@ export async function POST(request: Request) {
       intent,
       propertyId: listingId,
       enquiryId: id,
+      page: attribution.source_page,
+      channel: attribution.lead_channel,
+      utm: attribution.utm,
     });
   }
   return NextResponse.json({ id });
