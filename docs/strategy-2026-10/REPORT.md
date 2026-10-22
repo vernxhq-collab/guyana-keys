@@ -60,7 +60,7 @@ Present and wired to data when the database is connected:
 - Listings with purpose, type, price in GYD, beds, baths, photos, area, and a title status of transport, certificate of title, lease, or unknown (`src/lib/trust.ts`). The public listing page says a listing is not proof of title.
 - Enquiries, a five-stage lead (`new`, `contacted`, `viewing`, `offer`, `closed`) in `src/lib/agent-data.ts`, viewing time, and an event row when the stage changes.
 - Saved homes, recently viewed, and saved searches exist as tables (`supabase/migration.sql`). Alerts can be confirmed by POST. If Resend is unset, the alert is stored paused and the UI says confirm email is not connected (`src/app/api/alerts/route.ts`).
-- Mortgage and purchase-cost maths (`src/lib/mortgage.ts`) uses a rate the user types. The copy says Guyana Keys does not publish lender rates. Stamp duty is an estimate switch of about 2% or 2.5%, legal fees about 1.5%. The USD guide uses 209 GYD per USD (`src/lib/data.ts`). That rate is a guide, and the UI says banks use their own rate.
+- Mortgage and purchase-cost maths (`src/lib/mortgage.ts`) can use a rate the user types, or a lender rate that was checked on the bank's own page, with the source and the date. Stamp duty and legal fees are amounts the user types. They are not a percent of the price. The USD guide uses 209 GYD per USD (`src/lib/data.ts`). That rate is a guide, not a bank rate.
 - Area pages refuse an average price and a rental yield until the catalog has the sales (`src/lib/areas.ts` sets both to “Not enough sales / rentals on Guyana Keys yet.”). The assistant repeats that. This is the right behaviour. It also means the “market insights” product does not exist yet.
 - Place facts (water, electricity, road, drainage note) can be stored. They are agent-entered notes, not a survey.
 - Sample homes are impossible in production (`src/lib/catalog.ts`: `sampleDataEnabled()` requires `NODE_ENV !== "production"`). The live site cannot quietly fill itself with fake stock. On 22 October the public pages showed the empty state. **We did not count production rows.**
@@ -135,7 +135,7 @@ Gaps:
 
 - `.env.example` and the source tree have no Stripe, no price table, and no subscription state. A search of `src` for billing, stripe, and commission returns nothing.
 - The plan a profile carries is a label and a request an admin can approve (`createRequest` in `src/lib/agent-data.ts`). It is not a paid plan.
-- The owner’s current direction is free listings, with an OpenRent-style owner flow as a later idea. The code matches the free part: Today says “Free, no limit” when the desk is not in preview.
+- The owner’s current direction is a free plan of 3 live listings, with an OpenRent-style owner flow as a later idea. The code matches that cap (`FREE_LIVE_CAP` is 3). It is not an unlimited free plan.
 - Readiness fails on inventory and on proof. On 22 October 2026 the public Rent, Land, and Agents pages showed empty states. Agents will not pay, and buyers will not return, while those pages are empty. Featured placement cannot be sold against an empty search.
 
 ---
@@ -156,7 +156,7 @@ No public site with the exact name “Guyana Property Hub” came up in this rev
 | Zoopla | A house-price estimate with a stated source (Hometrack), a confidence cutoff (they withhold a range under 50%), and an explicit line that the estimate is not a valuation. Agents get the lead. Member rules require a real agency, redress, and deposit-scheme registration, and they reject private-vendor and “listings only” advertisers. | The estimate exists because the UK has a land registry feed and a comparable database. Guyana Keys does not. Importing an automated value would be a false precision. Their ban on private vendors is a choice, not a law we are under. | Keep our current rule: no average until there are enough live asking prices, and even then label it as asking prices, not a valuation. If owner-listing arrives later, it must be marked as the owner’s advert, never as agent-vetted stock. | [What the estimate is](https://help.zoopla.co.uk/hc/en-gb/articles/360006701777-What-is-a-Zoopla-house-price-estimate), [valuation leads](https://support.zoopla.co.uk/hc/en-gb/articles/31630570028434-Generate-more-valuation-leads), [member criteria](https://www.zoopla.co.uk/members/terms/previous-terms-zoopla-member-criteria-guidelines-dec-2025/) |
 | Rightmove | Search-led advertising. Agents pay for search products and leads. The product guidelines price search products off the search term and local values, and they define lead and package products. | We do not have their traffic, and this review did not extract a current public rate card. Quoting a Rightmove fee would be invented. Their model assumes a full market already listed. | Earn the right to charge for a feature or a lead only after a search returns real homes. Until then, free listings are the acquisition tool, not a permanent price. | [Product guidelines PDF](https://media.rightmove.co.uk/pdf/rightmove_estate_agency_and_lettings_product_guidelines_existing_companies.pdf), [rightmove.co.uk](https://www.rightmove.co.uk/) |
 | Realtor.com | A US discovery and agent-services marketplace. | This review did not re-audit their 2026 AI features. Treat any specific Realtor AI claim as **unverified** here. | Useful only as a reminder that the agent profile and the listing should be the same quality. Not a template. | [realtor.com](https://www.realtor.com/) |
-| HighLevel (GoHighLevel) | CRM, pipelines, workflows, and WhatsApp inside one agency tool. Their help centre prices WhatsApp at $10 per month per enabled sub-account plus usage, and documents Meta’s per-message rates, including changes from 1 October 2026. | It is a marketing CRM, not a property record. Adopting it would be a new subscription, a second database of clients, and a place where a workflow can message someone without our approval gate. Plan sticker prices on the marketing page were not captured in full in this review, so no plan fee is stated. | Rebuild the two workflows we actually need as rows in our own database, on top of enquiries we already store. Use the WaSender key we already have. Do not resell HighLevel. | [Pricing](https://www.gohighlevel.com/pricing), [billing guide](https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide), [WhatsApp rates](https://help.gohighlevel.com/support/solutions/articles/155000001428-whatsapp-pricing-billing-and-rebilling-guide) |
+| HighLevel (GoHighLevel) | CRM, pipelines, workflows, and WhatsApp inside one agency tool. Their help centre prices WhatsApp at $10 per month per enabled sub-account plus usage, and documents Meta’s per-message rates, including changes from 1 October 2026. | It is a marketing CRM, not a property record. Adopting it would be a new subscription, a second database of clients, and a place where a workflow can message someone without our approval gate. Plan sticker prices on the marketing page were not captured in full in this review, so no plan fee is stated. | Rebuild the two workflows we actually need as rows in our own database, on top of enquiries we already store. Do not reuse the WaSender key. WhatsApp sending stays off until Boss approves it. Do not resell HighLevel. | [Pricing](https://www.gohighlevel.com/pricing), [billing guide](https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide), [WhatsApp rates](https://help.gohighlevel.com/support/solutions/articles/155000001428-whatsapp-pricing-billing-and-rebilling-guide) |
 
 Facebook and WhatsApp groups remain the default listing rail in the News Room piece (their characterisation, not our count). Beating a group is a product problem: a stable URL, a title line, and a reply that is logged. Beating Home Hub is an inventory problem first and a desk problem second.
 
@@ -204,9 +204,9 @@ It does well: it is the business the brief asks for, and it keeps suggested work
 
 ### Recommendation
 
-**Ship Quay as the public brand, and ship the Desk layout behind sign-in.**
+**Ship Market as the public brand. Boss chose Market.** The Desk layout stays behind sign-in.
 
-Quay is the strongest public direction because the local failure is trust and title, not a lack of maps or motion. Corridor should be the listings mode once there are real pins, not the identity of the company. The agent command centre should look like Desk, because that is the job, and it should use the same green and the same type as Quay so it feels like one product.
+Quay, Corridor, and Desk were the three options drawn for this review. They are not the public name. Market is the direction that was chosen. The agent command centre can still follow the Desk layout behind sign-in, in the same green, so the signed-in job and the public site feel like one product.
 
 Do not blend all three into a fourth concept. Blends are how the current site became a hero, a plain form, and a different desk.
 
@@ -259,7 +259,7 @@ Principle: the model, if one is ever added, may draft. It may not send, price, o
 | Lead record | `enquiries`, `enquiry_events` | Stage, reply, viewing, private note |
 | Notices | `notices` | A send attempt, with status |
 | Mail | Resend, skipped if the key is empty | Alerts and enquiry mail |
-| WhatsApp | WaSender, skipped if the key is empty | The same, when a phone exists |
+| WhatsApp | Sending stays off until Boss approves it. Do not reuse the WaSender key for this. | Not a live sender |
 | Draft text | `src/lib/ai/local.ts` | Template, not a model |
 | Buyer answers | `src/lib/assistant.ts` | Rules over the live catalog |
 | Admin trail | `admin_events` | Extend, do not replace |
@@ -300,7 +300,7 @@ Money, a promise to buy or sell, a commission, a title opinion, and any message 
 
 ### Data flow
 
-Browser → existing API route → Supabase as the signed-in user where RLS allows, or the service role only inside the route that already uses it → `workflow_runs` and `notices` → Resend or WaSender if the key exists → status written back. Logs are the rows. A separate monitoring product is not required for the first 90 days. Vercel’s own logs plus `admin_events` are the trail. **Cost of a new observer: avoid.**
+Browser → existing API route → Supabase as the signed-in user where RLS allows, or the service role only inside the route that already uses it → `workflow_runs` and `notices` → Resend when mail is approved. WhatsApp sending stays off until Boss approves it. Do not reuse the WaSender key. Status is written back. Logs are the rows. A separate monitoring product is not required for the first 90 days. Vercel’s own logs plus `admin_events` are the trail. **Cost of a new observer: avoid.**
 
 ### Dependencies we refuse for now
 
@@ -312,11 +312,11 @@ HighLevel, a new CRM, an automated valuation, a tour-capture vendor, an SMS gate
 
 This is a sequence of milestones. It is not a staffing estimate and it is not permission to implement. Each milestone needs its own draft pull request and the owner’s approval. No production SQL and no Vercel change until that approval names them.
 
-Incremental vendor cost of this sequence: **no new subscription.** Mail and WhatsApp keep using the keys already in the environment. If those keys are empty, the features stay visibly off. Published list prices, if a paid tier is already in use or is chosen later, are in section G. The current invoice was not opened. **Unverified.**
+Incremental vendor cost of this sequence: **no new subscription.** Mail can keep using Resend when that key is set. WhatsApp sending stays off until Boss approves it. Do not reuse the WaSender key for sending. Published list prices, if a paid tier is already in use or is chosen later, are in section G. The current invoice was not opened. **Unverified.**
 
-### First 30 days — inventory and the public Quay pass
+### First 30 days — inventory and the public Market pass
 
-Scope: agent onboarding conversations (outside the repo), the thin-listing gate, title on the card, the Quay layout on home, listings, and the listing page, and the full-width empty state from pull request #19 merged only if the owner accepts that PR.
+Scope: agent onboarding conversations (outside the repo), the thin-listing gate, title on the card, the Market layout on home, listings, and the listing page, and the full-width empty state from pull request #19 merged only if the owner accepts that PR. Quay is not the public brand.
 
 Acceptance:
 
@@ -375,10 +375,10 @@ Every live listing needs an approved agent and the thin-listing gate. A target c
 
 ### Monetisation, in order
 
-1. **Now:** free listings. Matches the code (“Free, no limit”) and the owner’s direction.
+1. **Now:** a free plan of 3 live listings. That is the cap in the code, and it is the owner’s direction. It is not an unlimited free plan.
 2. **After enquiries are real:** a featured request, which the desk can already file, becomes a paid placement. No price is set here. Rightmove-style search ads need traffic we have not measured. **Do not publish a GYD or USD fee in the product until an agent has agreed one in writing.**
 3. **After the desk saves time:** a paid tier for the hold queue, team seats, and performance. HighLevel’s WhatsApp add-on is $10 per sub-account per month plus message usage, as a reference for what agencies already pay elsewhere, not as our price. Source: [HighLevel billing guide](https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide).
-4. **Later, and only as a referral the user asks for:** an introduction to an attorney or a lender the owner has a permitted agreement with. The introduction is not a rate, not a valuation, and not a recommendation of a loan. The mortgage screen keeps “we do not publish lender rates”.
+4. **Later, and only as a referral the user asks for:** an introduction to an attorney or a lender the owner has a permitted agreement with. The introduction is not a valuation and not a recommendation of a loan. The mortgage screen shows a lender rate only when it was checked on that bank's page, with the source and the date.
 5. **Not in this plan:** white-label, owner self-serve as a priced product, and any automated return or yield product.
 
 ### Running cost
@@ -402,7 +402,7 @@ A model API is not in the estimate because it is not in the plan.
 1. **Put real, approved listings on the public site.** A buyer cannot prefer an empty shelf. Evidence: empty states on 22 October; `loadCatalog` returns no cards when no live rows exist.
 2. **Show title status on every card, including Unknown.** The words exist in `src/lib/trust.ts` and are missing on `ListingCard`.
 3. **Block thin listings from going live.** The check already exists for hidden stock. It should gate `status = live`.
-4. **Adopt Quay in public and Desk when signed in.** One brand, two jobs. Mockups in this folder. Do not make the dark map the homepage.
+4. **Adopt Market in public, as Boss chose, and Desk when signed in.** One product, two jobs. Quay and Corridor stay options in this folder. They are not the public brand. Do not make the dark map the homepage.
 5. **Make the follow-up queue server-side.** Today’s dismiss lives in the browser. A lead with no reply must survive a new phone.
 6. **Separate suggested from sent.** A draft reply is not a message. Store both. Send only on approve, and say when WhatsApp or email is not connected.
 7. **Answer one real question.** “Who hasn’t had a follow-up this week?” over that agent’s enquiries. No model required.
