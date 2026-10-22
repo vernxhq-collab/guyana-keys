@@ -15,7 +15,7 @@ export default function PreviewKeysCheckPage() {
       <p className="chip">{SAMPLE_LABEL}</p>
       <h1>Keys Check preview</h1>
       <p className="sub">This form does not store a file, a code, or a decision. There is no sample ID image.</p>
-      <KeysCapture sample consentVersion={ID_CONSENT_VERSION} documents={[]} keysCheck={null} flags={[]} onDone={() => undefined} />
+      <KeysCapture sample consentVersion={ID_CONSENT_VERSION} documents={[]} keysCheck={null} flags={[]} />
       <section className="stack">
         <h2>Reviewer layout</h2>
         <p className="quiet">Empty boxes only. A real review opens private files for 60 seconds after an audit row. This preview does not.</p>

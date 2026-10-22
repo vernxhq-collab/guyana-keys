@@ -47,7 +47,7 @@ export function KeysCapture({
   keysCheck: KeysState;
   flags: string[];
   sample?: boolean;
-  onDone: (message: string) => void;
+  onDone?: (message: string) => void;
 }) {
   const [consent, setConsent] = useState(false);
   const [idKind, setIdKind] = useState(keysCheck?.idKind || "national_id");
@@ -58,7 +58,7 @@ export function KeysCapture({
   const [localNote, setLocalNote] = useState("");
   function report(message: string) {
     setLocalNote(message);
-    onDone(message);
+    onDone?.(message);
   }
 
   async function upload(kind: KeysDocumentKind, file: File | undefined) {
