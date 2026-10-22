@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Direction 1 — Quay (mockup, not the live site)</title>
+<style>
+  :root { --ink:#1c2420; --muted:#4d5b54; --line:#e4ddd2; --paper:#f7f4ee; --green:#0f6b49; --deep:#0c3d2c; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+  .banner { background:#0c3d2c; color:#e7f6ee; font-size:13px; letter-spacing:.04em; text-transform:uppercase; padding:8px 20px; }
+  header { display:flex; align-items:center; gap:22px; padding:18px 28px; background:#fff; border-bottom:1px solid var(--line); }
+  .brand { font-family: Georgia, "Times New Roman", serif; font-size:26px; letter-spacing:-.03em; }
+  .brand span { color:var(--green); }
+  nav { display:flex; gap:18px; font-size:15px; }
+  nav a { color:inherit; text-decoration:none; }
+  .spacer { margin-left:auto; display:flex; gap:10px; align-items:center; }
+  .btn { background:var(--green); color:#fff; border:0; border-radius:999px; padding:12px 18px; font-weight:650; }
+  .ghost { background:#fff; color:var(--ink); border:1px solid #cfc6b8; border-radius:999px; padding:11px 16px; }
+  section { padding:28px; }
+  h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight:500; letter-spacing:-.03em; margin:0 0 8px; }
+  h1 { font-size:64px; line-height:.95; }
+  h2 { font-size:36px; }
+  .kicker { color:var(--green); font-size:13px; letter-spacing:.14em; text-transform:uppercase; margin:0 0 8px; }
+  .hero { display:grid; grid-template-columns:1.1fr .9fr; gap:36px; align-items:end; padding-top:48px; }
+  .search { background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px; display:grid; gap:10px; box-shadow:0 16px 40px rgba(12,61,44,.06); }
+  .search input, .search select { border:1px solid #ddd4c8; border-radius:12px; padding:14px; font:inherit; width:100%; background:#fff; }
+  .row { display:flex; gap:8px; }
+  .note { color:var(--muted); font-size:15px; line-height:1.5; }
+  .cards { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .photo { height:180px; background: linear-gradient(160deg, #d7ebe3, #f3efe7 55%, #c9d5ce); position:relative; }
+  .tag { position:absolute; top:12px; left:12px; background:#fff; border-radius:999px; padding:4px 8px; font-size:12px; }
+  .body { padding:14px 16px 16px; display:grid; gap:4px; }
+  .price { font-family: Georgia, serif; font-size:28px; }
+  .rule { height:10px; width:46%; background:#e7e1d6; border-radius:99px; }
+  .chips { display:flex; gap:8px; color:var(--muted); font-size:13px; }
+  .sheet { background:#fff; border:1px solid var(--line); border-radius:18px; padding:18px; display:grid; gap:12px; }
+  .desk { display:grid; grid-template-columns:220px 1fr; gap:16px; }
+  .rail { background:var(--deep); color:#e7f6ee; border-radius:18px; padding:16px; display:grid; gap:10px; align-content:start; }
+  .rail a { color:#e7f6ee; text-decoration:none; }
+  .statgrid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .stat { border:1px solid var(--line); border-radius:14px; padding:14px; background:#fff; }
+  .phone { width:390px; border:1px solid var(--line); border-radius:28px; overflow:hidden; background:#fff; }
+  .phone header { padding:14px; }
+  .phone h1 { font-size:40px; }
+  .label { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+</style>
+</head>
+<body>
+  <div class="banner">Mockup only. Not the live app. Cards are layout specimens. No prices, people, or listings.</div>
+  <header>
+    <div class="brand">Guyana <span>Keys</span></div>
+    <nav><a>Buy</a><a>Rent</a><a>Land</a><a>Agents</a><a>Tools</a></nav>
+    <div class="spacer"><span class="ghost">Sign in</span><span class="btn">List a property</span></div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <p class="kicker">Direction 1 · Quay</p>
+      <h1>Find a home you can check.</h1>
+      <p class="note">A quiet registry. One search sentence, title status on every card, and a price in GYD with USD underneath. Nothing moves unless you ask it to.</p>
+    </div>
+    <form class="search">
+      <input value="3 bed house in Diamond, under my budget" aria-label="Search" />
+      <div class="row">
+        <select aria-label="Buy or rent"><option>Buy</option><option>Rent</option></select>
+        <select aria-label="Type"><option>House</option></select>
+        <span class="btn">Search</span>
+      </div>
+      <p class="note">A listing is not proof of title. Confirm transport or certificate of title with an attorney.</p>
+    </form>
+  </section>
+
+  <section>
+    <p class="kicker">Listings</p>
+    <h2>What is published</h2>
+    <div class="cards">
+      <article class="card"><div class="photo"><span class="tag">Transport noted</span></div><div class="body"><div class="price">GYD</div><div class="rule"></div><strong>Example house</strong><span class="note">Neighbourhood · Georgetown</span><div class="chips"><span>Beds</span><span>Baths</span><span>USD guide</span></div></div></article>
+      <article class="card"><div class="photo"><span class="tag">Title unknown</span></div><div class="body"><div class="price">GYD</div><div class="rule"></div><strong>Example land</strong><span class="note">Scheme · East Bank</span><div class="chips"><span>Lot size</span><span>Lease or transport</span></div></div></article>
+      <article class="card"><div class="photo"><span class="tag">For rent</span></div><div class="body"><div class="price">GYD / month</div><div class="rule"></div><strong>Example rental</strong><span class="note">Village · East Coast</span><div class="chips"><span>Furnished unknown</span><span>Ask the agent</span></div></div></article>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Search</p>
+    <h2>Filters stay in plain language</h2>
+    <div class="sheet">
+      <div class="row">
+        <span class="ghost">Buy</span><span class="ghost">Any region</span><span class="ghost">Any beds</span><span class="ghost">Price, low to high</span>
+      </div>
+      <p class="note">Results and the map share one row. If nothing is listed, the empty state is the full width and offers an alert, not a blank column.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Agent desk</p>
+    <h2>Today, then the next reply</h2>
+    <div class="desk">
+      <aside class="rail"><strong>Desk</strong><a>Today</a><a>Listings</a><a>Leads</a><a>Calendar</a><a>Profile</a></aside>
+      <div class="sheet">
+        <div class="statgrid">
+          <div class="stat"><span class="label">Need a reply</span><h2>—</h2><span class="note">From your enquiries</span></div>
+          <div class="stat"><span class="label">Viewings</span><h2>—</h2><span class="note">This week</span></div>
+          <div class="stat"><span class="label">Live listings</span><h2>—</h2><span class="note">Approved only</span></div>
+        </div>
+        <p class="note">Suggested next step sits above the list. Sending a WhatsApp or email stays a button the agent presses. The desk never marks a message sent until it is.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Mobile</p>
+    <div class="phone">
+      <header><div class="brand">Guyana <span>Keys</span></div></header>
+      <div style="padding:16px">
+        <h1>Find a home you can check.</h1>
+        <div class="search" style="margin-top:12px"><input placeholder="Neighbourhood or a sentence" /><span class="btn">Search</span></div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
