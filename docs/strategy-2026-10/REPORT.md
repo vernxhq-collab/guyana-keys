@@ -135,7 +135,7 @@ Gaps:
 
 - `.env.example` and the source tree have no Stripe, no price table, and no subscription state. A search of `src` for billing, stripe, and commission returns nothing.
 - The plan a profile carries is a label and a request an admin can approve (`createRequest` in `src/lib/agent-data.ts`). It is not a paid plan.
-- The owner’s current direction is a free plan of 3 live listings, with an OpenRent-style owner flow as a later idea. The code matches that cap (`FREE_LIVE_CAP` is 3). It is not an unlimited free plan.
+- The owner’s current direction is free to list, with no limits, and an OpenRent-style owner flow as a later idea. Optional extras such as boosts, featured placement, and CRM or AI tools do not limit how many homes can be listed.
 - Readiness fails on inventory and on proof. On 22 October 2026 the public Rent, Land, and Agents pages showed empty states. Agents will not pay, and buyers will not return, while those pages are empty. Featured placement cannot be sold against an empty search.
 
 ---
@@ -375,7 +375,7 @@ Every live listing needs an approved agent and the thin-listing gate. A target c
 
 ### Monetisation, in order
 
-1. **Now:** a free plan of 3 live listings. That is the cap in the code, and it is the owner’s direction. It is not an unlimited free plan.
+1. **Now:** free to list, no limits. That is the owner’s direction. Optional extras (boosts, featured placement, CRM and AI tools) can come later and do not limit how many homes can be listed.
 2. **After enquiries are real:** a featured request, which the desk can already file, becomes a paid placement. No price is set here. Rightmove-style search ads need traffic we have not measured. **Do not publish a GYD or USD fee in the product until an agent has agreed one in writing.**
 3. **After the desk saves time:** a paid tier for the hold queue, team seats, and performance. HighLevel’s WhatsApp add-on is $10 per sub-account per month plus message usage, as a reference for what agencies already pay elsewhere, not as our price. Source: [HighLevel billing guide](https://help.gohighlevel.com/support/solutions/articles/155000001156-highlevel-pricing-guide).
 4. **Later, and only as a referral the user asks for:** an introduction to an attorney or a lender the owner has a permitted agreement with. The introduction is not a valuation and not a recommendation of a loan. The mortgage screen shows a lender rate only when it was checked on that bank's page, with the source and the date.
