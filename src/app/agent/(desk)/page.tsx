@@ -48,7 +48,7 @@ export default function AgentHomePage() {
       <div className="stats">
         <a className={home.unanswered > 0 ? "stat attention" : "stat"} href="/agent/leads?filter=unanswered"><p className="quiet">Need a reply</p><strong>{home.unanswered}</strong><p className="quiet">{home.unanswered > 0 ? "Reply today" : "Clear"}</p></a>
         <a className="stat" href="/agent/calendar"><p className="quiet">Viewings this week</p><strong>{home.viewings}</strong><p className="quiet">{home.viewings > 0 ? "On the calendar" : "None set"}</p></a>
-        <a className="stat" href="/agent/listings"><p className="quiet">Live listings</p><strong>{home.live}</strong><p className="quiet">{home.preview ? "Test stock" : "Free, no limit"}</p></a>
+        <a className="stat" href="/agent/listings"><p className="quiet">Live listings</p><strong>{home.live}</strong><p className="quiet">{home.preview ? "Test stock" : "Free plan, up to 3 live"}</p></a>
       </div>
       <h2>Today</h2>
       {next ? (

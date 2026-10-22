@@ -17,14 +17,16 @@ function typeFromQuery(text: string) {
 
 export const dynamic = "force-dynamic";
 
-export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string; region?: string }> }) {
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ q?: string; purpose?: string; type?: string; beds?: string; sort?: string; region?: string; budget?: string }> }) {
   const params = await searchParams;
   const { listings } = await loadCatalog();
   const text = (params.q || "").trim();
   const parsed = parseBuyerSearch(text);
-  const purpose = params.purpose || parsed.purpose;
-  const type = params.type !== undefined ? params.type : typeFromQuery(text);
+  const landSearch = params.purpose === "Land";
+  const purpose = landSearch ? "" : (params.purpose || parsed.purpose);
+  const type = landSearch ? "Land" : (params.type !== undefined ? params.type : typeFromQuery(text));
   const beds = params.beds && params.beds !== "0" ? Number(params.beds) : parsed.beds;
+  const budget = Number(params.budget || 0);
   const regions = Array.from(new Set(areas.map((area) => area.region)));
   const regionName = regions.find((item) => regionSlug(item) === params.region) || "";
   const region = regionName || (parsed.area ? "" : regionIn(text));
@@ -33,6 +35,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
     if (type && item.type !== type) return false;
     if (beds && item.beds < beds) return false;
     if (parsed.maxPrice && item.priceGyd > parsed.maxPrice) return false;
+    if (budget > 0 && item.priceGyd > budget) return false;
     if (parsed.area && !areaFits(item.area, parsed.area)) return false;
     if (region && item.region !== region) return false;
     const structured = Boolean(parsed.purpose || parsed.area || parsed.beds || parsed.maxPrice || region);

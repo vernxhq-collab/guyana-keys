@@ -70,6 +70,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
     <aside className="card"><div className="card-body" style={{ display: "grid", gap: 12 }}>
       <p className="chip">Listed on Guyana Keys</p>
       {agent ? <h2><Link href={`/agents/${agent.id}`}>{agent.name}</Link></h2> : <h2>The agent has not added a name yet.</h2>}
+      {agent?.founding ? <p className="chip">Founding agent</p> : null}
       {agent ? <p className="meta">{[agent.company, agent.areas.join(", ")].filter(Boolean).join(" · ")}</p> : null}
       <form style={{ display: "grid", gap: 10 }} onSubmit={(event) => void contactAgent(event)}>
         <strong>Contact agent</strong>

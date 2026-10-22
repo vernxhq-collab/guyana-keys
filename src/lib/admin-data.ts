@@ -1,6 +1,7 @@
 import { adminSummary } from "./assist";
 import { mapProperty } from "./catalog";
 import { hoursSince, newId, planLabel, requestStatusLabel, stageLabel } from "./labels";
+import { liveCap, MIN_LIVE_PHOTOS, withinLiveCap } from "./listing-rules";
 import { serviceDb } from "./supabase";
 
 function text(value: unknown) {
@@ -340,21 +341,52 @@ export async function setApproved(agentId: string, approved: boolean) {
   if (!db) return { error: "Approval could not be saved." };
   const { data } = await db.from("profiles").select("name").eq("id", agentId).eq("role", "agent").maybeSingle();
   if (!data) return { error: "That agent was not found." };
-  const { error } = await db.from("profiles").update({ approved }).eq("id", agentId).eq("role", "agent");
+  let founding = false;
+  if (approved) {
+    const counted = await db.from("profiles").select("id", { count: "exact", head: true }).eq("founding_agent", true);
+    const missing = String(counted.error?.message || "").toLowerCase().includes("founding_agent");
+    if (!missing && !counted.error && (counted.count || 0) < 5) founding = true;
+  }
+  const patch: Record<string, boolean> = { approved };
+  if (founding) patch.founding_agent = true;
+  let { error } = await db.from("profiles").update(patch).eq("id", agentId).eq("role", "agent");
+  if (error && founding && String(error.message || "").toLowerCase().includes("founding_agent")) {
+    founding = false;
+    ({ error } = await db.from("profiles").update({ approved }).eq("id", agentId).eq("role", "agent"));
+  }
   if (error && String(error.message || "").toLowerCase().includes("approved")) return { error: "Approval is not ready on this desk yet." };
   if (error) return { error: "Approval could not be saved." };
-  await remember(db, approved ? `Approved ${data.name || "an agent"} to publish.` : `Approval removed for ${data.name || "an agent"}.`);
-  return { ok: true };
+  const name = data.name || "an agent";
+  await remember(db, approved
+    ? `Approved ${name} to publish.${founding ? " Founding agent badge assigned." : ""}`
+    : `Approval removed for ${name}.`);
+  return { ok: true, founding };
 }
 
 export async function adminPublish(propertyId: string) {
   const db = serviceDb();
   if (!db) return { error: "The listing could not be published." };
-  const { data } = await db.from("properties").select("title,agent_id").eq("id", propertyId).maybeSingle();
-  if (!data) return { error: "That listing was not found." };
-  const agent = data.agent_id ? await db.from("profiles").select("approved").eq("id", data.agent_id).maybeSingle() : { data: null };
-  if (agent.data && agent.data.approved === false) return { error: "Approve the agent before this listing goes live." };
+  let row = await db.from("properties").select("title,agent_id,photo_urls,owner_permission,status").eq("id", propertyId).maybeSingle();
+  if (row.error && String(row.error.message || "").toLowerCase().includes("owner_permission")) {
+    row = await db.from("properties").select("title,agent_id,photo_urls,status").eq("id", propertyId).maybeSingle();
+  }
+  const data = row.data as { title?: string; agent_id?: string; photo_urls?: unknown; owner_permission?: boolean; status?: string } | null;
+  if (row.error || !data) return { error: "That listing was not found." };
+  const photos = Array.isArray(data.photo_urls) ? data.photo_urls.filter((item) => typeof item === "string" && item.length > 0) : [];
+  if (photos.length < MIN_LIVE_PHOTOS) return { error: "Add at least 3 photos before this listing goes live." };
+  if (data.owner_permission === false) return { error: "Confirm owner permission on the listing before it goes live." };
+  if (data.agent_id) {
+    const agent = await db.from("profiles").select("approved,plan,listing_cap").eq("id", data.agent_id).maybeSingle();
+    if (agent.data && agent.data.approved === false) return { error: "Approve the agent before this listing goes live." };
+    if (data.status !== "live" && agent.data) {
+      const cap = liveCap(String(agent.data.plan || "starter"), Number(agent.data.listing_cap ?? 3));
+      const counted = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", data.agent_id).eq("status", "live");
+      if (counted.error || counted.count == null) return { error: "The live listing count could not be checked." };
+      if (!withinLiveCap(counted.count, cap)) return { error: "This agent is at the live listing cap." };
+    }
+  }
   const { error } = await db.from("properties").update({ status: "live" }).eq("id", propertyId);
+  if (error && String(error.message || "").toLowerCase().includes("live listing cap")) return { error: "This agent is at the live listing cap." };
   if (error) return { error: "The listing could not be published." };
   await remember(db, `Published ${data.title || "a listing"}.`);
   return { ok: true };
@@ -501,4 +533,70 @@ export async function adminLead(id: string) {
       email: String(buyer.data?.email || ""),
     },
   };
+}
+
+export type AgentApplication = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  areas: string;
+  message: string;
+  status: string;
+  idChecked: boolean;
+  licenceChecked: boolean;
+  phoneChecked: boolean;
+  referenceChecked: boolean;
+  notes: string;
+  createdAt: string;
+};
+
+function mapApplication(row: Record<string, unknown>): AgentApplication {
+  return {
+    id: text(row.id),
+    name: text(row.name),
+    email: text(row.email),
+    phone: text(row.phone),
+    company: text(row.company),
+    areas: text(row.areas),
+    message: text(row.message),
+    status: text(row.status) || "submitted",
+    idChecked: row.id_checked === true,
+    licenceChecked: row.licence_checked === true,
+    phoneChecked: row.phone_checked === true,
+    referenceChecked: row.reference_checked === true,
+    notes: text(row.notes),
+    createdAt: text(row.created_at),
+  };
+}
+
+export async function adminApplications() {
+  const db = serviceDb();
+  if (!db) return { applications: [] as AgentApplication[], error: "The desk is not connected." };
+  const { data, error } = await db.from("agent_applications").select("*").order("created_at", { ascending: false }).limit(100);
+  if (error) {
+    const missing = String(error.message || "").toLowerCase().includes("agent_applications");
+    return { applications: [] as AgentApplication[], error: missing ? "Applications are not ready on this desk yet." : "Applications could not be loaded." };
+  }
+  return { applications: (data || []).map((row) => mapApplication(row as Record<string, unknown>)) };
+}
+
+export async function reviewApplication(id: string, body: Record<string, unknown>) {
+  const db = serviceDb();
+  if (!db) return { error: "The application could not be saved." };
+  const status = body.status === "approved" || body.status === "declined" ? body.status : "submitted";
+  const patch = {
+    status,
+    id_checked: body.idChecked === true,
+    licence_checked: body.licenceChecked === true,
+    phone_checked: body.phoneChecked === true,
+    reference_checked: body.referenceChecked === true,
+    notes: String(body.notes || "").slice(0, 2000),
+  };
+  const { data, error } = await db.from("agent_applications").update(patch).eq("id", id).select("name").maybeSingle();
+  if (error && String(error.message || "").toLowerCase().includes("agent_applications")) return { error: "Applications are not ready on this desk yet." };
+  if (error || !data) return { error: "The application could not be saved." };
+  await remember(db, `Recorded application ${status} for ${data.name || "an applicant"}. This does not approve a login.`);
+  return { ok: true };
 }

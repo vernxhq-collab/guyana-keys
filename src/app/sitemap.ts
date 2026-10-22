@@ -6,6 +6,7 @@ const pages = [
   "/",
   "/listings",
   "/agents",
+  "/agents/apply",
   "/areas",
   "/tools",
   "/guides",

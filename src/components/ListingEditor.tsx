@@ -37,9 +37,11 @@ type Draft = {
   status: "live" | "hidden";
   photos: string[];
   featured: boolean;
+  ownerPermission: boolean;
+  photosConfirmed: boolean;
 };
 
-const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false };
+const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false, ownerPermission: false, photosConfirmed: false };
 
 export function ListingEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -91,6 +93,8 @@ export function ListingEditor({ id }: { id: string }) {
             status: listing.status === "live" ? "live" : "hidden",
             photos: listing.photos || [],
             featured: Boolean(listing.featured),
+            ownerPermission: listing.ownerPermission === true,
+            photosConfirmed: listing.ownerPermission === true,
           });
         }
         setLoading(false);
@@ -101,12 +105,15 @@ export function ListingEditor({ id }: { id: string }) {
       });
   }, [id]);
 
+  const goingLive = draft.status === "live";
   const checks = [
-    { ok: draft.photos.length > 0, label: "Add a photo." },
+    { ok: goingLive ? draft.photos.length >= 3 : draft.photos.length > 0, label: goingLive ? "Add at least 3 photos before this can go live." : "Add a photo." },
     { ok: Number.isFinite(draft.lat) && Number.isFinite(draft.lng), label: "Drop a pin on the map." },
     { ok: Number(draft.priceGyd.replace(/,/g, "")) > 0, label: "Enter a price in GYD." },
     { ok: Boolean(draft.area), label: "Choose an area." },
     { ok: draft.description.trim().length >= 40, label: "Write a description of 40 characters or more." },
+    { ok: !goingLive || draft.ownerPermission, label: "Confirm the owner allows this listing." },
+    { ok: !goingLive || draft.photosConfirmed, label: "Confirm the photos are landscape, with no watermark and no other agency logo." },
   ];
 
   async function upload(files: FileList | null) {
@@ -197,7 +204,7 @@ export function ListingEditor({ id }: { id: string }) {
     <form className="stack" onSubmit={save}>
       <p className="eyebrow">Listing</p>
       <h1>{id === "new" ? "New listing" : "Edit listing"}</h1>
-      <p className="quiet">{live} live. Listings are free, with no limit. A hidden listing stays off the public site.</p>
+      <p className="quiet">{live} live. The free plan is up to 3 live listings. A hidden listing stays off the public site.</p>
       <p className="ai-bar next"><span>{nextLine}</span></p>
       <div className="panel">
         <p className="quiet">Rough notes</p>
@@ -289,7 +296,7 @@ export function ListingEditor({ id }: { id: string }) {
       </label>
       <div className="panel">
         <strong>Photos</strong>
-        <p className="quiet">Up to twelve. The first photo is the cover. Drag a photo onto another to reorder.</p>
+        <p className="quiet">Up to twelve. A live listing needs at least 3. Use landscape photos, with no watermark and no other agency logo. Guyana Keys does not measure the pixels. The first photo is the cover.</p>
         <input type="file" accept="image/*" multiple onChange={(event) => void upload(event.target.files)} />
         <div className="photo-grid">
           {draft.photos.map((url, index) => (
@@ -320,6 +327,8 @@ export function ListingEditor({ id }: { id: string }) {
         <PinMap lat={draft.lat} lng={draft.lng} onChange={(lat, lng) => setDraft((current) => ({ ...current, lat, lng }))} />
         <p className="quiet">Pin: {draft.lat.toFixed(5)}, {draft.lng.toFixed(5)}</p>
       </div>
+      <label className="check-row"><input type="checkbox" checked={draft.ownerPermission} onChange={(event) => setDraft({ ...draft, ownerPermission: event.target.checked })} /> The owner allows this listing to be published.</label>
+      <label className="check-row"><input type="checkbox" checked={draft.photosConfirmed} onChange={(event) => setDraft({ ...draft, photosConfirmed: event.target.checked })} /> The photos are landscape, clear enough to see the property, with no watermark and no other agency logo.</label>
       <ul className="tick-list">
         {checks.map((check) => <li key={check.label} className={check.ok ? "ok" : ""}>{check.ok ? "Done. " : ""}{check.label}</li>)}
       </ul>

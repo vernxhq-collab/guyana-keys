@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAgent, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, saveInstructions, setApproved, setCap, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
+import { adminAgent, adminApplications, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, reviewApplication, saveInstructions, setApproved, setCap, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { isAdminEmail, readSession } from "../../../lib/session";
 
 async function admin() {
@@ -26,6 +26,7 @@ export async function GET(request: Request) {
   if (part === "request") return NextResponse.json(await adminRequest(id));
   if (part === "inbox") return NextResponse.json(await adminInbox(q));
   if (part === "lead") return NextResponse.json(await adminLead(id));
+  if (part === "applications") return NextResponse.json(await adminApplications());
   return NextResponse.json({ error: "Unknown view." }, { status: 400 });
 }
 
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
   else if (action === "suspend") result = await suspendAgent(String(body.agentId || ""));
   else if (action === "unsuspend") result = await unsuspendAgent(String(body.agentId || ""));
   else if (action === "approve") result = await setApproved(String(body.agentId || ""), body.approved !== false);
+  else if (action === "reviewApplication") result = await reviewApplication(String(body.id || ""), body);
   else if (action === "publish") result = await adminPublish(String(body.propertyId || ""));
   else if (action === "hide") result = await adminHide(String(body.propertyId || ""));
   else if (action === "feature") result = await adminFeature(String(body.propertyId || ""), true);

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { liveCap } from "./listing-rules";
 import { authClient, serviceDb } from "./supabase";
 
 export const SESSION_COOKIE = "gk_session";
@@ -56,10 +57,7 @@ function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
-export function liveCap(plan: string, listingCap: number) {
-  const cap = Number.isFinite(listingCap) && listingCap > 0 ? listingCap : 3;
-  return plan === "agency" ? cap : Math.min(cap, 3);
-}
+export { liveCap } from "./listing-rules";
 
 export function mapProfile(row: Record<string, unknown>): Profile {
   const role = text(row.role, "buyer");

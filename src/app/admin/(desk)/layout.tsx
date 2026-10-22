@@ -2,7 +2,7 @@ import { DeskNav } from "../../../components/DeskNav";
 import { SignOut } from "../../../components/SignOut";
 import { grantAdmin, isAdminEmail, readSession } from "../../../lib/session";
 
-const items: [string, string][] = [["Home", "/admin"], ["People", "/admin/people"], ["Listings", "/admin/listings"], ["Requests", "/admin/requests"], ["Inbox", "/admin/inbox"]];
+const items: [string, string][] = [["Home", "/admin"], ["People", "/admin/people"], ["Listings", "/admin/listings"], ["Applications", "/admin/applications"], ["Requests", "/admin/requests"], ["Inbox", "/admin/inbox"]];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await readSession();

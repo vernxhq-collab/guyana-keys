@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { draftDescription, draftReply } from "../src/lib/ai/local.ts";
+import { DAILY_BRIEFING_ENABLED, dailyBriefingJob } from "../src/lib/ai/briefing.ts";
+import { channelSenders } from "../src/lib/ai/channel.ts";
+import { nextDraftStatus } from "../src/lib/ai/drafts.ts";
+import { pendingEvent } from "../src/lib/ai/outbox.ts";
+import { activeProvider } from "../src/lib/ai/provider.ts";
+import { FREE_LIVE_CAP, liveCap, MIN_LIVE_PHOTOS, withinLiveCap } from "../src/lib/listing-rules.ts";
 import { decodeWorld, encodeWorld } from "../src/lib/preview/codec.ts";
 import { actors, buyerView, holdReply, matchesFor, performanceFor, saveDescription, seedWorld, todayFor, updateLead } from "../src/lib/preview/world.ts";
 import { noticeAllowed, tooMany } from "../src/lib/abuse.ts";
@@ -73,5 +80,34 @@ for (let i = 0; i < 20; i += 1) assert.equal(tooMany("slice-form", 20, 60_000), 
 assert.equal(tooMany("slice-form", 20, 60_000), true);
 for (let i = 0; i < 20; i += 1) assert.equal(noticeAllowed("agent-slice"), true);
 assert.equal(noticeAllowed("agent-slice"), false);
+
+assert.equal(nextDraftStatus("draft", "send"), null);
+assert.equal(nextDraftStatus("draft", "approve"), "approved");
+assert.equal(nextDraftStatus("approved", "send"), "sent");
+assert.equal(nextDraftStatus("approved", "approve"), null);
+assert.equal(activeProvider().id, "noop");
+assert.equal(DAILY_BRIEFING_ENABLED, false);
+assert.deepEqual(dailyBriefingJob(), { ran: false, reason: "disabled" });
+assert.equal(channelSenders.whatsapp.id, "whatsapp");
+assert.deepEqual(pendingEvent("lead.created", { id: "x" }).status, "pending");
+assert.equal(FREE_LIVE_CAP, 3);
+assert.equal(MIN_LIVE_PHOTOS, 3);
+assert.equal(withinLiveCap(2, 3), true);
+assert.equal(withinLiveCap(3, 3), false);
+assert.equal(liveCap("starter", 10), 3);
+assert.equal(liveCap("agency", 10), 10);
+const homeSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+const listingsSource = readFileSync(new URL("../src/app/listings/page.tsx", import.meta.url), "utf8");
+const apiSource = readFileSync(new URL("../src/app/api/listings/route.ts", import.meta.url), "utf8");
+const marketHome = readFileSync(new URL("../src/components/MarketHome.tsx", import.meta.url), "utf8");
+const marketCard = readFileSync(new URL("../src/components/MarketCard.tsx", import.meta.url), "utf8");
+assert.equal(homeSource.includes("lib/market-sample"), false);
+assert.equal(marketHome.includes("lib/market-sample"), false);
+assert.equal(marketCard.includes("lib/market-sample"), false);
+assert.equal(listingsSource.includes("lib/market-sample"), false);
+assert.equal(apiSource.includes("lib/market-sample"), false);
+assert.equal(readFileSync(new URL("../src/lib/sample-label.ts", import.meta.url), "utf8").includes("Sample preview — not a real listing"), true);
+assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("marketSample"), true);
+assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
 
 console.log("phase 2 checks passed");

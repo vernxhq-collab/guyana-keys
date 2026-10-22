@@ -42,6 +42,8 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     titleRef: text(row.title_ref),
     titleStatus: text(row.title_status),
     facts: factsFromRow(row),
+    createdAt: text(row.created_at),
+    priceReduced: row.price_reduced === true,
   };
 }
 
@@ -114,6 +116,7 @@ function mapAgent(data: Record<string, unknown>): Agent | null {
     image: text(data.photo_url),
     graLicence: text(data.gra_licence),
     verified: Boolean(data.verified),
+    founding: data.founding_agent === true,
   };
 }
 
@@ -154,6 +157,7 @@ export async function publicAgent(agentId: string): Promise<Agent | null> {
       image: String(data.photo_url || ""),
       graLicence: String(data.gra_licence || ""),
       verified: Boolean(data.verified),
+      founding: data.founding_agent === true,
     };
   } catch {
     return null;
