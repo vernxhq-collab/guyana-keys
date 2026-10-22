@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Direction 3 — Desk (mockup, not the live site)</title>
+<style>
+  :root { --ink:#17211c; --muted:#55635c; --line:#e3e8e5; --bg:#f3f6f4; --deep:#0c3d2c; --green:#116b4a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+  .banner { background:var(--deep); color:#d7f5e6; font-size:13px; letter-spacing:.04em; text-transform:uppercase; padding:8px 20px; }
+  .doors { display:grid; grid-template-columns:1.1fr .9fr; min-height:460px; }
+  .find { padding:36px; background:#fff; }
+  .run { padding:36px; background:var(--deep); color:#e8f7f0; }
+  h1 { font-size:52px; letter-spacing:-.045em; line-height:.95; margin:0 0 10px; }
+  h2 { font-size:28px; letter-spacing:-.03em; margin:0 0 8px; }
+  .kicker { letter-spacing:.14em; text-transform:uppercase; font-size:12px; }
+  .note { color:var(--muted); line-height:1.5; }
+  .run .note { color:#c5ddd2; }
+  .search { display:flex; gap:8px; margin-top:18px; }
+  input { flex:1; border:1px solid #d5dbd8; border-radius:12px; padding:14px; font:inherit; }
+  .btn { background:var(--green); color:#fff; border-radius:999px; padding:14px 18px; font-weight:700; }
+  .run .btn { background:#e8f7f0; color:var(--deep); }
+  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:16px; }
+  .tile { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:12px; }
+  .tile strong { display:block; font-size:28px; }
+  .app { display:grid; grid-template-columns:200px 1fr 280px; min-height:520px; }
+  .rail { background:#fff; border-right:1px solid var(--line); padding:16px; display:grid; gap:8px; align-content:start; }
+  .rail a { text-decoration:none; color:inherit; padding:8px 10px; border-radius:10px; }
+  .rail a.on { background:#e7f6ef; color:var(--deep); font-weight:700; }
+  main { padding:18px; }
+  .stats { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px; }
+  .stat span { color:var(--muted); font-size:13px; }
+  .stat b { display:block; font-size:26px; letter-spacing:-.04em; }
+  .ask { margin-top:12px; background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 8px 8px 16px; display:flex; gap:8px; align-items:center; }
+  aside { background:#fff; border-left:1px solid var(--line); padding:16px; }
+  .hold { border:1px dashed #b7d7c8; border-radius:12px; padding:10px; margin-top:8px; background:#f7fbf9; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .photo { height:90px; background:linear-gradient(160deg,#d7ebe3,#f4f7f5); }
+  .pad { padding:10px 12px; }
+  .phone { width:390px; margin:16px; background:#fff; border:1px solid var(--line); border-radius:28px; overflow:hidden; }
+</style>
+</head>
+<body>
+  <div class="banner">Mockup only. Not the live app. Dashes are empty data, not a count. No people, prices, or listings.</div>
+  <div class="doors">
+    <div class="find">
+      <p class="kicker">Direction 3 · Desk · Public</p>
+      <h1>Find a home.</h1>
+      <p class="note">Buyers get a short search. The operating system stays behind sign-in.</p>
+      <div class="search"><input placeholder="Neighbourhood, beds, or a budget" /><span class="btn">Search</span></div>
+      <div class="cards">
+        <article class="card"><div class="photo"></div><div class="pad"><strong>Example listing</strong><div class="note">Area · title status · GYD and USD</div></div></article>
+        <article class="card"><div class="photo"></div><div class="pad"><strong>Example listing</strong><div class="note">Saved search and alert, not a blank page</div></div></article>
+      </div>
+    </div>
+    <div class="run">
+      <p class="kicker">For agents</p>
+      <h1>Run the day.</h1>
+      <p class="note">One screen after sign-in. Figures come from that agent’s own rows. Suggested work is labeled suggested.</p>
+      <div class="grid">
+        <div class="tile"><span>Need a reply</span><strong>—</strong></div>
+        <div class="tile"><span>Viewings</span><strong>—</strong></div>
+        <div class="tile"><span>Follow-ups</span><strong>—</strong></div>
+      </div>
+      <p><span class="btn">Open the desk</span></p>
+    </div>
+  </div>
+  <div class="app">
+    <nav class="rail">
+      <strong>Guyana Keys</strong>
+      <a class="on">Today</a><a>Listings</a><a>Leads</a><a>Viewings</a><a>Messages</a><a>Profile</a>
+    </nav>
+    <main>
+      <h2>Today</h2>
+      <div class="stats">
+        <div class="stat"><span>Live listings</span><b>—</b></div>
+        <div class="stat"><span>New enquiries</span><b>—</b></div>
+        <div class="stat"><span>Qualified</span><b>—</b></div>
+        <div class="stat"><span>Outstanding</span><b>—</b></div>
+      </div>
+      <div class="ask"><span>Who has not had a follow-up this week?</span><span class="btn">Ask</span></div>
+      <p class="note">The answer lists real leads only. If none match, it says so. It does not invent a buyer.</p>
+    </main>
+    <aside>
+      <h2>Hold for approval</h2>
+      <div class="hold"><strong>Suggested reply</strong><p class="note">Draft sits here. Nothing is sent until the agent approves the words.</p></div>
+      <div class="hold"><strong>Not a valuation</strong><p class="note">Price checks say when there are not enough live sales.</p></div>
+    </aside>
+  </div>
+  <div class="phone">
+    <div style="padding:16px">
+      <p class="kicker">Mobile desk</p>
+      <h2>Next reply</h2>
+      <p class="note">One task, one button. The rest of the day is a short list under it.</p>
+      <span class="btn">Open the enquiry</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Direction 2 — Corridor (mockup, not the live site)</title>
+<style>
+  :root { --bg:#0e1c17; --panel:#163028; --ink:#f4faf7; --muted:#b7c9c0; --lime:#c6f5d4; --line:#245041; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+  .banner { background:#07140f; color:var(--lime); font-size:13px; letter-spacing:.04em; text-transform:uppercase; padding:8px 20px; }
+  header { display:flex; align-items:center; gap:18px; padding:16px 22px; }
+  .brand { font-weight:750; letter-spacing:-.04em; font-size:22px; }
+  nav { display:flex; gap:14px; color:var(--muted); }
+  nav a { color:inherit; text-decoration:none; }
+  .spacer { margin-left:auto; }
+  .btn { background:var(--lime); color:#0e1c17; border-radius:999px; padding:10px 14px; font-weight:750; }
+  .stage { display:grid; grid-template-columns:280px 1fr 320px; min-height:560px; gap:12px; padding:0 16px 20px; }
+  .filters, .sheet { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; }
+  .map { border-radius:16px; background:
+    radial-gradient(circle at 30% 40%, rgba(198,245,212,.18), transparent 28%),
+    linear-gradient(#1a3a2e 1px, transparent 1px),
+    linear-gradient(90deg, #1a3a2e 1px, transparent 1px),
+    #10281f;
+    background-size: auto, 48px 48px, 48px 48px, auto;
+    position:relative; min-height:520px;
+  }
+  .pin { position:absolute; width:14px; height:14px; border-radius:50%; background:var(--lime); box-shadow:0 0 0 6px rgba(198,245,212,.2); }
+  h1 { font-size:28px; letter-spacing:-.03em; margin:0 0 8px; }
+  h2 { font-size:22px; margin:0 0 8px; }
+  label, .note { color:var(--muted); font-size:14px; display:block; margin:8px 0; }
+  .chip { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:6px 10px; margin:0 6px 6px 0; color:var(--lime); }
+  .card { display:grid; grid-template-columns:72px 1fr; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+  .swatch { border-radius:10px; background:linear-gradient(160deg,#245041,#0e1c17); }
+  .kicker { color:var(--lime); font-size:12px; letter-spacing:.14em; text-transform:uppercase; }
+  .desk { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; }
+  .phone { width:390px; margin:16px; border:1px solid var(--line); border-radius:28px; overflow:hidden; background:#10281f; }
+</style>
+</head>
+<body>
+  <div class="banner">Mockup only. Not the live app. Pins are not properties. No prices or people.</div>
+  <header>
+    <div class="brand">Guyana Keys</div>
+    <nav><a>Map</a><a>List</a><a>Saved</a><a>Agents</a></nav>
+    <div class="spacer"><span class="btn">Ask in a sentence</span></div>
+  </header>
+  <div class="stage">
+    <aside class="filters">
+      <p class="kicker">Direction 2 · Corridor</p>
+      <h1>Search the coast.</h1>
+      <label>Sentence</label>
+      <div class="chip">Buy</div><div class="chip">East Bank</div><div class="chip">House</div><div class="chip">Any beds</div>
+      <p class="note">The map is the search. Filters sit on it. A pin appears only when a live listing has coordinates the agent entered.</p>
+    </aside>
+    <div class="map" aria-label="Schematic map, not a live map">
+      <div class="pin" style="top:42%; left:48%"></div>
+      <div class="pin" style="top:58%; left:61%"></div>
+      <div class="pin" style="top:36%; left:70%"></div>
+    </div>
+    <aside class="sheet">
+      <p class="kicker">Listings</p>
+      <h2>In this view</h2>
+      <div class="card"><div class="swatch"></div><div><strong>Example house</strong><div class="note">Area · title status · GYD / USD</div></div></div>
+      <div class="card"><div class="swatch"></div><div><strong>Example land</strong><div class="note">Scheme · lot · title unknown</div></div></div>
+      <div class="card"><div class="swatch"></div><div><strong>Example rental</strong><div class="note">Village · monthly · USD guide</div></div></div>
+    </aside>
+  </div>
+  <div class="desk">
+    <div class="box">
+      <p class="kicker">Agent desk</p>
+      <h2>Same map, your stock only</h2>
+      <p class="note">Live, hidden, and needs-a-photo are layers. Suggested matches are a list under the map, each with the reason, and none are sent until the agent approves.</p>
+    </div>
+    <div class="box">
+      <p class="kicker">Mobile</p>
+      <div class="phone">
+        <div class="map" style="min-height:220px; border-radius:0"></div>
+        <div style="padding:14px">
+          <h2>Bottom sheet</h2>
+          <p class="note">The list slides over the map. Search, save, and message stay one thumb away.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
