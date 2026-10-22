@@ -79,7 +79,7 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
         </div>
         <div className="market-panel accent">
           <h2>List your property free</h2>
-          <p>The free plan is up to 3 live listings. Apply, then an admin reviews the account before anything is public.</p>
+          <p>Free to list, no limits. Apply, then an admin reviews the account before anything is public.</p>
           <Link className="btn" href="/agents/apply">Apply to list</Link>
         </div>
       </section>

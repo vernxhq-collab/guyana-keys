@@ -101,10 +101,10 @@ export default function PlanPage() {
     <div className="stack">
       <p className="eyebrow">Plan</p>
       <h1>Plan</h1>
-      <p className="quiet">Listings are free. Featuring and advertising are arranged with the admin at {deskEmail}. This desk does not take payment.</p>
+      <p className="quiet">Free to list, no limits. Featuring, boosts, and other extras are optional and arranged with the admin at {deskEmail}. This desk does not take payment.</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live listings</p><strong>{live}</strong><p className="quiet">Free to publish</p></article>
-        <article className="stat"><p className="quiet">Package</p><strong>{plan}</strong><p className="quiet">{paidPlan ? "Paid extras" : "Listings stay free"}</p></article>
+        <article className="stat"><p className="quiet">Live listings</p><strong>{live}</strong><p className="quiet">Free to list, no limits</p></article>
+        <article className="stat"><p className="quiet">Package</p><strong>{plan}</strong><p className="quiet">Optional extras</p></article>
         <article className={withAdmin > 0 ? "stat attention" : "stat"}><p className="quiet">With the admin</p><strong>{withAdmin}</strong><p className="quiet">{withAdmin > 0 ? "Payment in progress" : "None open"}</p></article>
       </div>
       <p className="ai-bar next"><span>{nextLine}</span></p>

@@ -18,7 +18,6 @@ type Agent = {
   areas: string[];
   plan: string;
   planKey: string;
-  cap: number;
   live: number;
   suspended: boolean;
   graLicence: string;

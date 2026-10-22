@@ -38,7 +38,7 @@ export default function ApplyPage() {
   return (
     <main className="wrap section">
       <h1>Apply to list</h1>
-      <p>The free plan is up to 3 live listings. The first five accounts an admin approves can carry a Founding agent badge. Do not send an ID image. A person reviews the application before any listing is public.</p>
+      <p>Free to list, no limits. The first five accounts an admin approves can carry a Founding agent badge. Do not send an ID image. A person reviews the application before any listing is public.</p>
       <form className="tool-form" onSubmit={(event) => void submit(event)}>
         <label>Name<input name="name" required autoComplete="name" /></label>
         <label>Email<input name="email" type="email" required autoComplete="email" /></label>

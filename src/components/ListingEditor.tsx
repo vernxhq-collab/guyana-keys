@@ -210,7 +210,7 @@ export function ListingEditor({ id }: { id: string }) {
     <form className="stack" onSubmit={save}>
       <p className="eyebrow">Listing</p>
       <h1>{id === "new" ? "New listing" : "Edit listing"}</h1>
-      <p className="quiet">{live} live. The free plan is up to 3 live listings. A hidden listing stays off the public site.</p>
+      <p className="quiet">{live} live. Free to list, no limits. A hidden listing stays off the public site.</p>
       <p className="ai-bar next"><span>{nextLine}</span></p>
       <div className="panel">
         <p className="quiet">Rough notes</p>

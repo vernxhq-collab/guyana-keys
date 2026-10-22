@@ -5,7 +5,7 @@
 ## Channels
 
 - Facebook realtor outreach is already under way. The opener asks for the owner's permission before a home is listed. Do not copy a post, a photo, or a price onto Guyana Keys without that permission.
-- Founding-agent offer. The first five approved accounts can carry the Founding agent badge. The free plan stays at 3 live listings. The offer is the badge and a direct review, not a fee waiver beyond the free plan.
+- Founding-agent offer. The first five approved accounts can carry the Founding agent badge. Listings are free to list, with no limits. The offer is the badge and a direct review. Optional extras, such as a boost, featured placement, or CRM and AI tools, are separate and do not limit how many homes an agent can list.
 - Owners selling or renting without an agent. They apply, or an agent they choose submits the home with the owner-permission box ticked.
 - Developers. One contact per project. List only phases they confirm are for sale or rent.
 - Owners outside Guyana. Same permission rule. The public page frames this as buying from outside Guyana: budget, location, an attorney, and a USD guide. Do not sort or score people by ethnicity or national origin.

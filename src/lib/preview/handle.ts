@@ -17,7 +17,7 @@ export function previewGet(world: World, actor: Actor, part: string, id: string)
   if (part === "agency") return { status: 200, body: presentAgency(world, actor) };
   if (part === "outbox") return { status: 200, body: presentOutbox(world, actor) };
   if (part === "compose") return { status: 200, body: presentCompose(world, actor, id) };
-  if (part === "plan") return { status: 200, body: { plan: "Starter", cap: 3, live: presentListings(world, actor).live, requests: [], preview: true } };
+  if (part === "plan") return { status: 200, body: { plan: "Starter", live: presentListings(world, actor).live, requests: [], preview: true } };
   if (part === "checks") return { status: 200, body: { ready: false, licences: [], identity: null, documents: [], keysCheck: null, flags: [], consentVersion: "2026-10-22-keys" } };
   if (part === "profile") {
     return { status: 200, body: { profile: { id: actor.id, name: actor.name, email: actor.id + "@preview.guyanakeys", phone: "5926000000", company: actor.agency, address: "Georgetown", areas: ["Bel Air Park"], photoUrl: "", graLicence: "", verified: false } } };

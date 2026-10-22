@@ -1,7 +1,7 @@
 import { adminSummary } from "./assist";
 import { mapProperty } from "./catalog";
 import { hoursSince, newId, planLabel, requestStatusLabel, stageLabel } from "./labels";
-import { liveCap, MIN_LIVE_PHOTOS, withinLiveCap } from "./listing-rules";
+import { MIN_LIVE_PHOTOS } from "./listing-rules";
 import { serviceDb } from "./supabase";
 
 function text(value: unknown) {
@@ -12,11 +12,6 @@ type Db = NonNullable<ReturnType<typeof serviceDb>>;
 
 async function remember(db: Db, detail: string) {
   await db.from("admin_events").insert({ id: newId("log"), detail });
-}
-
-function shownCap(plan: string, cap: number) {
-  const safe = Number.isFinite(cap) && cap > 0 ? cap : 3;
-  return plan === "agency" ? safe : Math.min(safe, 3);
 }
 
 export async function adminHome() {
@@ -113,7 +108,6 @@ export async function adminPeople(query = "") {
       plan: planLabel(String(row.plan || "starter")),
       planKey: String(row.plan || "starter"),
       live: live.get(String(row.id)) || 0,
-      cap: shownCap(String(row.plan || "starter"), Number(row.listing_cap || 3)),
       suspended: Boolean(row.suspended),
     })),
     buyers: rows.filter((row) => row.role === "buyer").map((row) => ({
@@ -155,7 +149,6 @@ export async function adminAgent(id: string) {
       areas: Array.isArray(data.areas) ? data.areas.map(String) : [],
       plan: planLabel(String(data.plan || "starter")),
       planKey: String(data.plan || "starter"),
-      cap: shownCap(String(data.plan || "starter"), Number(data.listing_cap || 3)),
       live: listings.filter((row) => row.status === "live").length,
       suspended: Boolean(data.suspended),
       graLicence: String(data.gra_licence || ""),
@@ -323,19 +316,6 @@ export async function markPaid(id: string, receipt: { amountGyd?: number; paidBy
   return { ok: true };
 }
 
-export async function setCap(agentId: string, cap: number) {
-  const db = serviceDb();
-  if (!db) return { error: "The cap could not be saved." };
-  if (!Number.isFinite(cap) || cap < 1 || cap > 500) return { error: "Enter a cap from 1 to 500." };
-  const { data } = await db.from("profiles").select("name,plan").eq("id", agentId).eq("role", "agent").maybeSingle();
-  if (!data) return { error: "That agent was not found." };
-  const rounded = Math.round(cap);
-  const { error } = await db.from("profiles").update({ listing_cap: rounded }).eq("id", agentId).eq("role", "agent");
-  if (error) return { error: "The cap could not be saved." };
-  await remember(db, `Set ${data.name || "an agent"}'s cap to ${rounded}.`);
-  return { ok: true };
-}
-
 export async function setApproved(agentId: string, approved: boolean) {
   const db = serviceDb();
   if (!db) return { error: "Approval could not be saved." };
@@ -376,17 +356,10 @@ export async function adminPublish(propertyId: string) {
   if (photos.length < MIN_LIVE_PHOTOS) return { error: "Add at least 3 photos before this listing goes live." };
   if (data.owner_permission === false) return { error: "Confirm owner permission on the listing before it goes live." };
   if (data.agent_id) {
-    const agent = await db.from("profiles").select("approved,plan,listing_cap").eq("id", data.agent_id).maybeSingle();
+    const agent = await db.from("profiles").select("approved").eq("id", data.agent_id).maybeSingle();
     if (agent.data && agent.data.approved === false) return { error: "Approve the agent before this listing goes live." };
-    if (data.status !== "live" && agent.data) {
-      const cap = liveCap(String(agent.data.plan || "starter"), Number(agent.data.listing_cap ?? 3));
-      const counted = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", data.agent_id).eq("status", "live");
-      if (counted.error || counted.count == null) return { error: "The live listing count could not be checked." };
-      if (!withinLiveCap(counted.count, cap)) return { error: "This agent is at the live listing cap." };
-    }
   }
   const { error } = await db.from("properties").update({ status: "live" }).eq("id", propertyId);
-  if (error && String(error.message || "").toLowerCase().includes("live listing cap")) return { error: "This agent is at the live listing cap." };
   if (error) return { error: "The listing could not be published." };
   await remember(db, `Published ${data.title || "a listing"}.`);
   return { ok: true };

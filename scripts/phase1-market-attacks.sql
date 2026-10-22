@@ -252,3 +252,34 @@ end $$;
 delete from public.keys_check_flags where id in ('flg-doc-b', 'idn-chk-b');
 delete from public.id_documents where id in ('doc-a', 'doc-b');
 delete from public.keys_checks where id in ('chk-a', 'chk-b', 'chk-tenant', 'chk-purchaser', 'chk-landlord', 'chk-guard', 'chk-submitted');
+
+delete from public.properties where id in ('cap-a', 'cap-b', 'cap-c', 'cap-d');
+
+do $$
+declare
+  agent uuid := '22222222-2222-4222-8222-222222222222';
+begin
+  if exists (
+    select 1 from pg_trigger
+    where tgname = 'enforce_live_listing_cap' and not tgisinternal
+  ) then
+    raise exception 'the removed listing trigger is still installed';
+  end if;
+  if exists (
+    select 1 from pg_policies
+    where policyname in ('properties_live_cap', 'properties_live_cap_update')
+  ) then
+    raise exception 'the removed listing policy is still installed';
+  end if;
+  insert into public.properties (id, agent_id, title, status, featured)
+  values
+    ('cap-a', agent, 'Cap A', 'live', false),
+    ('cap-b', agent, 'Cap B', 'live', false),
+    ('cap-c', agent, 'Cap C', 'live', false),
+    ('cap-d', agent, 'Cap D', 'live', false);
+  if (select count(*) from public.properties where id in ('cap-a', 'cap-b', 'cap-c', 'cap-d') and status = 'live') <> 4 then
+    raise exception 'a fourth live listing was blocked';
+  end if;
+end $$;
+
+delete from public.properties where id in ('cap-a', 'cap-b', 'cap-c', 'cap-d');

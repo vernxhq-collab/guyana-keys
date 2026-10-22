@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Agent = { id: string; name: string; company: string; email: string; phone: string; address: string; areas: string[]; plan: string; planKey: string; live: number; cap: number; suspended: boolean };
+type Agent = { id: string; name: string; company: string; email: string; phone: string; address: string; areas: string[]; plan: string; planKey: string; live: number; suspended: boolean };
 type Buyer = { id: string; name: string; email: string; saved: number; enquiries: number };
 
 export default function PeoplePage() {

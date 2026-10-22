@@ -4,6 +4,24 @@
 
 begin;
 
+-- Listings are free to list, with no limits. Clear a count check left by an older founding.sql.
+create or replace function private.enforce_live_listing_cap()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  return new;
+end;
+$$;
+
+revoke all on function private.enforce_live_listing_cap() from public, anon, authenticated;
+
+drop trigger if exists enforce_live_listing_cap on public.properties;
+drop policy if exists properties_live_cap on public.properties;
+drop policy if exists properties_live_cap_update on public.properties;
+
 alter table public.enquiries add column if not exists source_page text not null default '';
 alter table public.enquiries add column if not exists utm jsonb not null default '{}'::jsonb;
 alter table public.enquiries add column if not exists lead_channel text not null default 'web';

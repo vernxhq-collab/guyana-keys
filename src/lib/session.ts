@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { liveCap } from "./listing-rules";
 import { authClient, serviceDb } from "./supabase";
 
 export const SESSION_COOKIE = "gk_session";
@@ -19,7 +18,6 @@ export type Profile = {
   verified: boolean;
   areas: string[];
   plan: string;
-  listingCap: number;
   abroad: boolean;
   suspended: boolean;
   approved: boolean;
@@ -57,8 +55,6 @@ function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
-export { liveCap } from "./listing-rules";
-
 export function mapProfile(row: Record<string, unknown>): Profile {
   const role = text(row.role, "buyer");
   const plan = text(row.plan, "starter") || "starter";
@@ -75,7 +71,6 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     verified: Boolean(row.verified),
     areas: Array.isArray(row.areas) ? row.areas.filter((item): item is string => typeof item === "string") : [],
     plan,
-    listingCap: liveCap(plan, Number(row.listing_cap ?? 3)),
     abroad: Boolean(row.abroad),
     suspended: Boolean(row.suspended),
     approved: row.approved === undefined ? true : row.approved !== false,

@@ -10,7 +10,7 @@ Market is a premium, modern, mobile-first property search. The reference is the 
 - Cards show a photo when the listing has one, the price in GYD, a USD guide, beds and baths or land size, the area, and the agent's name when that profile exists. "Founding agent" appears only when the account has that flag. "New" means the listing was created in the last 14 days. "Reduced" means the saved price is lower than the previous price.
 - Area names are categories: Georgetown, East Bank, East Coast, Berbice, Essequibo, West Coast. No counts and no prices on the strip.
 - A block for people buying from outside Guyana: GYD and a USD guide, title is not proved by a listing, use an attorney, a viewing is a request. It is not a valuation and not a promised return.
-- "List your property free" goes to the application form. The free plan is up to 3 live listings.
+- "List your property free" goes to the application form. Free to list, no limits. Optional extras, such as a boost or featured placement, do not change that.
 - When the live catalog is empty, the page says no homes are listed yet. It does not fill the gap with samples.
 
 The same card component is used for real database listings on `/`. Sample cards are imported only by `/preview/home`.

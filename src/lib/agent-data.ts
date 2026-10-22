@@ -9,7 +9,7 @@ import { notifyBuyer, notifyMatches, viewingNotice } from "./notify";
 import { addEvent, leadFromEnquiry } from "./records";
 import { guyanaLocalToUtc } from "./time";
 import { formatLeadSource } from "./attribution";
-import { MIN_LIVE_PHOTOS, withinLiveCap } from "./listing-rules";
+import { MIN_LIVE_PHOTOS } from "./listing-rules";
 import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
@@ -89,7 +89,6 @@ export async function agentHome(profile: Profile) {
   return {
     plan: planLabel(profile.plan),
     live,
-    cap: profile.listingCap,
     unanswered,
     viewings,
     openRequests: (requests.data || []).length,
@@ -128,7 +127,6 @@ export async function agentListings(profile: Profile) {
   }
   return {
     live: listings.filter((item) => item.status === "live").length,
-    cap: profile.listingCap,
     listings: listings.map((listing) => ({ ...listing, enquiries: counts.get(listing.id) || 0 })),
   };
 }
@@ -136,7 +134,6 @@ export async function agentListings(profile: Profile) {
 export async function agentListing(profile: Profile, id: string) {
   const base = {
     live: 0,
-    cap: profile.listingCap,
     listing: null as (Listing & { priceSuggested?: boolean }) | null,
   };
   const rows = await ownListings(profile.id);
@@ -256,18 +253,8 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
     return { error: "A lawyer check needs the partner id and the date." };
   }
   const savedId = existing ? id : newId("gy");
-  if (next.status === "live" && existing?.status !== "live") {
-    const counted = await db.from("properties").select("id", { count: "exact", head: true }).eq("agent_id", profile.id).eq("status", "live");
-    if (counted.error || counted.count == null) return { error: "The live listing count could not be checked." };
-    if (!withinLiveCap(counted.count, profile.listingCap)) {
-      return { error: "This account is at its live listing cap. Hide one before another goes live." };
-    }
-  }
   const payload = existing ? next : { id: savedId, ...next, held_live: false };
   const writeError = await writeProperty(db, existing ? "update" : "insert", savedId, profile.id, payload);
-  if (writeError && String(writeError.message || "").toLowerCase().includes("live listing cap")) {
-    return { error: "This account is at its live listing cap. Hide one before another goes live." };
-  }
   if (writeError && String(writeError.message || "").includes("Title status Other")) return { error: writeError.message };
   if (writeError) return { error: "The listing could not be saved." };
   if (next.status === "live" && existing?.status !== "live") {
@@ -571,7 +558,7 @@ export async function createRequest(profile: Profile, body: Record<string, unkno
   const message = typed || (kind === "advertise"
     ? "Asked to advertise. Listings stay free. Payment is with the admin."
     : kind === "plan"
-    ? "Asked to upgrade the package. Payment is with the admin."
+    ? "Asked about optional extras. Listings stay free to list, with no limits. Payment is with the admin."
     : `Asked to feature ${listingTitle}. Payment is with the admin.`);
   const { error: insertError } = await db.from("requests").insert({
     id: newId("req"),
@@ -600,7 +587,6 @@ export async function agentPlan(profile: Profile) {
   const liveListings = listings.filter((item) => item.status === "live");
   return {
     plan: planLabel(profile.plan),
-    cap: profile.listingCap,
     live: liveListings.length,
     requests: (requests.data || []).map((row) => {
       const record = row as Record<string, unknown>;

@@ -9,7 +9,7 @@ const placeholder =
 
 export function presentHome(world: World, actor: Actor) {
   const home = todayFor(world, actor);
-  return { ...home, plan: "Starter", cap: 3, openRequests: 0, preview: true };
+  return { ...home, plan: "Starter", openRequests: 0, preview: true };
 }
 
 export function presentLead(world: World, actor: Actor, id: string) {
@@ -89,7 +89,6 @@ export function presentListings(world: World, actor: Actor) {
   const leads = leadsFor(world, actor);
   return {
     live: rows.filter((item) => item.status === "live").length,
-    cap: 3,
     listings: rows.map((item) => ({
       id: item.id,
       title: item.title,

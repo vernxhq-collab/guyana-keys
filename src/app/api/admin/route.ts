@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAgent, adminApplications, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, reviewApplication, saveInstructions, setApproved, setCap, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
+import { adminAgent, adminApplications, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, reviewApplication, saveInstructions, setApproved, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { adminCheckQueue, declineDeletion, openIdentityFile, purgeIdentityFile, reviewIdentity, reviewLicence } from "../../../lib/phase1-desk";
 import { adminKeysQueue, decideKeysCheck, openKeysFiles, saveKeysNotes } from "../../../lib/keys-check-data";
 import { isAdminEmail, readSession } from "../../../lib/session";
@@ -52,7 +52,6 @@ export async function POST(request: Request) {
   let result: { error?: string; ok?: boolean } = { error: "Unknown action." };
   if (action === "instructions") result = await saveInstructions(String(body.id || ""), String(body.instructions || ""));
   else if (action === "paid") result = await markPaid(String(body.id || ""), { amountGyd: Number(body.amountGyd), paidBy: gate.profile.name || gate.profile.email || "Admin" });
-  else if (action === "cap") result = await setCap(String(body.agentId || ""), Number(body.cap));
   else if (action === "plan") result = await setPlan(String(body.agentId || ""), String(body.plan || ""));
   else if (action === "verified") result = await setVerified(String(body.agentId || ""), Boolean(body.verified));
   else if (action === "suspend") result = await suspendAgent(String(body.agentId || ""));

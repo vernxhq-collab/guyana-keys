@@ -9,7 +9,7 @@ Sequence is the order to do the work. Effort is the size of the change: small is
 | 1 | Market home and desk previews, gated by `PREVIEW_DESK` | Medium | In this pull request. Sample cards only on `/preview/home` and `/preview/desk`. |
 | 2 | Real home uses the same cards from the database | Small | In this pull request. Empty state when nothing is live. |
 | 3 | Search understands budget and `purpose=Land` | Small | In this pull request. Buy and rent URLs stay as they are. |
-| 4 | Free plan cap of 3 live listings, in code and in SQL | Medium | Code is in this pull request. `supabase/founding.sql` is for Boss to run. Agency plans can still use a higher cap. |
+| 4 | Listings are free to list, with no limits | Small | In this pull request. `supabase/founding.sql` and `supabase/phase1-market.sql` remove any older count check. Optional extras (boosts, featured placement, CRM and AI tools) do not limit how many homes can be listed. |
 | 5 | Live listings need 3 photos and owner permission | Small | In this pull request. Pixel size and logos are a confirmation, not a scan. |
 | 6 | Public application form and admin checklist | Medium | In this pull request. The table has to exist before a row can be saved. |
 | 7 | Founding badge for the first five approvals | Small | In this pull request. Needs the new column. |

@@ -31,15 +31,15 @@ export default function AgentListingsPage() {
   const featured = rows.filter((row) => row.featured).length;
   const nextLine = rows.length === 0
     ? "Add the first listing."
-    : "Open a listing, or add another. The free plan is up to 3 live listings.";
+    : "Open a listing, or add another. Free to list, no limits.";
 
   return (
     <div className="stack">
       <p className="eyebrow">Listings</p>
       <h1>Listings</h1>
-      <p className="quiet">The free plan is up to 3 live listings. A live listing needs at least 3 photos and owner permission. Hidden listings stay off the public site.</p>
+      <p className="quiet">Free to list, no limits. A live listing needs at least 3 photos and owner permission. Hidden listings stay off the public site.</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live</p><strong>{meta.live}</strong><p className="quiet">Up to 3 on the free plan</p></article>
+        <article className="stat"><p className="quiet">Live</p><strong>{meta.live}</strong><p className="quiet">Free to list, no limits</p></article>
         <article className="stat"><p className="quiet">Hidden</p><strong>{hidden}</strong><p className="quiet">{hidden ? "Off the public site" : "None hidden"}</p></article>
         <article className="stat"><p className="quiet">Featured</p><strong>{featured}</strong><p className="quiet">{featured ? "Arranged with the admin" : "None featured"}</p></article>
       </div>

@@ -63,7 +63,7 @@ Taking the money in the app needs a payment provider. That sits with the other e
 
 Owners and agents can use the basic record at no charge: the checklist, the inventory, the reminder, and the receipt note. That matches the self-serve idea already on the market home, where an owner can list without buying a package first.
 
-A later upgrade can charge per reference, or for a tenancy pack that bundles the check, the references, and the agreement. No amount is set here. The free plan for listings is unchanged.
+A later upgrade can charge per reference, or for a tenancy pack that bundles the check, the references, and the agreement. No amount is set here. Listings stay free to list, with no limits.
 
 ## What this pull request does not build
 
