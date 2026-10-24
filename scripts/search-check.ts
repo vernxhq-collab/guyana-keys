@@ -52,9 +52,12 @@ const advertise = readFileSync(new URL("../src/app/advertise/listing/page.tsx", 
 const sql = readFileSync(new URL("../supabase/listing-site-facts.sql", import.meta.url), "utf8");
 assert.match(about, /Free to list, no limits/);
 assert.equal(/founder|testimonial|WhatsApp|Messenger|Trinidad|Tobago|verified listings|trusted agents/i.test(about + contact), false);
-assert.match(contactLib, /guyanakeys@mail\.grokbot\.com/);
+assert.match(contactLib, /info@gykeys\.com/);
+assert.equal(contactLib.includes("grokbot"), false);
+assert.match(readFileSync(new URL("../src/lib/mail-from.ts", import.meta.url), "utf8"), /guyanakeys@mail\.grokbot\.com/);
 assert.match(contactLib, /https:\/\/www\.facebook\.com\/GuyanaKeysGY/);
-assert.match(contact, /deskEmail/);
+assert.match(contact, /publicEmail/);
+assert.equal(contact.includes("grokbot"), false);
 assert.match(contact, /facebookPage/);
 assert.match(contact, /\/agents\/apply/);
 assert.match(contact, /\/advertise/);
