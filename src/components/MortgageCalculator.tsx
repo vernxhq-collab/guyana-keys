@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { GYD_PER_USD, amortise, gyd, purchaseEstimate, usdFromGyd } from "../lib/mortgage";
-import { rateForLoan, rateLine, type MortgageRate } from "../lib/rates";
 
 const terms = [5, 10, 15, 20, 25, 30, 35];
 
@@ -23,12 +22,11 @@ function money(amount: number, unit: "GYD" | "USD") {
   return unit === "USD" ? usdFromGyd(amount) : gyd(amount);
 }
 
-export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: number; rates?: MortgageRate[] }) {
+export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
   const opening = priceGyd > 0 ? priceGyd : 20_000_000;
   const [price, setPrice] = useState(grouped(String(opening)));
   const [down, setDown] = useState("20");
   const [downAmount, setDownAmount] = useState(grouped(String(Math.round(opening * 0.2))));
-  const [bank, setBank] = useState("");
   const [rate, setRate] = useState("");
   const [term, setTerm] = useState("20");
   const [income, setIncome] = useState("");
@@ -36,17 +34,9 @@ export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: nu
   const [legal, setLegal] = useState("");
   const [unit, setUnit] = useState<"GYD" | "USD">("GYD");
 
-  const banks = useMemo(() => [...new Set(rates.map((item) => item.bank))], [rates]);
   const priceValue = Number(price.replace(/,/g, "")) || 0;
   const downPct = Math.min(100, Math.max(0, Number(down) || 0));
   const loan = Number.isFinite(priceValue) ? Math.max(0, priceValue * (1 - downPct / 100)) : 0;
-  const chosen = bank ? rateForLoan(rates, bank, loan) : null;
-
-  useEffect(() => {
-    if (!bank) return;
-    const match = rateForLoan(rates, bank, loan);
-    setRate(match ? String(match.rate) : "");
-  }, [bank, loan, rates]);
 
   const result = useMemo(() => {
     const annual = Number(rate);
@@ -95,7 +85,6 @@ export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: nu
   }
 
   function typeRate(raw: string) {
-    setBank("");
     setRate(rateText(raw));
   }
 
@@ -152,13 +141,6 @@ export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: nu
               </span>
             </label>
           </div>
-          <label className="field" htmlFor="calc-bank">
-            <span>Bank</span>
-            <select id="calc-bank" value={bank} onChange={(event) => setBank(event.target.value)}>
-              <option value="">I will type a rate</option>
-              {banks.map((name) => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </label>
           <label className="field" htmlFor="calc-rate">
             <span>Interest rate</span>
             <span className="slider-row">
@@ -169,13 +151,6 @@ export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: nu
               </span>
             </span>
           </label>
-          {chosen ? (
-            <p className="note">{rateLine(chosen)}. {chosen.product}. <a href={chosen.sourceUrl}>Source</a></p>
-          ) : bank ? (
-            <p className="note">{bank} has no published figure for this loan amount. The rate stays blank.</p>
-          ) : (
-            <p className="note">Pick a bank to use the rate checked on that bank&apos;s page for this loan amount, or type the rate you were quoted.</p>
-          )}
           <label className="field" htmlFor="calc-term">
             <span>Loan term</span>
             <span className="slider-row">
@@ -226,7 +201,7 @@ export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: nu
           ) : (
             <>
               <p className="pay-figure quiet-figure">Add a rate</p>
-              <p className="pay-secondary">The monthly payment appears after a checked rate is selected, or after you type one.</p>
+              <p className="pay-secondary">The monthly payment appears after you type one.</p>
             </>
           )}
           <table className="cost-table">
