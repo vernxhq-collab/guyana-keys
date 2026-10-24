@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ComingSoon } from "../../components/ComingSoon";
+import { FilterSheet } from "../../components/FilterSheet";
 import { ListingCard } from "../../components/ListingCard";
 import { MapView } from "../../components/MapView";
+import { PrelaunchBoard } from "../../components/PrelaunchBoard";
 import { SaveSearch } from "../../components/SaveSearch";
 import { SearchPanel } from "../../components/SearchPanel";
 import { loadCatalog } from "../../lib/catalog";
 import { filterListings, listingsPath, searchFormState, type SearchQuery } from "../../lib/listing-search";
 import { withCanonical } from "../../lib/seo";
 
-function emptyListing(purpose?: string, type?: string) {
-  if (type === "Land") return { heading: "No land listed yet", line: "Land will appear here as it is listed." };
-  if (purpose === "Rent") return { heading: "No rentals listed yet", line: "Rentals will appear here as they are listed." };
-  if (purpose === "Sale") return { heading: "No homes for sale yet", line: "Homes for sale will appear here as they are listed." };
-  return { heading: "No homes listed yet", line: "Homes, rentals, and land will appear here as they are listed." };
+function listingMode(purpose?: string, type?: string) {
+  if (type === "Commercial") return { kind: "commercial" as const, title: "Commercial property in Guyana" };
+  if (type === "Land" || purpose === "Land") return { kind: "land" as const, title: "Land in Guyana" };
+  if (purpose === "Rent") return { kind: "rent" as const, title: "Property to rent in Guyana" };
+  if (purpose === "Sale") return { kind: "buy" as const, title: "Property for sale in Guyana" };
+  return { kind: "search" as const, title: "Search property in Guyana" };
 }
 
 function searchLabel(params: SearchQuery) {
@@ -46,12 +48,15 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   const { shown, purpose, type } = filterListings(listings, params);
   const share = listingsPath(params);
   const form = searchFormState(params);
+  const mode = listingMode(purpose, type);
   return (
     <main className="wrap section">
-      <h1>Search property in Guyana</h1>
-      <SearchPanel initial={form} />
+      <h1>{mode.title}</h1>
+      <FilterSheet>
+        <SearchPanel initial={form} />
+      </FilterSheet>
       <SaveSearch href={share} label={searchLabel(params)} />
-      {listings.length === 0 ? <ComingSoon {...emptyListing(purpose, type)} /> : (
+      {listings.length === 0 ? <PrelaunchBoard kind={mode.kind} /> : (
         <>
           <p className="sub">{shown.length} homes · Listed on Guyana Keys · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
           {shown.length === 0 ? <p>No home matches. Try a neighbourhood, or clear a filter.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}

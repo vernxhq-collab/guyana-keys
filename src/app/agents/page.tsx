@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrelaunchBoard } from "../../components/PrelaunchBoard";
 import { loadPublicAgents } from "../../lib/catalog";
 import { withCanonical } from "../../lib/seo";
 
@@ -16,15 +17,7 @@ export default async function AgentsPage() {
     <main className="wrap section">
       <h1>Agents</h1>
       <p><Link href="/agents/apply">Apply to list a property</Link>. Free to list, no limits.</p>
-      {people.length === 0 ? (
-        <div className="empty-board solo">
-          <div className="empty-copy">
-            <h2>No agents listed yet</h2>
-            <p>Are you an agent? Join Guyana Keys.</p>
-            <Link className="btn" href="/advertise">For agents</Link>
-          </div>
-        </div>
-      ) : (
+      {people.length === 0 ? <PrelaunchBoard kind="agents" /> : (
         <div className="grid">
           {people.map((agent) => (
             <Link className="card" key={agent.id} href={`/agents/${agent.id}`}>
