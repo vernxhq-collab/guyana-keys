@@ -37,6 +37,9 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/founding-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/listing-site-facts-check.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase1-market-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
   migration:
@@ -65,6 +68,9 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/founding-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/listing-site-facts-check.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase1-market-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
   upgrade:
@@ -95,6 +101,9 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/founding.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/founding-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/listing-site-facts-check.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase1-market-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
