@@ -42,35 +42,10 @@ export default function AboutPage() {
         </section>
       </div>
       <section className="about-next">
-        <div className="wrap">
+        <div className="wrap about-measure">
+          <span className="about-spark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.2"/><path d="M10.4 13.1L19 5.2M16.2 5.2H19V8"/></svg></span>
           <h2>We&apos;re not done here.</h2>
-          <p className="about-next-lead">This is only the beginning. We have so much in store, and we can&apos;t wait to share it with you.</p>
-          <div className="about-next-grid">
-            <article>
-              <span className="about-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.25"/><path d="M8.2 12.2l2.4 2.4 5.2-5.2"/></svg></span>
-              <p className="about-soon">Coming soon</p>
-              <h3>Keys Check</h3>
-              <p>Our own in-house verification, so you know who you&apos;re dealing with, starting with agents.</p>
-            </article>
-            <article>
-              <span className="about-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 10.5l7-6 7 6V19a1 1 0 0 1-1 1h-4.2v-5.2H10.2V20H6a1 1 0 0 1-1-1z"/></svg></span>
-              <p className="about-soon">Coming soon</p>
-              <h3>Rent made simple</h3>
-              <p>Tenant referencing, digital tenancy agreements and move-in checklists, all in one place.</p>
-            </article>
-            <article>
-              <span className="about-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 9.2a5 5 0 0 1 10 0c0 4.2 1.4 5.3 1.4 5.3H5.6S7 13.4 7 9.2z"/><path d="M10 18.2a2 2 0 0 0 4 0"/></svg></span>
-              <p className="about-soon">Coming soon</p>
-              <h3>Never miss a payment</h3>
-              <p>Friendly rent reminders for tenants and clear records for landlords.</p>
-            </article>
-            <article>
-              <span className="about-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.25"/><path d="M15.8 15.8L20 20"/></svg></span>
-              <p className="about-soon">Coming soon</p>
-              <h3>Smarter search</h3>
-              <p>New tools that help you find the right property faster and understand the real costs.</p>
-            </article>
-          </div>
+          <p>This is only the beginning. We&apos;re working on things that will change how Guyana finds, rents and buys property, and we can&apos;t wait to share them with you.</p>
           <p className="about-next-close">Stay close. The best is yet to come.</p>
         </div>
       </section>

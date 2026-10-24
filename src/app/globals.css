@@ -313,15 +313,11 @@ body > main { flex: 1 0 auto; }
 .about-story section p.about-sign { margin-top: 28px; font-weight: 700; color: var(--deep); }
 .about-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 56px; }
 .about-close { padding-top: 72px; }
-.about-story .about-next { margin-top: 72px; padding: 80px 0 72px; background: linear-gradient(145deg, #07281c 0%, #0c3d2c 42%, #116b4a 100%); color: #f4fff8; }
-.about-story .about-next h2 { margin: 0 0 14px; max-width: 10em; color: #f4fff8; font-size: clamp(40px, 5vw, 64px); line-height: 1.02; letter-spacing: -.04em; font-weight: 700; }
-.about-story .about-next-lead { margin: 0 0 36px; max-width: 34em; color: #d7efe4; font-size: 19px; line-height: 1.6; }
-.about-next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.about-next-grid article { display: grid; gap: 10px; align-content: start; padding: 22px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1px solid rgba(244,255,248,.18); }
-.about-icon { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: rgba(232,246,239,.14); color: #d9ffe9; }
-.about-icon svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.about-story .about-next .about-next-grid p.about-soon { margin: 0; width: fit-content; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--deep); background: #e8f6ef; border-radius: 999px; padding: 4px 8px; line-height: 1.4; }
-.about-next-grid h3 { margin: 0; font-size: 22px; letter-spacing: -.03em; color: #f4fff8; }
-.about-story .about-next .about-next-grid p { margin: 0; color: #d7efe4; font-size: 16px; line-height: 1.5; }
-.about-story .about-next-close { margin: 32px 0 0; font-size: 22px; font-weight: 700; letter-spacing: -.03em; color: #f4fff8; }
-@media (max-width: 700px) { .about-next-grid { grid-template-columns: 1fr; } .about-story .about-next { padding: 56px 0 48px; } }
+.about-story .about-next { margin-top: 72px; padding: 96px 0 88px; background: linear-gradient(145deg, #07281c 0%, #0c3d2c 42%, #116b4a 100%); color: #f4fff8; }
+.about-story .about-next .about-measure { padding-top: 0; }
+.about-spark { display: inline-flex; margin: 0 0 22px; color: rgba(217, 255, 233, .72); }
+.about-spark svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.about-story .about-next h2 { margin: 0 0 18px; max-width: 10em; color: #f4fff8; font-size: clamp(40px, 5vw, 64px); line-height: 1.02; letter-spacing: -.04em; font-weight: 700; }
+.about-story .about-next p { max-width: 34em; color: #d7efe4; font-size: 20px; line-height: 1.6; }
+.about-story .about-next p.about-next-close { margin-top: 36px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; color: #f4fff8; }
+@media (max-width: 700px) { .about-story .about-next { padding: 72px 0 64px; } }
