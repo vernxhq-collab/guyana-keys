@@ -1,8 +1,19 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { draftDescription, draftReply } from "../src/lib/ai/local.ts";
+import { DAILY_BRIEFING_ENABLED, dailyBriefingJob } from "../src/lib/ai/briefing.ts";
+import { channelSenders } from "../src/lib/ai/channel.ts";
+import { nextDraftStatus } from "../src/lib/ai/drafts.ts";
+import { pendingEvent } from "../src/lib/ai/outbox.ts";
+import { activeProvider } from "../src/lib/ai/provider.ts";
+import { MIN_LIVE_PHOTOS } from "../src/lib/listing-rules.ts";
 import { decodeWorld, encodeWorld } from "../src/lib/preview/codec.ts";
 import { actors, buyerView, holdReply, matchesFor, performanceFor, saveDescription, seedWorld, todayFor, updateLead } from "../src/lib/preview/world.ts";
 import { noticeAllowed, tooMany } from "../src/lib/abuse.ts";
+import { checkBadge, expireStatus } from "../src/lib/licences.ts";
+import { publishedRates, rateForLoan } from "../src/lib/rates.ts";
+import { ID_CONSENT_VERSION, RETENTION_REVIEW_ENABLED, idConsentText, retentionReviewJob } from "../src/lib/compliance/retention.ts";
+import { SUBJECT_TYPES, codeStillCurrent, imageQuality, makeCheckCode, verificationProvider } from "../src/lib/keys-check.ts";
 import { guyanaInputValue, guyanaLabel, guyanaLocalToUtc } from "../src/lib/time.ts";
 
 const world = seedWorld();
@@ -73,5 +84,140 @@ for (let i = 0; i < 20; i += 1) assert.equal(tooMany("slice-form", 20, 60_000), 
 assert.equal(tooMany("slice-form", 20, 60_000), true);
 for (let i = 0; i < 20; i += 1) assert.equal(noticeAllowed("agent-slice"), true);
 assert.equal(noticeAllowed("agent-slice"), false);
+
+assert.equal(nextDraftStatus("draft", "send"), null);
+assert.equal(nextDraftStatus("draft", "approve"), "approved");
+assert.equal(nextDraftStatus("approved", "send"), "sent");
+assert.equal(nextDraftStatus("approved", "approve"), null);
+assert.equal(activeProvider().id, "noop");
+assert.equal(DAILY_BRIEFING_ENABLED, false);
+assert.deepEqual(dailyBriefingJob(), { ran: false, reason: "disabled" });
+assert.equal(channelSenders.whatsapp.id, "whatsapp");
+assert.deepEqual(pendingEvent("lead.created", { id: "x" }).status, "pending");
+assert.equal(MIN_LIVE_PHOTOS, 3);
+const listingRules = readFileSync(new URL("../src/lib/listing-rules.ts", import.meta.url), "utf8");
+assert.equal(listingRules.includes("FREE_LIVE_CAP"), false);
+assert.equal(listingRules.includes("withinLiveCap"), false);
+const foundingSql = readFileSync(new URL("../supabase/founding.sql", import.meta.url), "utf8");
+assert.equal(foundingSql.includes("cap reached"), false);
+assert.match(readFileSync(new URL("../src/components/MarketHome.tsx", import.meta.url), "utf8"), /Free to list, no limits/);
+assert.match(readFileSync(new URL("../src/app/agents/apply/page.tsx", import.meta.url), "utf8"), /Free to list, no limits/);
+const homeSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+const listingsSource = readFileSync(new URL("../src/app/listings/page.tsx", import.meta.url), "utf8");
+const apiSource = readFileSync(new URL("../src/app/api/listings/route.ts", import.meta.url), "utf8");
+const marketHome = readFileSync(new URL("../src/components/MarketHome.tsx", import.meta.url), "utf8");
+const marketCard = readFileSync(new URL("../src/components/MarketCard.tsx", import.meta.url), "utf8");
+assert.equal(homeSource.includes("lib/market-sample"), false);
+assert.equal(marketHome.includes("lib/market-sample"), false);
+assert.equal(marketCard.includes("lib/market-sample"), false);
+assert.equal(listingsSource.includes("lib/market-sample"), false);
+assert.equal(apiSource.includes("lib/market-sample"), false);
+assert.equal(readFileSync(new URL("../src/lib/sample-label.ts", import.meta.url), "utf8").includes("Sample preview — not a real listing"), true);
+assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("marketSample"), true);
+assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
+
+const badge = checkBadge({
+  idStatus: "checked",
+  idCheckedAt: "2026-10-02T00:00:00Z",
+  licences: [{ type: "gra_house_agent", status: "checked", checkedAt: "2026-10-02", expiry: "2027-01-01" }],
+  today: "2026-10-22",
+});
+assert.equal(badge, "ID and GRA House Agent licence checked by Guyana Keys · Oct 2026");
+assert.equal(badge.includes("Verified"), false);
+assert.equal(checkBadge({
+  idStatus: "checked",
+  idCheckedAt: "2026-10-02T00:00:00Z",
+  licences: [{ type: "gra_house_agent", status: "checked", checkedAt: "2026-10-02", expiry: "2026-10-01" }],
+  today: "2026-10-22",
+}), "ID checked by Guyana Keys · Oct 2026");
+assert.equal(checkBadge({ licences: [], today: "2026-10-22" }), "");
+assert.equal(expireStatus("rejected", "2020-01-01", "2026-10-22"), "rejected");
+assert.equal(expireStatus("checked", "2026-10-01", "2026-10-22"), "expired");
+const notifySource = readFileSync(new URL("../src/lib/notify.ts", import.meta.url), "utf8");
+assert.match(notifySource, /🔑 Guyana Keys Lead/);
+assert.match(notifySource, /Listing id:/);
+assert.match(notifySource, /Page:/);
+assert.match(notifySource, /Channel:/);
+const enquiryStart = notifySource.indexOf("export async function notifyAgentEnquiry");
+const enquiryNotice = notifySource.slice(enquiryStart, notifySource.indexOf("export async function notifyBuyer"));
+assert.match(enquiryNotice, /channelSenders\.whatsapp\.send/);
+assert.equal(enquiryNotice.includes("sendWhatsApp("), false);
+assert.match(readFileSync(new URL("../src/lib/ai/channel.ts", import.meta.url), "utf8"), /whatsapp sender is not connected/);
+assert.equal(RETENTION_REVIEW_ENABLED, false);
+assert.deepEqual(retentionReviewJob(), { ran: false, reason: "disabled" });
+assert.equal(publishedRates.some((rate) => /republic/i.test(rate.bank)), false);
+const mortgageSource = readFileSync(new URL("../src/lib/mortgage.ts", import.meta.url), "utf8");
+assert.match(mortgageSource, /return \{ stamp, legal, fees: stamp \+ legal \}/);
+assert.equal(mortgageSource.includes("1.5"), false);
+assert.equal(mortgageSource.includes("0.015"), false);
+const partnersPage = readFileSync(new URL("../src/app/partners/page.tsx", import.meta.url), "utf8");
+const calculator = readFileSync(new URL("../src/components/MortgageCalculator.tsx", import.meta.url), "utf8");
+assert.equal(partnersPage.includes("partner-sample"), false);
+assert.equal(calculator.includes("About 2%"), false);
+assert.equal(calculator.includes("1.5%"), false);
+assert.equal(calculator.includes("does not publish lender rates"), false);
+assert.match(calculator, /rateForLoan/);
+const toolsPage = readFileSync(new URL("../src/app/tools/page.tsx", import.meta.url), "utf8");
+assert.equal(toolsPage.includes("Still needing"), false);
+assert.equal(rateForLoan(publishedRates, "GBTI", 4_000_000)?.id, "gbti-4m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 4_000_001)?.id, "gbti-9m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 9_000_000)?.id, "gbti-9m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 9_000_001)?.id, "gbti-20m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 20_000_001)?.id, "gbti-40m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 40_000_001)?.id, "gbti-60m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 60_000_000)?.id, "gbti-60m");
+assert.equal(rateForLoan(publishedRates, "GBTI", 60_000_001), null);
+assert.equal(rateForLoan(publishedRates, "Demerara Bank", 4_000_000)?.id, "demerara-4m");
+assert.equal(rateForLoan(publishedRates, "Demerara Bank", 9_000_001)?.id, "demerara-15m");
+assert.equal(rateForLoan(publishedRates, "Demerara Bank", 15_000_001)?.id, "demerara-40m");
+assert.equal(rateForLoan(publishedRates, "Demerara Bank", 40_000_001)?.id, "demerara-above");
+assert.equal(rateForLoan(publishedRates, "Demerara Bank", 80_000_000)?.rate, 8);
+assert.equal(rateForLoan(publishedRates, "Citizens Bank", 10_000_000)?.id, "citizens-10m");
+assert.equal(rateForLoan(publishedRates, "Citizens Bank", 10_000_001)?.id, "citizens-20m");
+assert.equal(rateForLoan(publishedRates, "Citizens Bank", 30_000_001)?.id, "citizens-50m");
+assert.equal(rateForLoan(publishedRates, "Citizens Bank", 50_000_001), null);
+assert.equal(rateForLoan(publishedRates, "Scotiabank Guyana", 1)?.id, "scotia-floor");
+assert.equal(rateForLoan(publishedRates, "Scotiabank Guyana", 90_000_000)?.rate, 4);
+assert.equal(rateForLoan(publishedRates, "Republic Bank", 1_000_000), null);
+const keysPreview = readFileSync(new URL("../src/app/preview/keys-check/page.tsx", import.meta.url), "utf8");
+assert.match(keysPreview, />Sample preview</);
+assert.equal(keysPreview.includes("not a real listing"), false);
+const verificationDoc = readFileSync(new URL("../docs/strategy-2026-10/verification.md", import.meta.url), "utf8");
+const inventoryDoc = readFileSync(new URL("../docs/strategy-2026-10/inventory.md", import.meta.url), "utf8");
+assert.equal(verificationDoc.includes("no private bucket"), false);
+assert.equal(verificationDoc.includes("Do not store an ID image"), false);
+assert.equal(inventoryDoc.includes("Do not store ID images"), false);
+assert.match(verificationDoc, /identity-documents/);
+assert.match(inventoryDoc, /identity-documents/);
+assert.equal(readFileSync(new URL("../src/app/agents/[id]/page.tsx", import.meta.url), "utf8").includes("Verified on Guyana Keys"), false);
+assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
+assert.equal(readFileSync(new URL("../src/app/preview/partners/page.tsx", import.meta.url), "utf8").includes("partnerSample"), true);
+assert.equal(verificationProvider().id, "manual");
+assert.equal(verificationProvider().review, "human");
+assert.equal(verificationProvider().subjectType, "agent");
+assert.equal(verificationProvider("tenant").id, "manual");
+assert.equal(verificationProvider("tenant").subjectType, "tenant");
+assert.deepEqual([...SUBJECT_TYPES], ["agent", "tenant", "purchaser", "landlord"]);
+assert.equal(makeCheckCode(() => 0), "AAAAAA");
+assert.equal(codeStillCurrent(new Date().toISOString()), true);
+assert.equal(codeStillCurrent("2020-01-01T00:00:00Z"), false);
+assert.equal(ID_CONSENT_VERSION, "2026-10-22-keys");
+assert.match(idConsentText, /one-time code/);
+assert.match(idConsentText, /short video/);
+const tiny = imageQuality({ width: 40, height: 40, sampleWidth: 4, sampleHeight: 4, luminance: Array.from({ length: 16 }, () => 255) });
+assert.equal(tiny.some((line) => line.includes("small")), true);
+assert.equal(tiny.some((line) => line.includes("bright")), true);
+const sharp = imageQuality({
+  width: 1200,
+  height: 800,
+  sampleWidth: 8,
+  sampleHeight: 8,
+  luminance: Array.from({ length: 64 }, (_, index) => (index % 2 ? 20 : 180)),
+});
+assert.equal(sharp.length, 0);
+const keysUi = readFileSync(new URL("../src/components/KeysCapture.tsx", import.meta.url), "utf8")
+  + readFileSync(new URL("../src/app/admin/(desk)/keys-check/page.tsx", import.meta.url), "utf8");
+assert.equal(/didit|certified|face recognition|accuracy/i.test(keysUi), false);
+assert.equal(readFileSync(new URL("../src/app/preview/keys-check/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
 
 console.log("phase 2 checks passed");

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { EnquiryPanel } from "../../../components/EnquiryPanel";
-import { LeadForm } from "../../../components/LeadForm";
+import { TitleRequest } from "../../../components/TitleRequest";
 import { ListingCard } from "../../../components/ListingCard";
 import { KeyFacts } from "../../../components/KeyFacts";
 import { LocationSection } from "../../../components/LocationSection";
@@ -11,7 +11,8 @@ import { money, usd } from "../../../lib/data";
 import { readSession } from "../../../lib/session";
 import { serviceDb } from "../../../lib/supabase";
 import { peekNearby } from "../../../lib/places";
-import { titleCopy } from "../../../lib/trust";
+import { loadMortgageRates, publicPartners } from "../../../lib/phase1-desk";
+import { titleCopy, titleStatement } from "../../../lib/trust";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   const photos = listing.photos?.length ? listing.photos : [listing.image];
   const similar = catalog.listings.filter((item) => item.id !== listing.id && item.area === listing.area);
   const title = titleCopy(listing.titleStatus);
+  const [partners, rates] = await Promise.all([publicPartners(), loadMortgageRates()]);
+  const lawyers = partners.filter((partner) => partner.category === "lawyer").map((partner) => ({ id: partner.id, name: partner.name }));
   const nearby = peekNearby(listing.lat, listing.lng);
   return (
     <main className="wrap section">
@@ -51,18 +54,19 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           <section className="panel">
             <p className="chip">{title.label}</p>
             <h2>Title status</h2>
+            <p>{titleStatement(Boolean(listing.titleCheckedByLawyer))}</p>
+            {listing.titleCheckedByLawyer ? <p>Lawyer partner {listing.titleLawyerPartnerId || "not named"}{listing.titleCheckedOn ? ` · ${listing.titleCheckedOn}` : ""}</p> : null}
             <p>{title.plain}</p>
             {listing.titleRef ? <p>Title reference on file: {listing.titleRef}</p> : null}
-            <LeadForm propertyId={listing.id} preset="Request title check" button="Request title check" />
-            <LeadForm propertyId={listing.id} preset="Connect with a lawyer" button="Connect with a lawyer" />
-            <p className="disclaimer">A listing is not proof of title. These buttons save a Guyana Keys lead.</p>
+            <TitleRequest propertyId={listing.id} lawyers={lawyers} />
+            <p className="disclaimer">A listing is not proof of title. The button saves a Guyana Keys lead.</p>
           </section>
           <LocationSection area={listing.area} region={listing.region} lat={listing.lat} lng={listing.lng} report={nearby} />
           {listing.purpose === "Sale" && listing.priceGyd > 0 ? (
             <section>
               <h2>Mortgage and purchase costs</h2>
               <p className="sub">Estimates for this asking price. Change the rate, or open the full <Link href="/tools">tools page</Link>.</p>
-              <MortgageCalculator priceGyd={listing.priceGyd} />
+              <MortgageCalculator priceGyd={listing.priceGyd} rates={rates} />
             </section>
           ) : <p className="meta"><Link href="/tools">Open the mortgage calculator</Link> for a home you want to buy.</p>}
         </div>

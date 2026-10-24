@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GYD_PER_USD, amortise, gyd, purchaseEstimate, usdFromGyd } from "../lib/mortgage";
+import { rateForLoan, rateLine, type MortgageRate } from "../lib/rates";
 
 const terms = [5, 10, 15, 20, 25, 30, 35];
 
@@ -22,25 +23,36 @@ function money(amount: number, unit: "GYD" | "USD") {
   return unit === "USD" ? usdFromGyd(amount) : gyd(amount);
 }
 
-export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
+export function MortgageCalculator({ priceGyd = 0, rates = [] }: { priceGyd?: number; rates?: MortgageRate[] }) {
   const opening = priceGyd > 0 ? priceGyd : 20_000_000;
   const [price, setPrice] = useState(grouped(String(opening)));
   const [down, setDown] = useState("20");
   const [downAmount, setDownAmount] = useState(grouped(String(Math.round(opening * 0.2))));
+  const [bank, setBank] = useState("");
   const [rate, setRate] = useState("");
   const [term, setTerm] = useState("20");
   const [income, setIncome] = useState("");
-  const [stamp, setStamp] = useState("2");
+  const [stamp, setStamp] = useState("");
+  const [legal, setLegal] = useState("");
   const [unit, setUnit] = useState<"GYD" | "USD">("GYD");
 
+  const banks = useMemo(() => [...new Set(rates.map((item) => item.bank))], [rates]);
+  const priceValue = Number(price.replace(/,/g, "")) || 0;
+  const downPct = Math.min(100, Math.max(0, Number(down) || 0));
+  const loan = Number.isFinite(priceValue) ? Math.max(0, priceValue * (1 - downPct / 100)) : 0;
+  const chosen = bank ? rateForLoan(rates, bank, loan) : null;
+
+  useEffect(() => {
+    if (!bank) return;
+    const match = rateForLoan(rates, bank, loan);
+    setRate(match ? String(match.rate) : "");
+  }, [bank, loan, rates]);
+
   const result = useMemo(() => {
-    const priceValue = Number(price.replace(/,/g, ""));
-    const downPct = Math.min(100, Math.max(0, Number(down) || 0));
-    const loan = Number.isFinite(priceValue) ? Math.max(0, priceValue * (1 - downPct / 100)) : 0;
     const annual = Number(rate);
     const hasRate = rate.trim() !== "" && Number.isFinite(annual) && annual >= 0;
     const payment = hasRate ? amortise(loan, annual, Number(term)) : null;
-    const costs = purchaseEstimate(priceValue, Number(stamp));
+    const costs = purchaseEstimate(Number(stamp.replace(/,/g, "")), Number(legal.replace(/,/g, "")));
     const cash = (Number.isFinite(priceValue) ? priceValue * (downPct / 100) : 0) + costs.fees;
     const incomeValue = Number(income.replace(/,/g, ""));
     let afford = "Add monthly income for a simple affordability note.";
@@ -51,14 +63,14 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
         : `This payment is about ${Math.round(share * 100)}% of the income you entered. That is above a common 30% guide.`;
     }
     return { loan, payment, costs, cash, afford, downPct, hasRate, priceValue };
-  }, [price, down, rate, term, income, stamp]);
+  }, [loan, priceValue, downPct, rate, term, income, stamp, legal]);
 
   function applyPrice(raw: string) {
     const next = grouped(raw);
     setPrice(next);
-    const priceValue = Number(next.replace(/,/g, "")) || 0;
+    const nextPrice = Number(next.replace(/,/g, "")) || 0;
     const pct = Math.min(100, Math.max(0, Number(down) || 0));
-    setDownAmount(grouped(String(Math.round(priceValue * pct / 100))));
+    setDownAmount(grouped(String(Math.round(nextPrice * pct / 100))));
   }
 
   function applyPct(raw: string) {
@@ -66,20 +78,25 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
     const [whole, fraction = ""] = cleaned.split(".");
     const next = cleaned.includes(".") ? `${whole.slice(0, 3)}.${fraction.slice(0, 1)}` : whole.slice(0, 3);
     setDown(next);
-    const priceValue = Number(price.replace(/,/g, "")) || 0;
+    const nextPrice = Number(price.replace(/,/g, "")) || 0;
     const pct = Math.min(100, Math.max(0, Number(next) || 0));
-    setDownAmount(grouped(String(Math.round(priceValue * pct / 100))));
+    setDownAmount(grouped(String(Math.round(nextPrice * pct / 100))));
   }
 
   function applyAmount(raw: string) {
     const next = grouped(raw);
     setDownAmount(next);
-    const priceValue = Number(price.replace(/,/g, "")) || 0;
+    const nextPrice = Number(price.replace(/,/g, "")) || 0;
     const amount = Number(next.replace(/,/g, "")) || 0;
-    if (priceValue > 0) {
-      const pct = Math.min(100, Math.max(0, (amount / priceValue) * 100));
+    if (nextPrice > 0) {
+      const pct = Math.min(100, Math.max(0, (amount / nextPrice) * 100));
       setDown(String(Math.round(pct * 10) / 10));
     }
+  }
+
+  function typeRate(raw: string) {
+    setBank("");
+    setRate(rateText(raw));
   }
 
   const other = unit === "GYD" ? "USD" : "GYD";
@@ -103,8 +120,8 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
     ["Loan amount", money(result.loan, unit)],
     ["Total interest", result.hasRate && result.payment ? money(result.payment.totalInterest, unit) : "Enter a rate"],
     ["Total repaid", result.hasRate && result.payment ? money(result.payment.totalPaid, unit) : "Enter a rate"],
-    ["Stamp duty", money(result.costs.stamp, unit)],
-    ["Legal fees", money(result.costs.legal, unit)],
+    ["Stamp duty", result.costs.stamp > 0 ? money(result.costs.stamp, unit) : "Enter a figure"],
+    ["Legal fees", result.costs.legal > 0 ? money(result.costs.legal, unit) : "Enter a figure"],
     ["Cash needed upfront", money(result.cash, unit)],
   ];
 
@@ -135,17 +152,30 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
               </span>
             </label>
           </div>
+          <label className="field" htmlFor="calc-bank">
+            <span>Bank</span>
+            <select id="calc-bank" value={bank} onChange={(event) => setBank(event.target.value)}>
+              <option value="">I will type a rate</option>
+              {banks.map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </label>
           <label className="field" htmlFor="calc-rate">
             <span>Interest rate</span>
             <span className="slider-row">
-              <input type="range" min="0" max="20" step="0.1" aria-label="Interest rate slider" value={rate === "" ? "0" : rate} onChange={(event) => setRate(rateText(event.target.value))} />
+              <input type="range" min="0" max="20" step="0.1" aria-label="Interest rate slider" value={rate === "" ? "0" : rate} onChange={(event) => typeRate(event.target.value)} />
               <span className="money-field slim">
-                <input id="calc-rate" inputMode="decimal" value={rate} placeholder="Quoted" onChange={(event) => setRate(rateText(event.target.value))} />
+                <input id="calc-rate" inputMode="decimal" value={rate} placeholder="Quoted" onChange={(event) => typeRate(event.target.value)} />
                 <span>%</span>
               </span>
             </span>
           </label>
-          <p className="note">Enter the rate you were quoted. Guyana Keys does not publish lender rates.</p>
+          {chosen ? (
+            <p className="note">{rateLine(chosen)}. {chosen.product}. <a href={chosen.sourceUrl}>Source</a></p>
+          ) : bank ? (
+            <p className="note">{bank} has no published figure for this loan amount. The rate stays blank.</p>
+          ) : (
+            <p className="note">Pick a bank to use the rate checked on that bank&apos;s page for this loan amount, or type the rate you were quoted.</p>
+          )}
           <label className="field" htmlFor="calc-term">
             <span>Loan term</span>
             <span className="slider-row">
@@ -163,13 +193,22 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
               <input id="calc-income" inputMode="numeric" value={income} onChange={(event) => setIncome(grouped(event.target.value))} />
             </span>
           </label>
-          <label className="field" htmlFor="calc-stamp">
-            <span>Stamp duty estimate</span>
-            <select id="calc-stamp" value={stamp} onChange={(event) => setStamp(event.target.value)}>
-              <option value="2">About 2%</option>
-              <option value="2.5">About 2.5%</option>
-            </select>
-          </label>
+          <div className="field-pair">
+            <label className="field" htmlFor="calc-stamp">
+              <span>Stamp duty, GYD</span>
+              <span className="money-field">
+                <span>GYD</span>
+                <input id="calc-stamp" inputMode="numeric" value={stamp} placeholder="You enter this" onChange={(event) => setStamp(grouped(event.target.value))} />
+              </span>
+            </label>
+            <label className="field" htmlFor="calc-legal">
+              <span>Legal fees, GYD</span>
+              <span className="money-field">
+                <span>GYD</span>
+                <input id="calc-legal" inputMode="numeric" value={legal} placeholder="You enter this" onChange={(event) => setLegal(grouped(event.target.value))} />
+              </span>
+            </label>
+          </div>
         </form>
         <div className="panel calc-results">
           <div className="calc-head">
@@ -187,7 +226,7 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
           ) : (
             <>
               <p className="pay-figure quiet-figure">Add a rate</p>
-              <p className="pay-secondary">The monthly payment appears after you enter the rate you were quoted.</p>
+              <p className="pay-secondary">The monthly payment appears after a checked rate is selected, or after you type one.</p>
             </>
           )}
           <table className="cost-table">

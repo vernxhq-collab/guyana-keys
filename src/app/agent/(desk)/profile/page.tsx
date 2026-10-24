@@ -14,7 +14,6 @@ export default function AgentProfilePage() {
   const [email, setEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [graLicence, setGraLicence] = useState("");
-  const [verified, setVerified] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
@@ -36,7 +35,6 @@ export default function AgentProfilePage() {
         setEmail(profile.email || "");
         setPhotoUrl(profile.photoUrl || "");
         setGraLicence(profile.graLicence || "");
-        setVerified(Boolean(profile.verified));
         setPicked(profile.areas || []);
         setLoading(false);
       })
@@ -63,7 +61,7 @@ export default function AgentProfilePage() {
     }}>
       <p className="eyebrow">Profile</p>
       <h1>Profile</h1>
-      <p className="quiet">Name, company, WhatsApp, address, and areas are required. Email comes from sign-in. {verified ? "Verified on Guyana Keys." : "A GRA licence is optional. The verified badge is added by the admin."}</p>
+      <p className="quiet">Name, company, WhatsApp, address, and areas are required. Email comes from sign-in. Submit a GRA House Agent licence or a REABA professional licence on <a href="/agent/checks">Checks</a>. A public line names exactly what Guyana Keys checked.</p>
       {profileId && origin ? <p className="quiet">Your Guyana Keys link: {origin}/a/{profileId}</p> : null}
       <p className="ai-bar next"><span>{missing ? missing.label : "Profile is complete."}</span></p>
       <label>Name<input value={name} onChange={(event) => setName(event.target.value)} required /></label>

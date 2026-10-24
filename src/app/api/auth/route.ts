@@ -32,7 +32,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ user: null, profile: null });
   const profile = await loadProfile(user.id);
   const safe = profile
-    ? { id: profile.id, name: profile.name, email: profile.email, role: profile.role, phone: profile.phone, abroad: profile.abroad, suspended: profile.suspended, plan: profile.plan, listingCap: profile.listingCap, company: profile.company, areas: profile.areas, photoUrl: profile.photoUrl }
+    ? { id: profile.id, name: profile.name, email: profile.email, role: profile.role, phone: profile.phone, abroad: profile.abroad, suspended: profile.suspended, plan: profile.plan, company: profile.company, areas: profile.areas, photoUrl: profile.photoUrl }
     : null;
   return NextResponse.json({ user, profile: safe });
 }

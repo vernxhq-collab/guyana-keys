@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { money } from "../../../../lib/data";
 
-type Row = { id: string; title: string; area: string; purpose: string; priceGyd: number; status?: string; featured?: boolean; image: string; enquiries: number };
+type Row = { id: string; title: string; area: string; purpose: string; priceGyd: number; status?: string; featured?: boolean; image: string; enquiries: number; photos?: string[] };
 
 export default function AgentListingsPage() {
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -31,15 +31,15 @@ export default function AgentListingsPage() {
   const featured = rows.filter((row) => row.featured).length;
   const nextLine = rows.length === 0
     ? "Add the first listing."
-    : "Open a listing, or add another. Listings are free.";
+    : "Open a listing, or add another. Free to list, no limits.";
 
   return (
     <div className="stack">
       <p className="eyebrow">Listings</p>
       <h1>Listings</h1>
-      <p className="quiet">Listings are free. Hidden listings stay off the public site. Featuring is arranged on Plan.</p>
+      <p className="quiet">Free to list, no limits. A live listing needs at least 3 photos and owner permission. Hidden listings stay off the public site.</p>
       <div className="stats">
-        <article className="stat"><p className="quiet">Live</p><strong>{meta.live}</strong><p className="quiet">Free to publish</p></article>
+        <article className="stat"><p className="quiet">Live</p><strong>{meta.live}</strong><p className="quiet">Free to list, no limits</p></article>
         <article className="stat"><p className="quiet">Hidden</p><strong>{hidden}</strong><p className="quiet">{hidden ? "Off the public site" : "None hidden"}</p></article>
         <article className="stat"><p className="quiet">Featured</p><strong>{featured}</strong><p className="quiet">{featured ? "Arranged with the admin" : "None featured"}</p></article>
       </div>
@@ -54,7 +54,7 @@ export default function AgentListingsPage() {
             <img src={row.image} alt="" />
             <span>
               <strong>{row.title}</strong>
-              <span className="quiet">{row.area} · {sale} · {money(row.priceGyd, row.purpose)} · {status} · {row.featured ? "Featured" : "Not featured"} · {enquiries}</span>
+              <span className="quiet">{row.area} · {sale} · {money(row.priceGyd, row.purpose)} · {status} · {row.featured ? "Featured" : "Not featured"} · {enquiries}{(row.photos?.length || 0) < 3 ? " · Photos missing for a live listing" : ""}</span>
             </span>
           </a>
         );

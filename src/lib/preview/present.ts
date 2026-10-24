@@ -9,7 +9,7 @@ const placeholder =
 
 export function presentHome(world: World, actor: Actor) {
   const home = todayFor(world, actor);
-  return { ...home, plan: "Starter", cap: 3, openRequests: 0, preview: true };
+  return { ...home, plan: "Starter", openRequests: 0, preview: true };
 }
 
 export function presentLead(world: World, actor: Actor, id: string) {
@@ -51,6 +51,7 @@ export function presentLead(world: World, actor: Actor, id: string) {
       home: lead.home,
       area: lead.area,
       source: "Guyana Keys preview",
+      listingId: lead.propertyId,
       intent: lead.abroad ? "Buying from abroad" : "",
       privateNote: lead.privateNote,
       reviewRequested: false,
@@ -73,6 +74,7 @@ export function presentLeads(world: World, actor: Actor) {
       phone: lead.phone,
       note: lead.note,
       source: "Guyana Keys preview",
+      listingId: lead.propertyId,
       intent: lead.abroad ? "Buying from abroad" : "",
       viewingRequest: lead.viewingRequest || "",
       viewingAt: lead.viewingAt ? whenLabel(lead.viewingAt) : "",
@@ -87,7 +89,6 @@ export function presentListings(world: World, actor: Actor) {
   const leads = leadsFor(world, actor);
   return {
     live: rows.filter((item) => item.status === "live").length,
-    cap: 3,
     listings: rows.map((item) => ({
       id: item.id,
       title: item.title,

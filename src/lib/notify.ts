@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { noticeAllowed } from "./abuse";
 import { whenLabel } from "./assist";
+import { channelSenders } from "./ai/channel";
 import { deskFrom, siteUrl } from "./contact";
 import { digits, newId } from "./labels";
 import { serviceDb } from "./supabase";
@@ -258,17 +259,25 @@ export function guyanaKeysLeadMessage(input: {
   note: string;
   intent?: string;
   propertyId: string;
+  page?: string;
+  channel?: string;
+  utm?: Record<string, string>;
 }) {
+  const utm = Object.entries(input.utm || {}).filter(([, value]) => value).map(([key, value]) => `${key}=${value}`).join(" ");
   const lines = [
     "🔑 Guyana Keys Lead",
     "",
     `Property: ${input.title || "a home"}`,
+    `Listing id: ${input.propertyId || "none"}`,
+    `Page: ${input.page || "not sent"}`,
+    `Channel: ${input.channel || "web"}`,
+    `UTM: ${utm || "none"}`,
     `Buyer: ${input.buyerName || "A buyer"}`,
     `Phone: ${input.phone || "No phone"}`,
     `Message: ${input.note.trim() || "No message"}`,
   ];
   if (input.intent?.trim()) lines.push(input.intent.trim());
-  lines.push("", "Source: Guyana Keys", `View listing: ${siteOrigin()}/listings/${input.propertyId}`);
+  lines.push("", "Source: Guyana Keys", input.propertyId ? `View listing: ${siteOrigin()}/listings/${input.propertyId}` : "No listing link");
   return lines.join("\n");
 }
 
@@ -281,6 +290,9 @@ export async function notifyAgentEnquiry(input: {
   intent?: string;
   propertyId: string;
   enquiryId: string;
+  page?: string;
+  channel?: string;
+  utm?: Record<string, string>;
 }) {
   try {
     if (!input.agentId || !input.enquiryId) return;
@@ -290,8 +302,16 @@ export async function notifyAgentEnquiry(input: {
     const phone = String(agent.data?.phone || "");
     const email = String(agent.data?.email || "");
     const text = guyanaKeysLeadMessage(input);
+    await db.from("message_drafts").insert({
+      id: newId("dft"),
+      agent_id: input.agentId,
+      enquiry_id: input.enquiryId,
+      channel: "whatsapp",
+      body: text,
+      status: "draft",
+    });
+    await channelSenders.whatsapp.send({ channel: "whatsapp", to: phone, body: text, status: "draft" });
     if (phone && await agentMayNotify(input.agentId)) {
-      const whatsapp = await sendWhatsApp(phone, text);
       await recordNotice({
         userId: input.agentId,
         phone,
@@ -299,12 +319,12 @@ export async function notifyAgentEnquiry(input: {
         kind: "enquiry",
         propertyId: input.propertyId,
         body: text,
-        status: whatsapp,
+        status: "skipped",
         dedupe: `enquiry:${input.enquiryId}`,
       });
     }
     if (email && await agentMayNotify(input.agentId)) {
-      const mailed = await sendEmail(email, "Guyana Keys Lead", text);
+      const mailed = await sendEmail(email, "🔑 Guyana Keys Lead", text);
       await recordNotice({
         userId: input.agentId,
         email,

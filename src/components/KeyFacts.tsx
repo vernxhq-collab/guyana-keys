@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Listing } from "../lib/data";
 import { labelFor, roadAccesses, sizeFact, waterSupplies, electricitySupplies, emptyFacts } from "../lib/place-facts";
-import { titleCopy } from "../lib/trust";
+import { titleCopy, titleStatement } from "../lib/trust";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -65,6 +65,7 @@ export function KeyFacts({ listing }: { listing: Listing }) {
         <div>
           <Icon><path d="M7 3h10v18H7z" /><path d="M9 7h6M9 11h6M9 15h4" /></Icon>
           <span>{title}</span>
+          <span className="meta">{titleStatement(Boolean(listing.titleCheckedByLawyer))}</span>
         </div>
       </div>
       {listing.type === "Land" && listing.sqft > 0 ? <p className="meta">Acres are calculated from the square feet on the listing.</p> : null}
