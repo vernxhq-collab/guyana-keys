@@ -2,7 +2,8 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { noticeAllowed } from "./abuse";
 import { whenLabel } from "./assist";
 import { channelSenders } from "./ai/channel";
-import { deskFrom, siteUrl } from "./contact";
+import { siteUrl } from "./contact";
+import { deskFrom } from "./mail-from";
 import { digits, newId } from "./labels";
 import { serviceDb } from "./supabase";
 
