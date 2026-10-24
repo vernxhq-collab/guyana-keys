@@ -178,7 +178,7 @@ The prelaunch block contains:
 
 ### Footer
 
-Forest ground, ivory text. Four groups: wordmark and `info@gykeys.com`; Search (buy, rent, land, commercial, neighbourhoods); List (list a property, apply, agents); Company (tools, buying guide, about, partner, contact, alerts). No phone. No WhatsApp. No social network other than the contact page’s existing Facebook link, which stays on `/contact` rather than being repeated as a new icon row. On pages other than the homepage, the closing line includes `Free to list, no limits.` and `A listing is not proof of title.` The homepage hides that closing line because both sentences already appear once in the page.
+Forest ground, ivory text. Three groups: wordmark and `info@gykeys.com`; List (list a property, apply, agents, alerts); Company (tools, buying guide, about, partner, contact). Buy, rent, land, commercial, and neighbourhoods stay in the header, so the footer has no Search column. No phone. No WhatsApp. No social network other than the contact page’s existing Facebook link, which stays on `/contact` rather than being repeated as a new icon row. On pages other than the homepage, the closing line includes `Free to list, no limits.` and `A listing is not proof of title.` The homepage hides that closing line because both sentences already appear once in the page.
 
 ### Bottom-sheet filters
 

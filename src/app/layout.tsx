@@ -44,14 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {showCompanyWhatsApp ? <p>Message us</p> : null}
             </div>
             <div>
-              <p className="footer-label">Search</p>
-              <p><Link href="/listings?purpose=Sale">Buy</Link></p>
-              <p><Link href="/listings?purpose=Rent">Rent</Link></p>
-              <p><Link href="/listings?type=Land">Land</Link></p>
-              <p><Link href="/listings?type=Commercial">Commercial</Link></p>
-              <p><Link href="/areas">Neighbourhoods</Link></p>
-            </div>
-            <div>
               <p className="footer-label">List</p>
               <p><Link href="/advertise">List a property</Link></p>
               <p><Link href="/agents/apply">Apply to list</Link></p>
