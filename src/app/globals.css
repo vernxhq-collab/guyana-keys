@@ -308,7 +308,8 @@ body > main { flex: 1 0 auto; }
   .nav-drawer, .nav-drawer-btn { display: none; }
 }
 @media (max-width: 1079px) {
-  .nav-actions > .nav-signin { display: none; }
+  .nav-actions > a.nav-signin,
+  .nav-actions > button.nav-signin { display: none; }
 }
 .nav-more { position: relative; }
 .nav-more-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 220px; background: #fff; border-radius: 12px; box-shadow: var(--shadow-strong); padding: 8px; z-index: 40; display: grid; }
@@ -359,7 +360,7 @@ h1, .home h2, .about-story h2, .prelaunch h2 { font-family: var(--font-display),
 .area-mark { display: block; width: 36px; height: 2px; background: var(--gold); margin: 16px 0 0 14px; }
 .area-card figure { margin: 0; }
 .category-grid { grid-template-columns: 1fr 1fr; }
-.category-card { display: grid; align-content: end; min-height: 160px; padding-bottom: 16px; background: var(--ivory); }
+.category-card { display: grid; align-content: end; min-height: 160px; padding-bottom: 16px; background: #fff; }
 .category-card span:last-child { padding: 0 14px; color: var(--muted); }
 .home-invest { display: grid; margin-top: 48px; background: var(--white); }
 .home-invest-media { margin: 0; }
