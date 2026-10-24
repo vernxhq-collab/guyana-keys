@@ -31,21 +31,9 @@ export function HomeSearch({ areas }: { areas: { slug: string; name: string }[] 
       </div>
       {current.purpose ? <input type="hidden" name="purpose" value={current.purpose} /> : null}
       {current.type ? <input type="hidden" name="type" value={current.type} /> : null}
-      <div className="home-search-fields">
-        <label>
-          <span>Area</span>
-          <input name="q" list="home-areas" placeholder="Neighbourhood, such as Bel Air Park" aria-label="Area" />
-        </label>
+      <div className="home-search-field">
+        <input name="q" list="home-areas" placeholder="Search an area, such as Bel Air Park" aria-label="Area" />
         <datalist id="home-areas">{areas.map((area) => <option key={area.slug} value={area.name} />)}</datalist>
-        <label>
-          <span>Budget</span>
-          <select name="budget" defaultValue="" aria-label="Budget">
-            <option value="">Any budget</option>
-            <option value="20000000">Up to 20 million GYD</option>
-            <option value="50000000">Up to 50 million GYD</option>
-            <option value="100000000">Up to 100 million GYD</option>
-          </select>
-        </label>
         <button className="btn" type="submit">Search</button>
       </div>
     </form>

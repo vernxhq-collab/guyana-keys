@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { areas, regionSlug } from "../lib/areas";
 import { SAMPLE_LABEL } from "../lib/sample-label";
-import { AlertForm } from "./AlertForm";
 import { HomeSearch } from "./HomeSearch";
 import { MarketCard, type MarketCardData } from "./MarketCard";
 
@@ -53,6 +52,11 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
       <section className="home-hero">
         <figure className="home-hero-media" data-illustrative="true">
           <img src="/brand/cathedral-georgetown.jpg" alt="St George's Cathedral in Georgetown, an illustrative photograph, not a listing." />
+          <div className="home-hero-shade" aria-hidden="true" />
+          <div className="home-hero-copy">
+            <h1>Find property in Guyana with the facts in one place.</h1>
+            <p>Homes, rentals, land, and commercial property, for people here and for people searching from abroad.</p>
+          </div>
           <Credit
             author="Ian Mackenzie"
             file="https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg"
@@ -60,16 +64,15 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
             licenceHref="https://creativecommons.org/licenses/by/2.0/"
           />
         </figure>
-        <div className="home-hero-copy">
-          <div className="home-hero-inner">
-            <p className="eyebrow">Guyana Keys</p>
-            <h1>Find property in Guyana with the facts in one place.</h1>
-            <p>Homes, rentals, land, and commercial property, for people here and for people searching from abroad.</p>
+        <div className="home-search-wrap">
+          <div className="home-search-unit">
+            <HomeSearch areas={areas.map((area) => ({ slug: area.slug, name: area.name }))} />
+            <div className="home-list-band">
+              <p>Free to list, no limits.</p>
+              <Link className="btn" href="/advertise">List your property free</Link>
+            </div>
           </div>
         </div>
-      </section>
-      <section className="wrap home-search-wrap">
-        <HomeSearch areas={areas.map((area) => ({ slug: area.slug, name: area.name }))} />
       </section>
       <section className="wrap home-section">
         <h2>Explore Guyana by area</h2>
@@ -108,53 +111,6 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
           <div className="market-grid">{cards.map((card) => <MarketCard key={card.id} card={card} />)}</div>
         </section>
       ) : null}
-      <section className="home-invest">
-        <figure className="home-invest-media" data-illustrative="true">
-          <img src="/brand/kaieteur-falls.jpg" alt="Kaieteur Falls on the Potaro River, an illustrative photograph, not a listing." />
-          <Credit
-            author="Bill Cameron"
-            file="https://commons.wikimedia.org/wiki/File:Kaieteur_Falls_Guyana_(2)_2007.jpg"
-            licence="CC BY-SA 3.0"
-            licenceHref="https://creativecommons.org/licenses/by-sa/3.0/"
-          />
-        </figure>
-        <div className="home-invest-copy">
-          <h2>Searching from outside Guyana</h2>
-          <p>People abroad use the same search as people in Guyana. Prices are in GYD, with a USD guide. A viewing from abroad is a request the agent confirms.</p>
-          <div className="prelaunch-actions">
-            <Link className="btn" href="/listings?type=Commercial">Commercial</Link>
-            <Link className="btn ghost" href="/listings?type=Land">Land</Link>
-          </div>
-        </div>
-      </section>
-      <section className="wrap home-section">
-        <h2>Why Guyana Keys</h2>
-        <div className="benefit-grid">
-          <article><h3>Free to list, no limits</h3><p>Owners and agents can list without a cap. Featuring a listing is optional and does not change that.</p></article>
-          <article><h3>One search</h3><p>Buy, rent, land, and commercial property sit in the same place.</p></article>
-          <article><h3>GYD, with a USD guide</h3><p>Prices are shown in Guyana dollars. The dollar figure is a guide, not a bank rate.</p></article>
-          <article><h3>The same listings for everyone</h3><p>A buyer and a renter see the same homes, with the same facts.</p></article>
-        </div>
-      </section>
-      <section className="wrap home-section home-register">
-        <article>
-          <h2>List your property</h2>
-          <p>Free to list, no limits. Tell us whether you are an owner, an agent, or a developer, and follow the path for that account.</p>
-          <Link className="btn" href="/advertise">List a property</Link>
-        </article>
-        <article className="accent">
-          <h2>Become a founding agent</h2>
-          <p>Free to list, no limits. Apply, then an admin reviews the account before anything is public.</p>
-          <Link className="btn" href="/agents/apply">Apply to list</Link>
-        </article>
-      </section>
-      <section className="wrap home-section home-alerts">
-        <div>
-          <h2>Hear when a home is listed</h2>
-          <p>Leave an email and an area. We write when a home there is listed. More to come.</p>
-        </div>
-        <AlertForm />
-      </section>
       <section className="wrap home-section home-trust">
         <h2>Buying with care</h2>
         <p>Prices show GYD and a USD guide. A listing is not proof of title. Have an attorney search the registry before any deposit. A viewing from abroad is a request the agent confirms. This is not a valuation and not a promised return.</p>
