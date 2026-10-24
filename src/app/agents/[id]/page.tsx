@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ListingCard } from "../../../components/ListingCard";
 import { loadCatalog, publicAgent } from "../../../lib/catalog";
+import { withCanonical } from "../../../lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const agent = await publicAgent(id);
+  return withCanonical(`/agents/${id}`, {
+    title: agent ? `${agent.name} | Guyana Keys` : "Agent | Guyana Keys",
+    description: agent ? `${agent.name} lists property on Guyana Keys.` : "This person is not listed on Guyana Keys.",
+  });
+}
 
 export default async function AgentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

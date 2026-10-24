@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ListingCard } from "../../../../components/ListingCard";
 import { areas, regionGuide, regionSlug } from "../../../../lib/areas";
 import { loadCatalog } from "../../../../lib/catalog";
+import { withCanonical } from "../../../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const name = areas.find((item) => regionSlug(item.region) === slug)?.region;
   if (!name) return { title: "Region | Guyana Keys" };
   const guide = regionGuide(name);
-  return { title: `${guide.name} property | Guyana Keys`, description: guide.about };
+  return withCanonical(`/areas/region/${slug}`, { title: `${guide.name} property | Guyana Keys`, description: guide.about });
 }
 
 export default async function RegionPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -1,4 +1,5 @@
 export const deskEmail = "guyanakeys@mail.grokbot.com";
+export const facebookPage = "https://www.facebook.com/GuyanaKeysGY";
 export const deskFrom = `Guyana Keys <${deskEmail}>`;
 
 export function siteUrl() {

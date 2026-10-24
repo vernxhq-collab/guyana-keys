@@ -1,6 +1,7 @@
 import type { PlaceFacts } from "./place-facts";
+import type { SiteFacts } from "./site-facts";
 
-export type Listing = { id: string; title: string; area: string; region: string; type: string; purpose: string; priceGyd: number; beds: number; baths: number; sqft: number; lat: number; lng: number; image: string; description: string; agentId: string; photos?: string[]; featured?: boolean; status?: "live" | "hidden"; titleRef?: string; titleStatus?: string; titleCheckedByLawyer?: boolean; titleLawyerPartnerId?: string; titleCheckedOn?: string; facts?: PlaceFacts; createdAt?: string; priceReduced?: boolean; ownerPermission?: boolean; };
+export type Listing = { id: string; title: string; area: string; region: string; type: string; purpose: string; priceGyd: number; beds: number; baths: number; sqft: number; lat: number; lng: number; pinned?: boolean; image: string; description: string; agentId: string; photos?: string[]; featured?: boolean; status?: "live" | "hidden"; titleRef?: string; titleStatus?: string; titleCheckedByLawyer?: boolean; titleLawyerPartnerId?: string; titleCheckedOn?: string; facts?: PlaceFacts; site?: SiteFacts; createdAt?: string; priceReduced?: boolean; ownerPermission?: boolean; };
 export type Agent = { id: string; name: string; company: string; phone: string; areas: string[]; image: string; address?: string; graLicence?: string; verified?: boolean; founding?: boolean; checkBadge?: string; };
 
 export const GYD_PER_USD = 209;

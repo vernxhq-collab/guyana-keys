@@ -4,13 +4,14 @@ import { CurrencyConverter } from "../../components/CurrencyConverter";
 import { MortgageCalculator } from "../../components/MortgageCalculator";
 import { loadMortgageRates } from "../../lib/phase1-desk";
 import { rateLine } from "../../lib/rates";
+import { withCanonical } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical("/tools", {
   title: "Mortgage calculator | Guyana Keys",
   description: "Estimate a payment from a rate checked on a bank page, or from a rate you type. This is an estimate, not financial advice.",
-};
+});
 
 export default async function ToolsPage() {
   const rates = await loadMortgageRates();

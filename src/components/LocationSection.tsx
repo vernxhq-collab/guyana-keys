@@ -18,13 +18,14 @@ function PlaceIcon() {
   );
 }
 
-export function LocationSection({ area, region, lat, lng, report }: { area: string; region: string; lat: number; lng: number; report: NearbyReport | null }) {
+export function LocationSection({ area, region, lat, lng, report, approximate = false }: { area: string; region: string; lat: number; lng: number; report: NearbyReport | null; approximate?: boolean }) {
   const [data, setData] = useState<NearbyReport | null>(report);
   const [loading, setLoading] = useState(!report);
   const [tab, setTab] = useState(report?.groups[0]?.id || "schools");
   const node = useRef<HTMLDivElement>(null);
   const group = data?.groups.find((item) => item.id === tab) || data?.groups[0];
   const place = [area, region].filter(Boolean).join(", ");
+  const pinNote = approximate ? " The map shows the area, not the exact lot." : "";
   const mapHref = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 
   useEffect(() => {
@@ -118,7 +119,7 @@ export function LocationSection({ area, region, lat, lng, report }: { area: stri
   return (
     <section className="location-block">
       <h2>Location</h2>
-      {place ? <p className="sub">{place}</p> : null}
+      {place ? <p className="sub">{place}{pinNote}</p> : null}
       <div className="location-map">
         <div ref={node} className="location-canvas" role="img" aria-label={place ? `Map of ${place}` : "Map"} />
         <a className="open-map" href={mapHref} target="_blank" rel="noreferrer">

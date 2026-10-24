@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ListingCard } from "../../../components/ListingCard";
 import { areaDetail, areas, regionSlug } from "../../../lib/areas";
 import { loadCatalog } from "../../../lib/catalog";
+import { withCanonical } from "../../../lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const area = areas.find((item) => item.slug === slug);
   if (!area) return { title: "Neighbourhood | Guyana Keys" };
-  return {
+  return withCanonical(`/areas/${area.slug}`, {
     title: `${area.name} property | Guyana Keys`,
     description: `${area.note} Homes for sale and rent in ${area.name}, ${area.region}.`,
-  };
+  });
 }
 
 export default async function AreaPage({ params }: { params: Promise<{ slug: string }> }) {

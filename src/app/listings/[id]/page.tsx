@@ -3,11 +3,13 @@ import { EnquiryPanel } from "../../../components/EnquiryPanel";
 import { TitleRequest } from "../../../components/TitleRequest";
 import { ListingCard } from "../../../components/ListingCard";
 import { KeyFacts } from "../../../components/KeyFacts";
+import { SiteDetails } from "../../../components/SiteDetails";
 import { LocationSection } from "../../../components/LocationSection";
 import { MortgageCalculator } from "../../../components/MortgageCalculator";
 import { areaByName } from "../../../lib/areas";
 import { loadCatalog, publicAgent } from "../../../lib/catalog";
 import { money, usd } from "../../../lib/data";
+import { withCanonical } from "../../../lib/seo";
 import { readSession } from "../../../lib/session";
 import { serviceDb } from "../../../lib/supabase";
 import { peekNearby } from "../../../lib/places";
@@ -15,6 +17,15 @@ import { loadMortgageRates, publicPartners } from "../../../lib/phase1-desk";
 import { titleCopy, titleStatement } from "../../../lib/trust";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const catalog = await loadCatalog();
+  const listing = catalog.listings.find((item) => item.id === id);
+  const title = listing ? `${listing.title} | Guyana Keys` : "Listing | Guyana Keys";
+  const description = listing ? `${listing.area}, ${listing.region}. A listing is not proof of title.` : "This home is not listed on Guyana Keys.";
+  return withCanonical(`/listings/${id}`, { title, description });
+}
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,6 +61,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {listing.priceGyd > 0 ? <p className="price">{money(listing.priceGyd, listing.purpose)}</p> : <p className="price">Price not listed</p>}
           <p className="meta">{listing.priceGyd > 0 ? `Guide USD ${usd(listing.priceGyd).toLocaleString()} · ` : ""}{listing.area}, {listing.region}</p>
           <KeyFacts listing={listing} />
+          <SiteDetails listing={listing} />
           <p>{listing.description}</p>
           <section className="panel">
             <p className="chip">{title.label}</p>
@@ -61,7 +73,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <TitleRequest propertyId={listing.id} lawyers={lawyers} />
             <p className="disclaimer">A listing is not proof of title. The button saves a Guyana Keys lead.</p>
           </section>
-          <LocationSection area={listing.area} region={listing.region} lat={listing.lat} lng={listing.lng} report={nearby} />
+          <LocationSection area={listing.area} region={listing.region} lat={listing.lat} lng={listing.lng} report={nearby} approximate={listing.pinned === false} />
           {listing.purpose === "Sale" && listing.priceGyd > 0 ? (
             <section>
               <h2>Mortgage and purchase costs</h2>

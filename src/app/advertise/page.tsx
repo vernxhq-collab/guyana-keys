@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+import { withCanonical } from "../../lib/seo";
+
+export const metadata: Metadata = withCanonical("/advertise", {
+  title: "List your property | Guyana Keys",
+  description: "List a property on Guyana Keys, or ask about featuring and advertising. Free to list, no limits.",
+});
+
 const services = [
   { title: "I'm an agent", href: "/agent/login", image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80" },
   { title: "I'm a landlord", href: "/landlords", image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80" },
