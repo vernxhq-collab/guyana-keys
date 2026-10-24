@@ -13,7 +13,7 @@ import { withCanonical } from "../../../lib/seo";
 import { readSession } from "../../../lib/session";
 import { serviceDb } from "../../../lib/supabase";
 import { peekNearby } from "../../../lib/places";
-import { loadMortgageRates, publicPartners } from "../../../lib/phase1-desk";
+import { publicPartners } from "../../../lib/phase1-desk";
 import { titleCopy, titleStatement } from "../../../lib/trust";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   const photos = listing.photos?.length ? listing.photos : [listing.image];
   const similar = catalog.listings.filter((item) => item.id !== listing.id && item.area === listing.area);
   const title = titleCopy(listing.titleStatus);
-  const [partners, rates] = await Promise.all([publicPartners(), loadMortgageRates()]);
+  const partners = await publicPartners();
   const lawyers = partners.filter((partner) => partner.category === "lawyer").map((partner) => ({ id: partner.id, name: partner.name }));
   const nearby = peekNearby(listing.lat, listing.lng);
   return (
@@ -78,7 +78,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <section>
               <h2>Mortgage and purchase costs</h2>
               <p className="sub">Estimates for this asking price. Change the rate, or open the full <Link href="/tools">tools page</Link>.</p>
-              <MortgageCalculator priceGyd={listing.priceGyd} rates={rates} />
+              <MortgageCalculator priceGyd={listing.priceGyd} />
             </section>
           ) : <p className="meta"><Link href="/tools">Open the mortgage calculator</Link> for a home you want to buy.</p>}
         </div>

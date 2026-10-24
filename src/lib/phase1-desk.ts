@@ -1,6 +1,5 @@
 import { checkBadge, expireStatus, licenceLabel, LICENCE_TYPES, type LicenceType } from "./licences";
 import { newId } from "./labels";
-import { publishedRates, type MortgageRate } from "./rates";
 import { ID_CONSENT_VERSION, RETENTION_MONTHS } from "./compliance/retention";
 import { loadAgentKeysCheck } from "./keys-check-data";
 import { serviceDb } from "./supabase";
@@ -330,21 +329,6 @@ export async function publicPartners(): Promise<PublicPartner[]> {
       note: text(row.note),
     }))
     .filter((row) => row.name);
-}
-
-export async function loadMortgageRates(): Promise<MortgageRate[]> {
-  const db = serviceDb();
-  if (!db) return publishedRates;
-  const { data, error } = await db.from("mortgage_rates").select("id,bank,product,rate,source_url,checked_on");
-  if (error || !data?.length) return publishedRates;
-  return data.map((row) => ({
-    id: text(row.id),
-    bank: text(row.bank),
-    product: text(row.product),
-    rate: Number(row.rate),
-    sourceUrl: text(row.source_url),
-    checkedOn: text(row.checked_on).slice(0, 10),
-  })).filter((row) => row.bank && Number.isFinite(row.rate) && row.sourceUrl);
 }
 
 export const IDENTITY_BUCKET = "identity-documents";
