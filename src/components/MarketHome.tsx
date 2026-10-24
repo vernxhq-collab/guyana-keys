@@ -52,12 +52,12 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
       {sample ? <p className="market-banner">{SAMPLE_LABEL}. These cards are not on the public site and are not saved.</p> : null}
       <section className="home-hero">
         <figure className="home-hero-media" data-illustrative="true">
-          <img src="/brand/cathedral-georgetown.jpg" alt="St. George's Cathedral in Georgetown, an illustrative photograph, not a listing." />
+          <img src="/brand/stabroek-market.jpg" alt="Stabroek Market clock tower in Georgetown, an illustrative photograph, not a listing." />
           <Credit
-            author="Dan Lundberg"
-            file="https://commons.wikimedia.org/wiki/File:20191121_Guyana_0048_Georgetown_sRGB_(49295795336).jpg"
-            licence="CC BY-SA 2.0"
-            licenceHref="https://creativecommons.org/licenses/by-sa/2.0/"
+            author="John Cray"
+            file="https://commons.wikimedia.org/wiki/File:Stabroek_Market_Georgetown_Guyana.jpg"
+            licence="CC BY-SA 4.0"
+            licenceHref="https://creativecommons.org/licenses/by-sa/4.0/"
           />
         </figure>
         <div className="home-hero-copy">
