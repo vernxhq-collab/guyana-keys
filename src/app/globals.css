@@ -296,3 +296,28 @@ body > main { flex: 1 0 auto; }
 .saved-search { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 18px; }
 .saved-search ul { display: flex; flex-wrap: wrap; gap: 8px 16px; list-style: none; margin: 0; padding: 0; }
 .saved-search li { display: flex; gap: 8px; align-items: center; }
+.about-story { padding-bottom: 88px; }
+.about-measure { width: min(740px, calc(100% - 32px)); }
+.about-hero { background: var(--deep); color: #f4fff8; padding: 96px 0 88px; }
+.about-hero h1 { margin: 0; max-width: 12em; font-size: clamp(42px, 6vw, 72px); line-height: 1.02; letter-spacing: -.04em; font-weight: 650; }
+.about-story .about-measure > p { margin: 0 0 22px; font-size: 19px; line-height: 1.65; }
+.about-story .about-measure { padding-top: 72px; }
+.about-hero .about-measure { padding-top: 0; }
+.about-story .about-turn { color: var(--deep); font-size: 26px; line-height: 1.35; font-weight: 650; letter-spacing: -.03em; margin: 8px 0 0; }
+.about-story section { padding: 56px 0 0; }
+.about-story section h2 { margin: 0 0 14px; }
+.about-story section p { margin: 0; font-size: 19px; line-height: 1.65; }
+.about-promise { margin-top: 56px; padding: 32px 32px 28px; background: #e8f6ef; border-color: #c5e4d4; }
+.about-promise h2 { color: var(--deep); }
+.about-promise ul { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 16px; font-size: 19px; line-height: 1.5; }
+.about-story section p.about-sign { margin-top: 28px; font-weight: 700; color: var(--deep); }
+.about-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 56px; }
+.about-close { padding-top: 72px; }
+.about-story .about-next { margin-top: 72px; padding: 96px 0 88px; background: linear-gradient(145deg, #07281c 0%, #0c3d2c 42%, #116b4a 100%); color: #f4fff8; }
+.about-story .about-next .about-measure { padding-top: 0; }
+.about-spark { display: inline-flex; margin: 0 0 22px; color: rgba(217, 255, 233, .72); }
+.about-spark svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.about-story .about-next h2 { margin: 0 0 18px; max-width: 10em; color: #f4fff8; font-size: clamp(40px, 5vw, 64px); line-height: 1.02; letter-spacing: -.04em; font-weight: 700; }
+.about-story .about-next p { max-width: 34em; color: #d7efe4; font-size: 20px; line-height: 1.6; }
+.about-story .about-next p.about-next-close { margin-top: 36px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; color: #f4fff8; }
+@media (max-width: 700px) { .about-story .about-next { padding: 72px 0 64px; } }
