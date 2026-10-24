@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { withCanonical } from "../../lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical("/guides", {
   title: "Buying safely | Guyana Keys",
   description: "Title checks, deposits, and buying a Guyana home from abroad.",
-};
+});
 
 export default function GuidesPage() {
   return (

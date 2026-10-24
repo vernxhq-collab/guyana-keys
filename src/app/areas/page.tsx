@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { areas, regionGuide, regionSlug } from "../../lib/areas";
+import { withCanonical } from "../../lib/seo";
 
-export const metadata = {
+export const metadata = withCanonical("/areas", {
   title: "Neighbourhoods | Guyana Keys",
   description: "Georgetown, the East Bank, the East Coast, Berbice, Linden, and the other places people search.",
-};
+});
 
 export default function AreasPage() {
   const regions = Array.from(new Set(areas.map((area) => area.region)));

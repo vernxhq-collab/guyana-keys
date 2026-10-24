@@ -3,11 +3,12 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 import { LeadForm } from "../../components/LeadForm";
 import { publicPartners, type PublicPartner } from "../../lib/phase1-desk";
+import { withCanonical } from "../../lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical("/partners", {
   title: "Partners | Guyana Keys",
   description: "Banks, insurance brokers, lawyers, surveyors, and valuers appear here only after they agree to be listed.",
-};
+});
 
 const labels: Record<string, string> = {
   bank: "Banks",

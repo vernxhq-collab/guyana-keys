@@ -10,6 +10,7 @@ import { addEvent, leadFromEnquiry } from "./records";
 import { guyanaLocalToUtc } from "./time";
 import { formatLeadSource } from "./attribution";
 import { MIN_LIVE_PHOTOS } from "./listing-rules";
+import { cleanSite, siteColumns } from "./site-facts";
 import { type Profile } from "./session";
 import { serviceDb } from "./supabase";
 import { supabaseUrl } from "./supabase";
@@ -198,6 +199,15 @@ function listingInput(profile: Profile, body: Record<string, unknown>, existing:
     road_access: facts.roadAccess,
     drainage_note: facts.drainageNote,
     area_note: facts.areaNote,
+    ...siteColumns(cleanSite({
+      generator: body.generator,
+      waterTank: body.waterTank,
+      waterNotes: body.waterNotes,
+      parking: body.parking,
+      parkingSpaces: body.parkingSpaces,
+      floodRisk: body.floodRisk,
+      furnished: body.furnished,
+    })),
     status,
     featured: Boolean(existing?.featured),
     photo_urls: cleanPhotos(body.photos, profile.id),
@@ -273,7 +283,7 @@ export async function saveListing(profile: Profile, body: Record<string, unknown
 function columnMissing(error: { message?: string } | null, column: string) {
   const message = String(error?.message || "").toLowerCase();
   if (message.includes("check constraint") || message.includes("violates check")) return false;
-  return message.includes(column);
+  return new RegExp(`(^|[^a-z0-9_])${column}([^a-z0-9_]|$)`).test(message);
 }
 
 async function writeProperty(
@@ -288,7 +298,7 @@ async function writeProperty(
     : db.from("properties").update(row).eq("id", id).eq("agent_id", agentId);
   let row = { ...payload };
   let result = await run(row);
-  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note", "owner_permission", "price_reduced", "title_checked_by_lawyer", "title_lawyer_partner_id", "title_checked_on"];
+  const optional = ["title_status", "title_ref", "mobile_networks", "broadband_providers", "broadband_speed", "water_supply", "electricity", "road_access", "drainage_note", "area_note", "owner_permission", "price_reduced", "title_checked_by_lawyer", "title_lawyer_partner_id", "title_checked_on", "generator", "water_tank", "water_notes", "parking", "parking_spaces", "flood_risk", "furnished"];
   while (result.error) {
     const message = String(result.error.message || "").toLowerCase();
     const check = message.includes("check constraint") || message.includes("violates check");
@@ -344,6 +354,12 @@ export async function duplicateListing(profile: Profile, id: string) {
     ...(typeof (data as { road_access?: unknown }).road_access === "string" ? { road_access: (data as { road_access: string }).road_access } : {}),
     ...(typeof (data as { drainage_note?: unknown }).drainage_note === "string" ? { drainage_note: (data as { drainage_note: string }).drainage_note } : {}),
     ...(typeof (data as { area_note?: unknown }).area_note === "string" ? { area_note: (data as { area_note: string }).area_note } : {}),
+    ...(["generator", "water_tank", "water_notes", "parking", "flood_risk", "furnished"] as const).reduce<Record<string, string | null>>((copy, column) => {
+      const value = (data as Record<string, unknown>)[column];
+      if (typeof value === "string" || value === null) copy[column] = value;
+      return copy;
+    }, {}),
+    ...(typeof (data as { parking_spaces?: unknown }).parking_spaces === "number" || (data as { parking_spaces?: unknown }).parking_spaces === null ? { parking_spaces: (data as { parking_spaces: number | null }).parking_spaces } : {}),
   });
   if (insertError) return { error: "The copy could not be made." };
   return { id: copyId };

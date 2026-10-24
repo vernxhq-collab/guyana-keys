@@ -142,3 +142,57 @@ export const areas = [
   { slug: "lethem", name: "Lethem", region: "Rupununi", note: "Border town, a thin market." },
   { slug: "anna-regina", name: "Anna Regina", region: "Essequibo", note: "Essequibo coast town." }
 ];
+
+/** Approximate centre of the neighbourhood, for a map pin when a listing has no coordinates. */
+export const areaCenters: Record<string, { lat: number; lng: number }> = {
+  "bel-air-park": { lat: 6.809, lng: -58.146 },
+  "bel-air": { lat: 6.812, lng: -58.14 },
+  queenstown: { lat: 6.816, lng: -58.16 },
+  kitty: { lat: 6.825, lng: -58.14 },
+  campbellville: { lat: 6.82, lng: -58.148 },
+  "lamaha-gardens": { lat: 6.815, lng: -58.145 },
+  "prashad-nagar": { lat: 6.818, lng: -58.155 },
+  subryanville: { lat: 6.811, lng: -58.142 },
+  alberttown: { lat: 6.812, lng: -58.162 },
+  cummingsburg: { lat: 6.813, lng: -58.158 },
+  kingston: { lat: 6.826, lng: -58.162 },
+  ruimveldt: { lat: 6.792, lng: -58.16 },
+  "festival-city": { lat: 6.788, lng: -58.155 },
+  ogle: { lat: 6.807, lng: -58.105 },
+  "better-hope": { lat: 6.81, lng: -58.09 },
+  plaisance: { lat: 6.82, lng: -58.11 },
+  beterverwagting: { lat: 6.815, lng: -58.07 },
+  "mon-repos": { lat: 6.82, lng: -58.05 },
+  lusignan: { lat: 6.82, lng: -58.02 },
+  buxton: { lat: 6.83, lng: -57.98 },
+  enmore: { lat: 6.835, lng: -57.95 },
+  mahaica: { lat: 6.85, lng: -57.9 },
+  eccles: { lat: 6.785, lng: -58.165 },
+  providence: { lat: 6.768, lng: -58.175 },
+  diamond: { lat: 6.73, lng: -58.18 },
+  herstelling: { lat: 6.75, lng: -58.175 },
+  mocha: { lat: 6.71, lng: -58.185 },
+  soesdyke: { lat: 6.55, lng: -58.2 },
+  "vreed-en-hoop": { lat: 6.81, lng: -58.19 },
+  parika: { lat: 6.84, lng: -58.43 },
+  tuschen: { lat: 6.83, lng: -58.25 },
+  leonora: { lat: 6.85, lng: -58.28 },
+  "new-amsterdam": { lat: 6.247, lng: -57.522 },
+  "rose-hall": { lat: 6.27, lng: -57.35 },
+  corriverton: { lat: 5.9, lng: -57.15 },
+  rosignol: { lat: 6.27, lng: -57.54 },
+  linden: { lat: 6.0, lng: -58.3 },
+  bartica: { lat: 6.4, lng: -58.62 },
+  lethem: { lat: 3.38, lng: -59.8 },
+  "anna-regina": { lat: 7.26, lng: -58.48 },
+};
+
+export function centerForArea(name: string) {
+  const area = areaByName(name);
+  if (!area) return null;
+  return areaCenters[area.slug] || null;
+}
+
+export function areaBySlug(slug: string) {
+  return areas.find((item) => item.slug === slug.trim().toLowerCase()) || null;
+}

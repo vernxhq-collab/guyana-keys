@@ -1,6 +1,8 @@
 import { type Agent, type Listing } from "./data";
 import { badgesFor } from "./phase1-desk";
 import { factsFromRow } from "./place-facts";
+import { centerForArea } from "./areas";
+import { siteFromRow } from "./site-facts";
 import { sampleAgents, sampleListingById, sampleListings } from "./sample-data";
 import { serviceDb } from "./supabase";
 import { cleanTitleStatus } from "./trust";
@@ -22,10 +24,15 @@ export function mapProperty(row: Record<string, unknown>): Listing {
   const photos = Array.isArray(row.photo_urls) ? row.photo_urls.filter((item): item is string => typeof item === "string" && item.length > 0) : [];
   const purpose = text(row.purpose, "Sale") === "Rent" ? "Rent" : "Sale";
   const status = text(row.status) === "live" ? "live" : "hidden";
+  const latNumber = row.lat === null || row.lat === undefined || row.lat === "" ? null : Number(row.lat);
+  const lngNumber = row.lng === null || row.lng === undefined || row.lng === "" ? null : Number(row.lng);
+  const pinned = latNumber !== null && lngNumber !== null && Number.isFinite(latNumber) && Number.isFinite(lngNumber);
+  const areaName = text(row.area);
+  const center = centerForArea(areaName);
   return {
     id: text(row.id),
     title: text(row.title, "Untitled home"),
-    area: text(row.area),
+    area: areaName,
     region: text(row.region),
     type: text(row.type, "House") || "House",
     purpose,
@@ -33,8 +40,9 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     beds: Number(row.beds || 0) || 0,
     baths: Number(row.baths || 0) || 0,
     sqft: Number(row.sqft || 0) || 0,
-    lat: Number(row.lat ?? 6.8) || 6.8,
-    lng: Number(row.lng ?? -58.16) || -58.16,
+    lat: pinned ? latNumber : (center?.lat ?? 6.8),
+    lng: pinned ? lngNumber : (center?.lng ?? -58.16),
+    pinned,
     image: photos[0] || photoPlaceholder,
     photos,
     description: text(row.description),
@@ -47,6 +55,7 @@ export function mapProperty(row: Record<string, unknown>): Listing {
     titleLawyerPartnerId: text(row.title_lawyer_partner_id),
     titleCheckedOn: text(row.title_checked_on).slice(0, 10),
     facts: factsFromRow(row),
+    site: siteFromRow(row),
     createdAt: text(row.created_at),
     priceReduced: row.price_reduced === true,
   };

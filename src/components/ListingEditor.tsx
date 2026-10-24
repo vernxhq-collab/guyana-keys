@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { areas } from "../lib/areas";
 import { broadbandProviders, electricitySupplies, mobileNetworks, roadAccesses, waterSupplies } from "../lib/place-facts";
+import { floodChoices, furnishedChoices, generatorChoices, parkingChoices, waterTankChoices } from "../lib/site-facts";
 import { titleStatuses } from "../lib/trust";
 import { compressImage } from "../lib/photos";
 import { DeskSkeleton } from "./DeskSkeleton";
@@ -35,6 +36,13 @@ type Draft = {
   roadAccess: string;
   drainageNote: string;
   areaNote: string;
+  generator: string;
+  waterTank: string;
+  waterNotes: string;
+  parking: string;
+  parkingSpaces: string;
+  floodRisk: string;
+  furnished: string;
   lat: number;
   lng: number;
   status: "live" | "hidden";
@@ -44,7 +52,7 @@ type Draft = {
   photosConfirmed: boolean;
 };
 
-const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", titleCheckedByLawyer: false, titleLawyerPartnerId: "", titleCheckedOn: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false, ownerPermission: false, photosConfirmed: false };
+const empty: Draft = { id: "new", purpose: "Sale", type: "House", title: "", area: "", region: "", priceGyd: "", priceSuggested: false, beds: "", baths: "", sqft: "", description: "", titleRef: "", titleStatus: "", titleCheckedByLawyer: false, titleLawyerPartnerId: "", titleCheckedOn: "", mobileNetworks: [], broadbandProviders: [], broadbandSpeed: "", waterSupply: "", electricity: "", roadAccess: "", drainageNote: "", areaNote: "", generator: "", waterTank: "", waterNotes: "", parking: "", parkingSpaces: "", floodRisk: "", furnished: "", lat: 6.8, lng: -58.16, status: "hidden", photos: [], featured: false, ownerPermission: false, photosConfirmed: false };
 
 export function ListingEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -94,8 +102,15 @@ export function ListingEditor({ id }: { id: string }) {
             roadAccess: listing.facts?.roadAccess || "",
             drainageNote: listing.facts?.drainageNote || "",
             areaNote: listing.facts?.areaNote || "",
-            lat: listing.lat || 6.8,
-            lng: listing.lng || -58.16,
+            generator: listing.site?.generator || "",
+            waterTank: listing.site?.waterTank || "",
+            waterNotes: listing.site?.waterNotes || "",
+            parking: listing.site?.parking || "",
+            parkingSpaces: listing.site?.parkingSpaces != null ? String(listing.site.parkingSpaces) : "",
+            floodRisk: listing.site?.floodRisk || "",
+            furnished: listing.site?.furnished || "",
+            lat: listing.pinned === false ? 6.8 : (listing.lat || 6.8),
+            lng: listing.pinned === false ? -58.16 : (listing.lng || -58.16),
             status: listing.status === "live" ? "live" : "hidden",
             photos: listing.photos || [],
             featured: Boolean(listing.featured),
@@ -302,6 +317,42 @@ export function ListingEditor({ id }: { id: string }) {
         </label>
         <label>Drainage or flood note<textarea value={draft.drainageNote} onChange={(event) => setDraft({ ...draft, drainageNote: event.target.value })} placeholder="Only what you have observed or been told" /></label>
         <label>Around the area<textarea value={draft.areaNote} onChange={(event) => setDraft({ ...draft, areaNote: event.target.value })} placeholder="A short note about the streets nearby" /></label>
+      </div>
+      <div className="panel">
+        <strong>Guyana details</strong>
+        <p className="quiet">Optional. Leave a field blank if you do not know. Flooding is saved as what you report, not as a Guyana Keys assessment.</p>
+        <label>Generator
+          <select value={draft.generator} onChange={(event) => setDraft({ ...draft, generator: event.target.value })}>
+            <option value="">Not set</option>
+            {generatorChoices.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Water tank
+          <select value={draft.waterTank} onChange={(event) => setDraft({ ...draft, waterTank: event.target.value })}>
+            <option value="">Not set</option>
+            {waterTankChoices.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Water notes<textarea value={draft.waterNotes} onChange={(event) => setDraft({ ...draft, waterNotes: event.target.value })} placeholder="Tank size, well, or how often the water runs" /></label>
+        <label>Parking
+          <select value={draft.parking} onChange={(event) => setDraft({ ...draft, parking: event.target.value })}>
+            <option value="">Not set</option>
+            {parkingChoices.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Parking spaces<input value={draft.parkingSpaces} onChange={(event) => setDraft({ ...draft, parkingSpaces: event.target.value })} inputMode="numeric" /></label>
+        <label>Flooding risk, as reported by the lister
+          <select value={draft.floodRisk} onChange={(event) => setDraft({ ...draft, floodRisk: event.target.value })}>
+            <option value="">Not set</option>
+            {floodChoices.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
+        <label>Furnished
+          <select value={draft.furnished} onChange={(event) => setDraft({ ...draft, furnished: event.target.value })}>
+            <option value="">Not set</option>
+            {furnishedChoices.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>
       </div>
       <label>Status
         <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value === "live" ? "live" : "hidden" })}>

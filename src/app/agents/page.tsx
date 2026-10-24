@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { loadPublicAgents } from "../../lib/catalog";
+import { withCanonical } from "../../lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = withCanonical("/agents", {
+  title: "Agents | Guyana Keys",
+  description: "Apply to list property in Guyana. Free to list, no limits.",
+});
 
 export default async function AgentsPage() {
   const people = await loadPublicAgents();
