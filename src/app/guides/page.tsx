@@ -4,7 +4,7 @@ import { withCanonical } from "../../lib/seo";
 
 export const metadata: Metadata = withCanonical("/guides", {
   title: "Guides | Guyana Keys",
-  description: "Short guides on buying from abroad, checking a deposit, and renting in Guyana.",
+  description: "Clear, practical guides for renting, buying, and investing in Guyana, at home or from abroad.",
 });
 
 export default function GuidesPage() {
@@ -12,7 +12,7 @@ export default function GuidesPage() {
     <main className="guide-page">
       <p className="guide-kicker">Guides</p>
       <h1>Guides for buying and renting</h1>
-      <p>Short guides on buying from abroad, checking a deposit, and renting.</p>
+      <p>Clear, practical guides for every step, whether you&apos;re renting in Georgetown, buying your first home or investing from abroad.</p>
       <GuideCards />
     </main>
   );

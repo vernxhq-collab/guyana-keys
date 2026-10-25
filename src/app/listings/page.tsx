@@ -45,7 +45,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     rent: "Rentals across Guyana, with prices in GYD and a USD guide.",
     land: "House lots and other land in Guyana.",
     commercial: "Offices, shops, and commercial property in Guyana.",
-    search: "Search homes, rentals, and land in Guyana. Free to list, no limits. A listing is not proof of title.",
+    search: "Search homes, rentals, and land in Guyana. Free to list, no limits.",
   } as const;
   const description = extra.length ? `${descriptions[mode.kind]} ${extra.join(" · ")}.` : descriptions[mode.kind];
   return withCanonical(listingsPath(params), { title, description });
@@ -67,11 +67,11 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       <SaveSearch href={share} label={searchLabel(params)} />
       {listings.length === 0 ? <PrelaunchBoard kind={mode.kind} /> : (
         <>
-          <p className="sub">{shown.length} homes · Listed on Guyana Keys · GYD with a USD guide · not proof of title · <Link href="/listings">Clear</Link></p>
+          <p className="sub">{shown.length} homes · Listed on Guyana Keys · GYD with a USD guide · <Link href="/listings">Clear</Link></p>
           {shown.length === 0 ? <p>No home matches. Try a neighbourhood, or clear a filter.</p> : <div className="grid">{shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}
         </>
       )}
-      <MapView listings={shown} />
+      {shown.length > 0 ? <MapView listings={shown} /> : null}
     </main>
   );
 }

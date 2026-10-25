@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GYD_PER_USD, amortise, gyd, purchaseEstimate, usdFromGyd } from "../lib/mortgage";
+import { amortise, gyd, purchaseEstimate, usdFromGyd } from "../lib/mortgage";
+import { usdGuideNote } from "../lib/usd-guide";
 
 const terms = [5, 10, 15, 20, 25, 30, 35];
 
@@ -223,7 +224,7 @@ export function MortgageCalculator({ priceGyd = 0 }: { priceGyd?: number }) {
             </ul>
           </div>
           <p className="note">{result.afford}</p>
-          <p className="note">Estimates only. Confirm the rate, stamp duty, and legal fees with the lender and your attorney. The USD figure uses a guide of {GYD_PER_USD} GYD.</p>
+          <p className="note">Estimates only. Confirm the rate, stamp duty, and fees with the lender, and take independent professional advice. {usdGuideNote()}</p>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PrivacyNote } from "./PrivacyNote";
 import { pageAttribution } from "../lib/page-context";
 
 export function LeadForm({ propertyId, preset, button, leadKind = "enquiry", partnerId = "", sample = false }: { propertyId?: string; preset: string; button: string; leadKind?: "enquiry" | "title_check" | "intro"; partnerId?: string; sample?: boolean }) {
@@ -36,9 +37,10 @@ export function LeadForm({ propertyId, preset, button, leadKind = "enquiry", par
   return (
     <form className="tool-form" onSubmit={(event) => void submit(event)}>
       <input name="name" required placeholder="Your name" />
-      <input name="phone" required placeholder="WhatsApp number" />
+      <input name="phone" required placeholder="Phone" autoComplete="tel" />
       <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
       <input name="note" placeholder="Message (optional)" />
+      <PrivacyNote />
       <button className="btn" type="submit" disabled={busy}>{button}</button>
       {sent ? <p>{sent}</p> : null}
     </form>

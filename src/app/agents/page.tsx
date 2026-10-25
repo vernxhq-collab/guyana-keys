@@ -16,7 +16,7 @@ export default async function AgentsPage() {
   return (
     <main className="wrap section">
       <h1>Agents</h1>
-      <p><Link href="/agents/apply">Apply to list a property</Link>. Free to list, no limits.</p>
+      <p>Welcome. <Link href="/agents/apply">Apply to list a property</Link>. Free to list, no limits.</p>
       {people.length === 0 ? <PrelaunchBoard kind="agents" /> : (
         <div className="grid">
           {people.map((agent) => (

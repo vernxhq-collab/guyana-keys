@@ -15,15 +15,25 @@ export function HomeSearch({ areas }: { areas: { slug: string; name: string }[] 
 
   return (
     <form className="home-search" action="/listings" id="home-search">
-      <div className="home-search-tabs" role="tablist" aria-label="Buy, rent, land, or commercial">
-        {modes.map((item) => (
+      <div className="home-search-tabs" role="radiogroup" aria-label="Buy, rent, land, or commercial">
+        {modes.map((item, index) => (
           <button
             key={item.id}
             type="button"
-            role="tab"
-            aria-selected={mode === item.id}
+            role="radio"
+            aria-checked={mode === item.id}
+            tabIndex={mode === item.id ? 0 : -1}
             className={mode === item.id ? "on" : ""}
             onClick={() => setMode(item.id)}
+            onKeyDown={(event) => {
+              const delta = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+              if (!delta) return;
+              event.preventDefault();
+              const nextIndex = (index + delta + modes.length) % modes.length;
+              setMode(modes[nextIndex].id);
+              const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+              buttons?.[nextIndex]?.focus();
+            }}
           >
             {item.label}
           </button>

@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
-import { publicEmail } from "../../lib/contact";
+import { PrivacyNote } from "../../components/PrivacyNote";
 export default function AlertsPage() {
   const [sent, setSent] = useState("");
   return (
     <main className="wrap section">
       <h1>Create alert</h1>
-      <p className="quiet">A match is emailed from {publicEmail}.</p>
+      <p className="quiet">A match is emailed from Guyana Keys.</p>
       <form className="card" style={{maxWidth:520, padding:22, display:"grid", gap:12}} onSubmit={async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -23,6 +23,7 @@ export default function AlertsPage() {
         <input name="email" type="email" required placeholder="Email" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <input name="area" required placeholder="Area, such as Bel Air Park" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
+        <PrivacyNote />
         <button className="btn" type="submit">Create alert</button>
       </form>
       {sent && <p>{sent}</p>}

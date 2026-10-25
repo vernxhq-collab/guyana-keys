@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { GYD_PER_USD, gyd, usdFromGyd } from "../lib/mortgage";
+import { usdGuideNote } from "../lib/usd-guide";
 
 function grouped(value: string) {
   const clean = value.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, "");
@@ -35,7 +36,7 @@ export function CurrencyConverter() {
         <p className="convert-label">{fromUsd ? "Guyana dollars" : "US dollars"}</p>
         <p className="convert-result">{result}</p>
       </div>
-      <p className="note">Guide only: 1 USD ≈ {GYD_PER_USD} GYD. Banks use their own rate on the day.</p>
+      <p className="note">{usdGuideNote()}</p>
     </div>
   );
 }

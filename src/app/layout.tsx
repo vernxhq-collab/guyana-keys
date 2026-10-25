@@ -5,7 +5,7 @@ import { Header } from "../components/Header";
 import { LiveChat } from "../components/LiveChat";
 import { SessionCatcher } from "../components/SessionCatcher";
 import Link from "next/link";
-import { publicEmail } from "../lib/contact";
+import { facebookPage, publicEmail } from "../lib/contact";
 import { publicOrigin } from "../lib/seo";
 import { showCompanyWhatsApp } from "../lib/public-flags";
 
@@ -16,6 +16,7 @@ const playfair = Playfair_Display({ subsets: ["latin"], display: "swap", variabl
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicOrigin),
+  generator: null,
   title: { default: "Guyana Keys", template: "%s" },
   description,
   openGraph: {
@@ -43,7 +44,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="footer-tag">Property & investment</p>
               <p>Homes, land, and rentals across Guyana.</p>
               <p><a href={`mailto:${publicEmail}`}>{publicEmail}</a></p>
+              <p><a href={facebookPage} target="_blank" rel="noreferrer">Facebook</a></p>
               {showCompanyWhatsApp ? <p>Message us</p> : null}
+            </div>
+            <div>
+              <p className="footer-label">Explore</p>
+              <p><Link href="/listings?purpose=Sale">Buy</Link></p>
+              <p><Link href="/listings?purpose=Rent">Rent</Link></p>
+              <p><Link href="/listings?type=Land">Land</Link></p>
+              <p><Link href="/areas">Areas</Link></p>
+              <p><Link href="/guides">Guides</Link></p>
             </div>
             <div>
               <p className="footer-label">List</p>
@@ -55,15 +65,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>
               <p className="footer-label">Company</p>
               <p><Link href="/tools">Tools</Link></p>
-              <p><Link href="/guides">Buying guide</Link></p>
               <p><Link href="/about">About</Link></p>
               <p><Link href="/partners">Partner with us</Link></p>
               <p><Link href="/contact">Contact</Link></p>
+              <p><Link href="/privacy">Privacy</Link></p>
+              <p><Link href="/terms">Terms</Link></p>
             </div>
           </div>
           <div className="wrap footer-base">
-            <p>Free to list, no limits.</p>
-            <p>A listing is not proof of title.</p>
+            <p className="footer-free">Free to list, no limits.</p>
+            <p>Listings are provided by owners and agents. Please take independent professional advice and confirm title before paying any deposit. Every home is open to every buyer and renter.</p>
           </div>
         </footer>
         <LiveChat />

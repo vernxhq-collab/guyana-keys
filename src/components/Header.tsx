@@ -17,7 +17,7 @@ const primary = [
 
 const more = [
   { href: "/tools", label: "Tools" },
-  { href: "/guides", label: "Buying guides" },
+  { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },
   { href: "/partners", label: "Partner with us" },
 ];

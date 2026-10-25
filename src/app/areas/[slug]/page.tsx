@@ -41,8 +41,6 @@ export default async function AreaPage({ params }: { params: Promise<{ slug: str
           <ul className="pros">{area.cons.map((item) => <li key={item}>{item}</li>)}</ul>
         </section>
       </div>
-      <p className="meta">Average price: {area.averagePrice}</p>
-      <p className="meta">Rental yield: {area.rentalYield}</p>
       <h2>Current listings</h2>
       {matched.length === 0 ? <p>No live listing in {area.name} yet. <Link href="/alerts">Be first to hear about one</Link>, or <Link href="/advertise">list your property</Link>.</p> : <div className="grid">{matched.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}
     </main>

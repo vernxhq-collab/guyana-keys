@@ -31,7 +31,7 @@ export function regionIn(text: string) {
 const areaNotes: Record<string, { pros: string[]; cons: string[] }> = {
   "bel-air-park": {
     pros: ["Gated residential streets.", "Often the first neighbourhood diaspora buyers search."],
-    cons: ["Asking prices are among the higher ones on Guyana Keys.", "A listing is still not proof of title."],
+    cons: ["Asking prices are among the higher ones on Guyana Keys.", "Confirm the papers before any deposit."],
   },
   "bel-air": {
     pros: ["Residential streets beside Bel Air Park.", "Close to the commercial core of Georgetown."],
@@ -71,7 +71,7 @@ export function areaDetail(area: (typeof areas)[number]) {
   return {
     ...area,
     pros: extra?.pros || [`${area.name} is in ${area.region}.`, "Listings on this page are the ones agents have published."],
-    cons: extra?.cons || ["A listing is not proof of title.", "There are not enough Guyana Keys sales here for an average price."],
+    cons: extra?.cons || ["There are not enough Guyana Keys sales here for an average price."],
     averagePrice: marketPrice,
     rentalYield: marketYield,
   };
@@ -93,7 +93,7 @@ export function regionGuide(name: string) {
     name: guide?.name || name,
     about: guide?.about || `Neighbourhoods in ${name}.`,
     pros: guide?.pros || ["Live listings are the ones agents have published on Guyana Keys."],
-    cons: guide?.cons || ["A listing is not proof of title.", "Average price and rental yield wait until more sales are on Guyana Keys."],
+    cons: guide?.cons || ["Average price and rental yield wait until more sales are on Guyana Keys."],
     areas: areas.filter((item) => item.region === name),
     averagePrice: marketPrice,
     rentalYield: marketYield,
@@ -101,7 +101,7 @@ export function regionGuide(name: string) {
 }
 
 export const areas = [
-  { slug: "bel-air-park", name: "Bel Air Park", region: "Georgetown", note: "Gated homes and the prices diaspora buyers ask for first." },
+  { slug: "bel-air-park", name: "Bel Air Park", region: "Georgetown", note: "Gated residential streets." },
   { slug: "bel-air", name: "Bel Air", region: "Georgetown", note: "Residential streets beside the park." },
   { slug: "queenstown", name: "Queenstown", region: "Georgetown", note: "Older houses close to the commercial core." },
   { slug: "kitty", name: "Kitty", region: "Georgetown", note: "Family houses near the seawall." },
@@ -139,7 +139,7 @@ export const areas = [
   { slug: "rosignol", name: "Rosignol", region: "Berbice", note: "West Berbice river crossing." },
   { slug: "linden", name: "Linden", region: "Upper Demerara", note: "Mining town up the Demerara." },
   { slug: "bartica", name: "Bartica", region: "Cuyuni-Mazaruni", note: "Essequibo river town." },
-  { slug: "lethem", name: "Lethem", region: "Rupununi", note: "Border town, a thin market." },
+  { slug: "lethem", name: "Lethem", region: "Rupununi", note: "Gateway town to the Rupununi, on the border with Brazil." },
   { slug: "anna-regina", name: "Anna Regina", region: "Essequibo", note: "Essequibo coast town." }
 ];
 

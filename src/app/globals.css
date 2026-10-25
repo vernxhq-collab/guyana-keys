@@ -349,15 +349,18 @@ h1, .home h2, .about-story h2, .prelaunch h2 { font-family: var(--font-display),
 .home-search-field .btn { flex: none; min-height: 44px; padding: 12px 18px; }
 .home-list-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; background: var(--forest); color: var(--ivory); border-radius: 16px; padding: 22px 24px; }
 .home-list-band p { margin: 0; font-size: 18px; font-weight: 650; }
+.home-list-band .home-list-sub { font-size: 16px; font-weight: 500; line-height: 1.45; max-width: 40rem; margin-top: 6px; }
 .home-list-band .btn { background: #fff; color: var(--forest); }
 .home-section { padding: 56px 0 0; }
 .home-note { margin: 0 0 20px; max-width: 40rem; }
 .area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .area-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; min-height: 100%; }
-.area-card { display: grid; position: relative; min-height: 180px; background: linear-gradient(160deg, var(--forest), #1c5c49 70%); color: var(--ivory); }
+.area-card { display: grid; position: relative; min-height: 210px; background: linear-gradient(160deg, var(--forest), #1c5c49 70%); color: var(--ivory); }
 .area-soon { position: absolute; top: 12px; left: 12px; z-index: 3; margin: 0; padding: 6px 9px; border-radius: 999px; background: var(--gold); color: var(--forest); font-family: var(--font-ui), Manrope, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .08em; line-height: 1; text-transform: uppercase; }
 .area-name { display: block; padding: 14px 14px 4px; font-weight: 700; }
-.area-card .area-name { color: var(--ivory); position: absolute; left: 0; bottom: 8px; }
+.area-card .area-copy { position: absolute; left: 14px; right: 14px; bottom: 14px; }
+.area-card .area-name { color: var(--ivory); position: static; padding: 0; }
+.area-line { display: block; margin-top: 6px; font-size: 14px; line-height: 1.35; font-weight: 500; }
 .area-card:has(.area-soon) .area-mark { margin-top: 44px; }
 .area-mark { display: block; width: 36px; height: 2px; background: var(--gold); margin: 16px 0 0 14px; }
 .guide-grid { display: grid; gap: 16px; }
@@ -375,7 +378,14 @@ h1, .home h2, .about-story h2, .prelaunch h2 { font-family: var(--font-display),
 .guide-back { margin-top: 28px; }
 .prelaunch h3 { margin: 0 0 8px; }
 .home-alert input { min-height: 48px; font-size: 16px; }
-body:has(main.home) .footer-base { display: none; }
+body:has(main.home) .footer-free { display: none; }
+.choice-grid { display: grid; gap: 16px; margin-top: 24px; }
+.choice-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 200px; padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); color: var(--ink); }
+.choice-card h2 { margin: 0; font-family: var(--font-display), Georgia, serif; font-size: 26px; font-weight: 560; }
+.choice-card p { margin: 0; color: var(--muted); flex: 1; }
+.choice-card .area-mark { margin: 0; }
+.choice-card .btn { background: var(--forest); color: var(--ivory); }
+.privacy-note { margin: 4px 0 0; }
 .hp { position: absolute; left: -9999px; }
 .prelaunch { display: grid; gap: 18px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin: 12px 0 24px; }
 .prelaunch-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -421,10 +431,14 @@ body:has(main.home) .footer-base { display: none; }
   .home-hero-copy { padding: 168px 0 180px; }
   .area-grid, .guide-grid { grid-template-columns: repeat(3, 1fr); }
   .prelaunch { grid-template-columns: 1fr 1fr; }
-  .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 48px; align-items: start; }
+  .footer-grid { grid-template-columns: 1fr 1fr; column-gap: 48px; align-items: start; }
+  .choice-grid { grid-template-columns: 1fr 1fr; }
   .filter-sheet-open, .filter-sheet-backdrop, .filter-sheet-bar { display: none; }
   .filter-sheet-panel, .filter-sheet-panel.open { display: block; position: static; max-height: none; overflow: visible; padding: 0; box-shadow: none; border-radius: 0; background: transparent; }
   .home { padding-bottom: 80px; }
   .home-section { padding: 80px 0 0; }
   .guide-page { padding: 64px 0 96px; }
+}
+@media (min-width: 1080px) {
+  .footer-grid { grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr)); }
 }

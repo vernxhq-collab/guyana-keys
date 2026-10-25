@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { PrivacyNote } from "../../../components/PrivacyNote";
 export default function AdvertiseListingPage() {
   const [sent, setSent] = useState("");
   return (
@@ -23,7 +24,7 @@ export default function AdvertiseListingPage() {
       }}>
         <input name="name" required placeholder="Your name" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <input name="company" required placeholder="Agency or brand" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
-        <input name="phone" required placeholder="WhatsApp number" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
+        <input name="phone" required placeholder="Phone" autoComplete="tel" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <input name="area" required placeholder="Listing or area to feature" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14}} />
         <label>Generator, optional
           <select name="generator" defaultValue="" style={{border:"1px solid #d5dbd8", borderRadius:10, padding:14, width:"100%"}}>
@@ -52,6 +53,7 @@ export default function AdvertiseListingPage() {
             <option value="">Not set</option><option value="unfurnished">Unfurnished</option><option value="partly">Partly furnished</option><option value="furnished">Furnished</option><option value="unknown">Not stated</option>
           </select>
         </label>
+        <PrivacyNote />
         <button className="btn" type="submit">Contact us</button>
       </form>
       {sent && <p>{sent}</p>}

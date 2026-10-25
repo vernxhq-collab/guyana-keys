@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { areas, regionSlug } from "../lib/areas";
 import { SAMPLE_LABEL } from "../lib/sample-label";
@@ -6,6 +7,15 @@ import { HomeSearch } from "./HomeSearch";
 import { MarketCard, type MarketCardData } from "./MarketCard";
 
 const regions = ["Georgetown", "East Coast Demerara", "East Bank Demerara", "West Coast Demerara", "Essequibo", "Berbice"];
+
+const areaLines: Record<string, string> = {
+  Georgetown: "City wards, the seawall and the capital's busiest streets.",
+  "East Coast": "Villages and schemes from Ogle to Mahaica.",
+  "East Bank": "Family neighbourhoods along the East Bank public road.",
+  "West Coast": "From Vreed-en-Hoop westward along the coast.",
+  Essequibo: "River towns and the Essequibo coast.",
+  Berbice: "New Amsterdam and the Corentyne.",
+};
 
 function Credit({ author, file, licence, licenceHref }: { author: string; file: string; licence: string; licenceHref: string }) {
   return (
@@ -22,7 +32,7 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
       {sample ? <p className="market-banner">{SAMPLE_LABEL}. These cards are not on the public site and are not saved.</p> : null}
       <section className="home-hero">
         <figure className="home-hero-media" data-illustrative="true">
-          <img src="/brand/cathedral-georgetown.jpg" alt="St George's Cathedral in Georgetown, an illustrative photograph, not a listing." />
+          <Image src="/brand/cathedral-georgetown.jpg" alt="St George's Cathedral in Georgetown, an illustrative photograph, not a listing." fill priority sizes="100vw" />
           <div className="home-hero-shade" aria-hidden="true" />
           <div className="home-hero-copy">
             <h1>Your next key is in Guyana.</h1>
@@ -48,7 +58,10 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
               <Link className="area-card graphic" key={name} href={`/areas/region/${regionSlug(name)}`}>
                 {comingSoon ? <span className="area-soon">Coming soon</span> : null}
                 <span className="area-mark" aria-hidden="true" />
-                <span className="area-name">{label}</span>
+                <span className="area-copy">
+                  <span className="area-name">{label}</span>
+                  {areaLines[label] ? <span className="area-line">{areaLines[label]}</span> : null}
+                </span>
               </Link>
             );
           })}
@@ -56,12 +69,15 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
       </section>
       <section className="wrap home-section home-guides">
         <h2>Guides for buying and renting in Guyana</h2>
-        <p className="home-note">A listing is not proof of title.</p>
+        <p className="home-note">Practical help for buying, renting and investing in Guyana, wherever you&apos;re starting from. A listing is not proof of title.</p>
         <GuideCards />
       </section>
       <section className="wrap home-section">
         <div className="home-list-band">
-          <p>Free to list, no limits.</p>
+          <div>
+            <p>Free to list, no limits.</p>
+            <p className="home-list-sub">Show your home, rental, land or commercial space to people searching in Guyana and abroad.</p>
+          </div>
           <Link className="btn" href="/advertise">List your property free</Link>
         </div>
       </section>

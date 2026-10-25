@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PrivacyNote } from "./PrivacyNote";
 
 export function AlertForm() {
   const [sent, setSent] = useState("");
@@ -32,6 +33,7 @@ export function AlertForm() {
         <input name="area" required placeholder="Bel Air Park" />
       </label>
       <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
+      <PrivacyNote />
       <button className="btn" type="submit">Create alert</button>
       {sent ? <p className="note">{sent}</p> : null}
     </form>

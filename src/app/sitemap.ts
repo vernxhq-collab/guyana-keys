@@ -22,6 +22,8 @@ const pages = [
   "/landlords",
   "/developers",
   "/partners",
+  "/privacy",
+  "/terms",
 ];
 
 export const dynamic = "force-dynamic";

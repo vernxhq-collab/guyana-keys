@@ -7,7 +7,7 @@ import { withCanonical } from "../../lib/seo";
 
 export const metadata: Metadata = withCanonical("/partners", {
   title: "Partners | Guyana Keys",
-  description: "Banks, insurance brokers, lawyers, surveyors, and valuers appear here only after they agree to be listed.",
+  description: "Mortgage, insurance, legal, survey and valuation professionals in Guyana appear here only after they agree to be listed.",
 });
 
 const labels: Record<string, string> = {
@@ -24,15 +24,15 @@ export default async function PartnersPage() {
     id,
     label,
     rows: partners.filter((partner) => partner.category === id),
-  }));
+  })).filter((group) => group.rows.length > 0);
   return (
     <main className="wrap section">
       <h1>Partners</h1>
-      <p className="sub">A firm is shown only when consent to list is on. No real partner is seeded.</p>
-      {partners.length === 0 ? <p>No partner has consented to be listed.</p> : groups.map((group) => (
+      <p className="sub">We&apos;re bringing together mortgage, insurance, legal, survey and valuation professionals in Guyana. A firm appears here only once it has agreed to be listed.</p>
+      {groups.map((group) => (
         <section key={group.id}>
           <h2>{group.label}</h2>
-          {group.rows.length === 0 ? <p className="quiet">None in this category.</p> : <div className="grid">{group.rows.map((partner) => <PartnerCard key={partner.id} partner={partner} />)}</div>}
+          <div className="grid">{group.rows.map((partner) => <PartnerCard key={partner.id} partner={partner} />)}</div>
         </section>
       ))}
       <h2>Partner with us</h2>

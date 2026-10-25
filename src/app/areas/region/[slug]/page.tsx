@@ -43,8 +43,6 @@ export default async function RegionPage({ params }: { params: Promise<{ slug: s
           <ul className="pros">{guide.cons.map((item) => <li key={item}>{item}</li>)}</ul>
         </section>
       </div>
-      <p className="meta">Average price: {guide.averagePrice}</p>
-      <p className="meta">Rental yield: {guide.rentalYield}</p>
       <h2>Neighbourhoods</h2>
       <div className="grid">{guide.areas.map((area) => (
         <Link className="card" key={area.slug} href={`/areas/${area.slug}`}><div className="card-body"><strong>{area.name}</strong><p className="meta">{area.note}</p></div></Link>
