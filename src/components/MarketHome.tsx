@@ -44,7 +44,7 @@ function Credit({ author, file, licence, licenceHref }: { author: string; file: 
   );
 }
 
-export function MarketHome({ cards, sample = false }: { cards: MarketCardData[]; sample?: boolean }) {
+export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards: MarketCardData[]; sample?: boolean; liveByRegion?: Record<string, number> }) {
   const shown = regions.filter((item) => areas.some((area) => area.region === item.name));
   return (
     <main className="market home">
@@ -77,17 +77,27 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
       <section className="wrap home-section">
         <h2>Explore Guyana by area</h2>
         <div className="area-grid">
-          {shown.map((item) => (
-            <Link className={item.image ? "area-card" : "area-card graphic"} key={item.name} href={`/areas/region/${regionSlug(item.name)}`}>
-              {item.image ? (
-                <figure data-illustrative="true">
-                  <img src={item.image} alt={item.alt || ""} />
-                  <Credit author={item.author || ""} file={item.file || ""} licence={item.licence || ""} licenceHref={item.licenceHref || ""} />
-                </figure>
-              ) : <span className="area-mark" aria-hidden="true" />}
-              <span className="area-name">{item.name.replace(" Demerara", "")}</span>
-            </Link>
-          ))}
+          {shown.map((item) => {
+            const label = item.name.replace(" Demerara", "");
+            const comingSoon = (liveByRegion[item.name] || 0) === 0;
+            return (
+              <Link className={item.image ? "area-card photo" : "area-card graphic"} key={item.name} href={`/areas/region/${regionSlug(item.name)}`}>
+                {comingSoon ? <span className="area-soon">Coming soon</span> : null}
+                {item.image ? (
+                  <figure data-illustrative="true">
+                    <img src={item.image} alt={item.alt || ""} />
+                    <span className="area-name">{label}</span>
+                    <Credit author={item.author || ""} file={item.file || ""} licence={item.licence || ""} licenceHref={item.licenceHref || ""} />
+                  </figure>
+                ) : (
+                  <>
+                    <span className="area-mark" aria-hidden="true" />
+                    <span className="area-name">{label}</span>
+                  </>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </section>
       <section className="wrap home-section">

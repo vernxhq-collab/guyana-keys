@@ -358,11 +358,17 @@ h1, .home h2, .about-story h2, .prelaunch h2 { font-family: var(--font-display),
 .home-section { padding: 48px 0 8px; }
 .area-grid, .category-grid { display: grid; gap: 12px; }
 .area-card, .category-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; min-height: 100%; }
-.area-card { display: grid; }
+.area-card { display: grid; position: relative; }
 .area-card img { aspect-ratio: 3 / 2; }
-.area-card.graphic { min-height: 180px; background: linear-gradient(160deg, var(--forest), #1c5c49 70%); color: var(--ivory); position: relative; }
+.area-card.graphic { min-height: 180px; background: linear-gradient(160deg, var(--forest), #1c5c49 70%); color: var(--ivory); }
+.area-soon { position: absolute; top: 12px; left: 12px; z-index: 3; margin: 0; padding: 6px 9px; border-radius: 999px; background: var(--gold); color: var(--forest); font-family: var(--font-ui), Manrope, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .12em; line-height: 1; text-transform: uppercase; }
 .area-name, .category-card strong { display: block; padding: 14px 14px 4px; font-weight: 700; }
 .area-card.graphic .area-name { color: var(--ivory); position: absolute; left: 0; bottom: 8px; }
+.area-card.graphic:has(.area-soon) .area-mark { margin-top: 44px; }
+.area-card.photo figure { position: relative; display: grid; margin: 0; }
+.area-card.photo img { grid-area: 1 / 1; }
+.area-card.photo .area-name { grid-area: 1 / 1; align-self: end; position: static; margin: 0; padding: 28px 12px 8px; color: #fff; background: linear-gradient(to top, rgba(12, 46, 38, .78), rgba(12, 46, 38, 0)); text-shadow: 0 1px 2px rgba(12, 46, 38, .45); }
+.area-card.photo figcaption { grid-column: 1; grid-row: 2; position: relative; z-index: 1; }
 .area-mark { display: block; width: 36px; height: 2px; background: var(--gold); margin: 16px 0 0 14px; }
 .area-card figure { margin: 0; }
 .category-grid { grid-template-columns: 1fr 1fr; }
