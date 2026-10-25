@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Agent, Listing } from "../lib/data";
+import { PrivacyNote } from "./PrivacyNote";
 import { pageAttribution } from "../lib/page-context";
 
 export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing: Listing; agent: Agent | null; viewer: { name: string; abroad: boolean } | null; initialSaved: boolean }) {
@@ -78,9 +79,10 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
       <form style={{ display: "grid", gap: 10 }} onSubmit={(event) => void contactAgent(event)}>
         <strong>Contact agent</strong>
         <input name="name" required placeholder="Your name" defaultValue={viewer?.name || ""} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
-        <input name="phone" required placeholder="WhatsApp number" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+        <input name="phone" required placeholder="Phone" autoComplete="tel" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
         <input name="note" placeholder="Message (optional)" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+        <PrivacyNote />
         <button className="btn" type="submit" disabled={busy}>Request info</button>
       </form>
       {viewer ? (
@@ -91,7 +93,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
             void submit(event, submitter?.value === "viewing");
           }}>
             <input name="name" required placeholder="Your name" defaultValue={viewer.name} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
-            <input name="phone" required placeholder="WhatsApp number" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
+            <input name="phone" required placeholder="Phone" autoComplete="tel" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
             <input name="note" placeholder="Note" style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14 }} />
             {listing.purpose === "Rent" ? (
               <>
@@ -100,6 +102,7 @@ export function EnquiryPanel({ listing, agent, viewer, initialSaved }: { listing
               </>
             ) : null}
             <label className="meta"><input name="abroad" type="checkbox" defaultChecked={viewer.abroad} /> Buying from abroad</label>
+            <PrivacyNote />
             <button className="btn ghost" type="submit" value="enquiry" disabled={busy}>Save this enquiry on Your homes</button>
             <label className="meta">Preferred day<input type="date" value={day} onChange={(event) => setDay(event.target.value)} style={{ border: "1px solid #d5dbd8", borderRadius: 12, padding: 14, width: "100%" }} /></label>
             <label className="meta">Time of day

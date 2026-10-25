@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PrivacyNote } from "../../../components/PrivacyNote";
 
 export default function ApplyPage() {
   const [message, setMessage] = useState("");
@@ -47,6 +48,7 @@ export default function ApplyPage() {
         <label>Areas you list in<input name="areas" placeholder="Georgetown, East Bank, East Coast" /></label>
         <label>What you want to list<textarea name="message" /></label>
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px" }} />
+        <PrivacyNote />
         <button className="btn" type="submit" disabled={busy}>{busy ? "Please wait..." : "Send application"}</button>
       </form>
       {message ? <p>{message}</p> : null}

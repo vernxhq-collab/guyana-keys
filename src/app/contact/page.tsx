@@ -5,7 +5,7 @@ import { withCanonical } from "../../lib/seo";
 
 export const metadata: Metadata = withCanonical("/contact", {
   title: "Contact | Guyana Keys",
-  description: "Write to the Guyana Keys team by email, or visit the Guyana Keys Facebook Page.",
+  description: "Write to info@gykeys.com. The Guyana Keys team will get back to you.",
 });
 
 export default function ContactPage() {
@@ -13,12 +13,11 @@ export default function ContactPage() {
     <main className="wrap section">
       <p className="eyebrow">The Guyana Keys team</p>
       <h1>Contact</h1>
-      <p>Write to the Guyana Keys team at <a href={`mailto:${publicEmail}`}>{publicEmail}</a>.</p>
+      <p>We&apos;d love to hear from you, whether you&apos;re searching, listing or just have a question. Write to <a href={`mailto:${publicEmail}`}>{publicEmail}</a> and the Guyana Keys team will get back to you.</p>
       <p><a href={facebookPage} target="_blank" rel="noreferrer">Guyana Keys on Facebook</a></p>
       <h2>List a property</h2>
-      <p>Agents apply, then an admin reviews the account before a listing is public. Free to list, no limits.</p>
-      <p><Link href="/agents/apply">Apply to list</Link></p>
-      <p><Link href="/advertise">List your property</Link></p>
+      <p>Owners and agents are welcome. Our team reviews each new account before its first listing goes live. Free to list, no limits.</p>
+      <p><Link className="btn" href="/advertise">List a property</Link></p>
     </main>
   );
 }

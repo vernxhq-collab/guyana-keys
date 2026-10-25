@@ -4,9 +4,10 @@ import { SampleIntro } from "../../../components/SampleIntro";
 import { partnerSample } from "../../../lib/partner-sample";
 import { previewEnabled } from "../../../lib/preview/http";
 import { SAMPLE_LABEL } from "../../../lib/sample-label";
+import { privateMeta } from "../../../lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Partners preview", robots: { index: false, follow: false } };
+export const metadata: Metadata = privateMeta("/preview/partners", "Partners preview | Guyana Keys", "Private sample of the partners page. Not a public page.");
 
 export default function PreviewPartnersPage() {
   if (!previewEnabled()) notFound();

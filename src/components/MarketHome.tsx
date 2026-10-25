@@ -1,88 +1,95 @@
+import Image from "next/image";
 import Link from "next/link";
 import { areas, regionSlug } from "../lib/areas";
 import { SAMPLE_LABEL } from "../lib/sample-label";
+import { GuideCards } from "./GuideCards";
+import { HomeSearch } from "./HomeSearch";
 import { MarketCard, type MarketCardData } from "./MarketCard";
 
-const strips = ["Georgetown", "East Bank Demerara", "East Coast Demerara", "Berbice", "Essequibo", "West Coast Demerara"];
+const regions = ["Georgetown", "East Coast Demerara", "East Bank Demerara", "West Coast Demerara", "Essequibo", "Berbice"];
 
-export function MarketHome({ cards, sample = false }: { cards: MarketCardData[]; sample?: boolean }) {
-  const regions = strips.filter((name) => areas.some((area) => area.region === name));
+const areaLines: Record<string, string> = {
+  Georgetown: "City wards, the seawall and the capital's busiest streets.",
+  "East Coast": "Villages and schemes from Ogle to Mahaica.",
+  "East Bank": "Family neighbourhoods along the East Bank public road.",
+  "West Coast": "From Vreed-en-Hoop westward along the coast.",
+  Essequibo: "River towns and the Essequibo coast.",
+  Berbice: "New Amsterdam and the Corentyne.",
+};
+
+function Credit({ author, file, licence, licenceHref }: { author: string; file: string; licence: string; licenceHref: string }) {
   return (
-    <main className="market">
+    <figcaption>
+      Illustrative. Not a listing. Photo: <a href={file}>{author}</a>, <a href={licenceHref}>{licence}</a>.
+    </figcaption>
+  );
+}
+
+export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards: MarketCardData[]; sample?: boolean; liveByRegion?: Record<string, number> }) {
+  const shown = regions.filter((name) => areas.some((area) => area.region === name));
+  return (
+    <main className="market home">
       {sample ? <p className="market-banner">{SAMPLE_LABEL}. These cards are not on the public site and are not saved.</p> : null}
-      <section className="market-hero">
-        <div className="wrap">
-          <p className="market-kicker">Guyana Keys</p>
-          <h1>Find a home in Guyana.</h1>
-          <p className="market-lead">Search by area, type, and budget. Prices are in GYD, with a USD guide. A listing is not proof of title.</p>
-          <form className="market-search" action="/listings">
-            <label>Area
-              <input name="q" list="market-areas" placeholder="Neighbourhood, such as Bel Air Park" />
-            </label>
-            <datalist id="market-areas">{areas.map((area) => <option key={area.slug} value={area.name} />)}</datalist>
-            <label>Buy, rent, or land
-              <select name="purpose" defaultValue="Sale" aria-label="Buy, rent, or land">
-                <option value="Sale">Buy</option>
-                <option value="Rent">Rent</option>
-                <option value="Land">Land</option>
-              </select>
-            </label>
-            <label>Type
-              <select name="type" defaultValue="" aria-label="Type">
-                <option value="">Any</option>
-                <option>House</option>
-                <option>Apartment</option>
-                <option>Land</option>
-                <option>Commercial</option>
-              </select>
-            </label>
-            <label>Budget
-              <select name="budget" defaultValue="" aria-label="Budget">
-                <option value="">Any budget</option>
-                <option value="20000000">Up to 20 million GYD</option>
-                <option value="50000000">Up to 50 million GYD</option>
-                <option value="100000000">Up to 100 million GYD</option>
-              </select>
-            </label>
-            <button className="btn" type="submit">Search</button>
-          </form>
-        </div>
-      </section>
-      <section className="wrap market-section">
-        <h2>Areas</h2>
-        <div className="market-strips">
-          {regions.map((name) => <Link key={name} href={`/areas/region/${regionSlug(name)}`}>{name.replace(" Demerara", "")}</Link>)}
-        </div>
-      </section>
-      <section className="wrap market-section">
-        <div className="section-head">
-          <h2>{cards.length ? "Listed now" : "No homes listed yet"}</h2>
-          {cards.length ? <Link href="/listings">All listings</Link> : null}
-        </div>
-        {cards.length ? (
-          <div className="market-grid">{cards.map((card) => <MarketCard key={card.id} card={card} />)}</div>
-        ) : (
-          <div className="market-empty">
-            <p>Homes, rentals, and land will show here after an approved agent publishes them. Nothing on this page is a sample.</p>
-            <div className="market-actions">
-              <Link className="btn" href="/alerts">Create alert</Link>
-              <Link className="btn ghost" href="/agents/apply">List your property free</Link>
-            </div>
+      <section className="home-hero">
+        <figure className="home-hero-media" data-illustrative="true">
+          <Image src="/brand/cathedral-georgetown.jpg" alt="St George's Cathedral in Georgetown, an illustrative photograph, not a listing." fill priority sizes="100vw" />
+          <div className="home-hero-shade" aria-hidden="true" />
+          <div className="home-hero-copy">
+            <h1>Your next key is in Guyana.</h1>
           </div>
-        )}
-      </section>
-      <section className="wrap market-section market-split">
-        <div className="market-panel">
-          <h2>Buying from outside Guyana</h2>
-          <p>Prices show GYD and a USD guide. A listing is not proof of title. Have an attorney search the registry before any deposit. A viewing from abroad is a request the agent confirms. This is not a valuation and not a promised return.</p>
-          <Link className="btn ghost" href="/guides">Read the buying guide</Link>
-        </div>
-        <div className="market-panel accent">
-          <h2>List your property free</h2>
-          <p>Free to list, no limits. Apply, then an admin reviews the account before anything is public.</p>
-          <Link className="btn" href="/agents/apply">Apply to list</Link>
+          <Credit
+            author="Ian Mackenzie"
+            file="https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg"
+            licence="CC BY 2.0"
+            licenceHref="https://creativecommons.org/licenses/by/2.0/"
+          />
+        </figure>
+        <div className="home-search-wrap">
+          <HomeSearch areas={areas.map((area) => ({ slug: area.slug, name: area.name }))} />
         </div>
       </section>
+      <section className="wrap home-section">
+        <h2>Explore Guyana by area</h2>
+        <div className="area-grid">
+          {shown.map((name) => {
+            const label = name.replace(" Demerara", "");
+            const comingSoon = (liveByRegion[name] || 0) === 0;
+            return (
+              <Link className="area-card graphic" key={name} href={`/areas/region/${regionSlug(name)}`}>
+                {comingSoon ? <span className="area-soon">Coming soon</span> : null}
+                <span className="area-mark" aria-hidden="true" />
+                <span className="area-copy">
+                  <span className="area-name">{label}</span>
+                  {areaLines[label] ? <span className="area-line">{areaLines[label]}</span> : null}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+      <section className="wrap home-section home-guides">
+        <h2>Guides for buying and renting in Guyana</h2>
+        <p className="home-note">Practical help for buying, renting and investing in Guyana, wherever you&apos;re starting from. A listing is not proof of title.</p>
+        <GuideCards />
+      </section>
+      <section className="wrap home-section">
+        <div className="home-list-band">
+          <div>
+            <p>Free to list, no limits.</p>
+            <p className="home-list-sub">Show your home, rental, land or commercial space to people searching in Guyana and abroad.</p>
+          </div>
+          <Link className="btn" href="/advertise">List your property free</Link>
+        </div>
+      </section>
+      {cards.length ? (
+        <section className="wrap home-section">
+          <div className="section-head">
+            <h2>Listed now</h2>
+            <Link href="/listings">All listings</Link>
+          </div>
+          <div className="market-grid">{cards.map((card) => <MarketCard key={card.id} card={card} />)}</div>
+        </section>
+      ) : null}
     </main>
   );
 }

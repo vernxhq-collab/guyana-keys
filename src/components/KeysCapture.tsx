@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { idConsentText } from "../lib/compliance/retention";
 import { cleanQualityNote, documentLabel, imageQuality, type KeysDocumentKind } from "../lib/keys-check";
@@ -123,6 +124,7 @@ export function KeysCapture({
       <p>A person at Guyana Keys looks at the files. No outside company is used, and no software compares faces.</p>
       <p>{idConsentText}</p>
       <label><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} /> I have read this and I agree to this version ({consentVersion || "not loaded"}).</label>
+      <p className="quiet">Read the <Link href="/privacy">privacy notice</Link> and <Link href="/terms">terms</Link>.</p>
       {flags.map((flag) => <p key={flag}>{flag}</p>)}
       {keysCheck?.decisionReason ? <p>Last decision: {keysCheck.decisionReason}</p> : null}
       <p className="quiet">Status: {keysCheck?.status || "not started"}</p>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { showAskKeys } from "../lib/public-flags";
 
 function isDesk(path: string) {
   return path === "/account" || path.startsWith("/account/") || path === "/agent" || path.startsWith("/agent/") || path === "/admin" || path.startsWith("/admin/");
@@ -11,7 +12,7 @@ export function LiveChat() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<{ from: string; body: string }[]>([{ from: "Keys", body: "Ask about a neighbourhood, a price, a sale, a rental, or the title check." }]);
-  if (isDesk(path)) return null;
+  if (!showAskKeys || isDesk(path)) return null;
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const website = String(new FormData(event.currentTarget).get("website") || "");

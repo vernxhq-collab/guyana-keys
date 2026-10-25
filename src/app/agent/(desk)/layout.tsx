@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { privateMeta } from "../../../lib/seo";
 import { DeskNav } from "../../../components/DeskNav";
 import { SignOut } from "../../../components/SignOut";
 import { readPreview } from "../../../lib/preview/http";
@@ -7,6 +9,8 @@ import { canUseAgentDesk, readSession } from "../../../lib/session";
 const simulated = new Set(["/agent/compose", "/agent/outbox", "/agent/agency"]);
 
 const items: [string, string][] = [["Today", "/agent"], ["Listings", "/agent/listings"], ["Leads", "/agent/leads"], ["Calendar", "/agent/calendar"], ["Checks", "/agent/checks"], ["Plan", "/agent/plan"]];
+
+export const metadata: Metadata = privateMeta("/agent", "Agent desk | Guyana Keys", "Private agent desk. Sign in required.");
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
   const preview = await readPreview();

@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import { DeskNav } from "../../../components/DeskNav";
+import { privateMeta } from "../../../lib/seo";
 import { SignOut } from "../../../components/SignOut";
 import { grantAdmin, isAdminEmail, readSession } from "../../../lib/session";
 
 const items: [string, string][] = [["Home", "/admin"], ["People", "/admin/people"], ["Listings", "/admin/listings"], ["Applications", "/admin/applications"], ["Licences", "/admin/licences"], ["Keys Check", "/admin/keys-check"], ["Requests", "/admin/requests"], ["Inbox", "/admin/inbox"]];
+
+export const metadata: Metadata = privateMeta("/admin", "Admin desk | Guyana Keys", "Private admin desk. Sign in required.");
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await readSession();

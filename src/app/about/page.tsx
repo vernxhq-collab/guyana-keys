@@ -6,7 +6,7 @@ const firstParagraph = "For too long, searching for property here has meant scro
 
 export const metadata: Metadata = withCanonical("/about", {
   title: "About Guyana Keys",
-  description: firstParagraph,
+  description: "Guyana Keys is a clear place to find, rent, and list property in Guyana, at home or from abroad.",
 });
 
 export default function AboutPage() {
@@ -22,11 +22,11 @@ export default function AboutPage() {
         <p className="about-turn">We knew there had to be a better way.</p>
         <section>
           <h2>Who we are</h2>
-          <p>Guyana Keys is built by a tech-savvy team immersed in the digital world. We know how the best property portals work, and we asked a simple question: why shouldn&apos;t Guyana have the same?</p>
+          <p>Guyana Keys is built by a team who care about Guyana and know what a good property search should feel like. We know how the best property portals work, and we asked a simple question: why shouldn&apos;t Guyana have the same?</p>
         </section>
         <section>
           <h2>What we&apos;re building</h2>
-          <p>One clear place to find homes, land and commercial property across Guyana. Listings with the facts that matter here, like water, backup power, parking and flood risk. Photos that show the actual property. Simple tools, like our mortgage and purchase-cost calculator, so you can plan with your own numbers before you call anyone.</p>
+          <p>One clear place to find homes, land and commercial property across Guyana. Listings with the facts that matter here, like water, backup power, parking and flood risk. We ask for photos of the actual property. Simple tools, like our mortgage and purchase-cost calculator, so you can plan with your own numbers before you call anyone.</p>
         </section>
         <section>
           <h2>Why it matters</h2>

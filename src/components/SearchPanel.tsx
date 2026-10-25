@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { areas, regionSlug } from "../lib/areas";
 import { GYD_PER_USD } from "../lib/data";
+import { usdGuideNote } from "../lib/usd-guide";
 import { searchPlaceholder } from "../lib/search";
 import { generatorChoices, parkingChoices, waterTankChoices } from "../lib/site-facts";
 
@@ -108,7 +109,7 @@ export function SearchPanel({ initial }: { initial: Initial }) {
         </select>
         <button className="btn" type="submit">Search</button>
       </div>
-      <p className="quiet">USD uses a guide of {GYD_PER_USD} GYD. A search link keeps these filters.</p>
+      <p className="quiet">{usdGuideNote()} A search link keeps these filters.</p>
     </form>
   );
 }

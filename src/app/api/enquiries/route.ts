@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const name = String(body.name || "").trim();
   const phone = String(body.phone || "").trim();
   const note = String(body.note || "").trim();
-  if (!name || !phone) return NextResponse.json({ error: "Name and WhatsApp number are required." }, { status: 400 });
+  if (!name || !phone) return NextResponse.json({ error: "Name and phone number are required." }, { status: 400 });
   const client = serviceDb();
   if (!client) return NextResponse.json({ error: "The enquiry could not be saved." }, { status: 503 });
   const listingId = String(body.propertyId || body.listingId || "");
