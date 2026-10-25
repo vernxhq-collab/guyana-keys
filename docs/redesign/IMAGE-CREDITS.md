@@ -5,14 +5,11 @@ Photographs used in the Priority 1 redesign. Each one is genuine Guyana scenery 
 Licence pages:
 
 - CC BY 2.0: https://creativecommons.org/licenses/by/2.0/
-- CC BY-SA 2.0: https://creativecommons.org/licenses/by-sa/2.0/
 
 | File | Subject | Source | Author | Licence |
 | --- | --- | --- | --- | --- |
 | `public/brand/cathedral-georgetown.jpg` | St George's Cathedral, Georgetown | https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg | Ian Mackenzie | CC BY 2.0 |
-| `public/brand/parliament-georgetown.jpg` | Parliament Building, Georgetown | https://commons.wikimedia.org/wiki/File:Guyana_Parliament_Building.jpg | David Stanley | CC BY 2.0 |
-| `public/brand/essequibo-bartica.jpg` | Essequibo River at Bartica | https://commons.wikimedia.org/wiki/File:Essequibo_River_-_Bartica,_Guyana_(23571825811).jpg | Dan Sloan | CC BY-SA 2.0 |
 
-Originals were downloaded from Wikimedia Commons and resized to a maximum width of 1600px. Category cards and the regions without a credited photograph use a Forest/Ivory graphic, not a stock house.
+The original was downloaded from Wikimedia Commons and resized to a maximum width of 1600px. Area tiles and category cards use a Forest/Ivory graphic, not a photograph.
 
 The Unsplash files already referenced on `/advertise` are not part of this set and are not reused on the homepage.

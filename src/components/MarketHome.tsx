@@ -4,30 +4,7 @@ import { SAMPLE_LABEL } from "../lib/sample-label";
 import { HomeSearch } from "./HomeSearch";
 import { MarketCard, type MarketCardData } from "./MarketCard";
 
-const regions: { name: string; image?: string; alt?: string; author?: string; file?: string; licence?: string; licenceHref?: string }[] = [
-  {
-    name: "Georgetown",
-    image: "/brand/parliament-georgetown.jpg",
-    alt: "Parliament Building in Georgetown, an illustrative photograph, not a listing.",
-    author: "David Stanley",
-    file: "https://commons.wikimedia.org/wiki/File:Guyana_Parliament_Building.jpg",
-    licence: "CC BY 2.0",
-    licenceHref: "https://creativecommons.org/licenses/by/2.0/",
-  },
-  { name: "East Coast Demerara" },
-  { name: "East Bank Demerara" },
-  { name: "West Coast Demerara" },
-  {
-    name: "Essequibo",
-    image: "/brand/essequibo-bartica.jpg",
-    alt: "The Essequibo River at Bartica, an illustrative photograph, not a listing.",
-    author: "Dan Sloan",
-    file: "https://commons.wikimedia.org/wiki/File:Essequibo_River_-_Bartica,_Guyana_(23571825811).jpg",
-    licence: "CC BY-SA 2.0",
-    licenceHref: "https://creativecommons.org/licenses/by-sa/2.0/",
-  },
-  { name: "Berbice" },
-];
+const regions = ["Georgetown", "East Coast Demerara", "East Bank Demerara", "West Coast Demerara", "Essequibo", "Berbice"];
 
 const categories = [
   { href: "/listings?purpose=Sale", title: "Buy", line: "Houses and apartments for sale." },
@@ -45,7 +22,7 @@ function Credit({ author, file, licence, licenceHref }: { author: string; file: 
 }
 
 export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards: MarketCardData[]; sample?: boolean; liveByRegion?: Record<string, number> }) {
-  const shown = regions.filter((item) => areas.some((area) => area.region === item.name));
+  const shown = regions.filter((name) => areas.some((area) => area.region === name));
   return (
     <main className="market home">
       {sample ? <p className="market-banner">{SAMPLE_LABEL}. These cards are not on the public site and are not saved.</p> : null}
@@ -55,7 +32,6 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
           <div className="home-hero-shade" aria-hidden="true" />
           <div className="home-hero-copy">
             <h1>Your next key is in Guyana.</h1>
-            <p>Homes, rentals, land and commercial property across Guyana, whether you're here or abroad.</p>
           </div>
           <Credit
             author="Ian Mackenzie"
@@ -77,24 +53,14 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
       <section className="wrap home-section">
         <h2>Explore Guyana by area</h2>
         <div className="area-grid">
-          {shown.map((item) => {
-            const label = item.name.replace(" Demerara", "");
-            const comingSoon = (liveByRegion[item.name] || 0) === 0;
+          {shown.map((name) => {
+            const label = name.replace(" Demerara", "");
+            const comingSoon = (liveByRegion[name] || 0) === 0;
             return (
-              <Link className={item.image ? "area-card photo" : "area-card graphic"} key={item.name} href={`/areas/region/${regionSlug(item.name)}`}>
+              <Link className="area-card graphic" key={name} href={`/areas/region/${regionSlug(name)}`}>
                 {comingSoon ? <span className="area-soon">Coming soon</span> : null}
-                {item.image ? (
-                  <figure data-illustrative="true">
-                    <img src={item.image} alt={item.alt || ""} />
-                    <span className="area-name">{label}</span>
-                    <Credit author={item.author || ""} file={item.file || ""} licence={item.licence || ""} licenceHref={item.licenceHref || ""} />
-                  </figure>
-                ) : (
-                  <>
-                    <span className="area-mark" aria-hidden="true" />
-                    <span className="area-name">{label}</span>
-                  </>
-                )}
+                <span className="area-mark" aria-hidden="true" />
+                <span className="area-name">{label}</span>
               </Link>
             );
           })}
