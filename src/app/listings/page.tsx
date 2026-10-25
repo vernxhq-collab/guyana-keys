@@ -38,7 +38,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const params = await searchParams;
   const mode = listingMode(params.purpose, params.type);
   const label = searchLabel(params);
-  const title = label === "All listings" ? `${mode.title} | Guyana Keys` : `${mode.title}: ${label} | Guyana Keys`;
+  const extra = label.split(" · ").map((bit) => bit.trim()).filter((bit) => bit && !["All listings", "Buy", "Rent", "Land", "Commercial"].includes(bit));
+  const title = extra.length ? `${mode.title}: ${extra.join(" · ")} | Guyana Keys` : `${mode.title} | Guyana Keys`;
   const descriptions = {
     buy: "Houses and apartments for sale in Guyana.",
     rent: "Rentals across Guyana, with prices in GYD and a USD guide.",
@@ -46,7 +47,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     commercial: "Offices, shops, and commercial property in Guyana.",
     search: "Search homes, rentals, and land in Guyana. Free to list, no limits. A listing is not proof of title.",
   } as const;
-  const description = label === "All listings" ? descriptions[mode.kind] : `${descriptions[mode.kind]} ${label}.`;
+  const description = extra.length ? `${descriptions[mode.kind]} ${extra.join(" · ")}.` : descriptions[mode.kind];
   return withCanonical(listingsPath(params), { title, description });
 }
 
