@@ -54,8 +54,8 @@ export function MarketHome({ cards, sample = false }: { cards: MarketCardData[];
           <img src="/brand/cathedral-georgetown.jpg" alt="St George's Cathedral in Georgetown, an illustrative photograph, not a listing." />
           <div className="home-hero-shade" aria-hidden="true" />
           <div className="home-hero-copy">
-            <h1>Find property in Guyana with the facts in one place.</h1>
-            <p>Homes, rentals, land, and commercial property, for people here and for people searching from abroad.</p>
+            <h1>Your next key is in Guyana.</h1>
+            <p>Homes, rentals, land and commercial property across Guyana, whether you're here or abroad.</p>
           </div>
           <Credit
             author="Ian Mackenzie"
