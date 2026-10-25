@@ -4,9 +4,10 @@ import { KeysCapture } from "../../../components/KeysCapture";
 import { ID_CONSENT_VERSION } from "../../../lib/compliance/retention";
 import { previewEnabled } from "../../../lib/preview/http";
 import { SAMPLE_LABEL } from "../../../lib/sample-label";
+import { privateMeta } from "../../../lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Keys Check preview", robots: { index: false, follow: false } };
+export const metadata: Metadata = privateMeta("/preview/keys-check", "Keys Check preview | Guyana Keys", "Private sample of a check screen. Not a public page.");
 
 export default function PreviewKeysCheckPage() {
   if (!previewEnabled()) notFound();

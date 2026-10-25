@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { areas, regionSlug } from "../lib/areas";
 import { loadCatalog, loadPublicAgents, sampleDataEnabled } from "../lib/catalog";
-import { siteUrl } from "../lib/contact";
+import { publicOrigin } from "../lib/seo";
 
 const pages = [
   "/",
@@ -13,6 +13,9 @@ const pages = [
   "/areas",
   "/tools",
   "/guides",
+  "/guides/buying-from-abroad",
+  "/guides/spotting-scams",
+  "/guides/renting",
   "/alerts",
   "/advertise",
   "/advertise/listing",
@@ -24,7 +27,7 @@ const pages = [
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const site = siteUrl();
+  const site = publicOrigin;
   const lastModified = new Date();
   const regions = [...new Set(areas.map((area) => area.region))].map((name) => `/areas/region/${regionSlug(name)}`);
   const neighbourhoods = areas.map((area) => `/areas/${area.slug}`);

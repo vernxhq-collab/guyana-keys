@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { privateMeta } from "../../../lib/seo";
+
+export const metadata: Metadata = privateMeta("/admin/login", "Admin sign in | Guyana Keys", "Email a sign-in link for the admin desk.");
 import { MagicLinkForm } from "../../../components/MagicLinkForm";
 import { SignOut } from "../../../components/SignOut";
 import { grantAdmin, isAdminEmail, readSession } from "../../../lib/session";

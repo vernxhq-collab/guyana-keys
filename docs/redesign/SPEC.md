@@ -22,7 +22,7 @@ Preserve working routes, APIs, Supabase writes, and the held sentences listed in
 | Privacy and terms pages. | Do not invent legal text or claim a review that has not happened. | P2 adds the routes only after counsel. P1 footer does not pretend those pages exist. |
 | Testimonials, stats, agent profiles, prices. | Do not invent them. | Zero listings and zero agents render a prelaunch state. Real rows from the catalogue render as they do today. |
 | Imagery of foreign property. | Only genuine Guyana scenery or architecture under a free commercial-use licence, or a Forest/Ivory graphic. | New photographs are listed in `docs/redesign/IMAGE-CREDITS.md`. Each is marked illustrative. Category cards in P1 are graphic treatments, not houses. Existing Unsplash files on `/advertise` are deferred to P2 and are not reused on new sections. |
-| Title-verification sentence in the hero. | Keep the wording and move it off the homepage hero into buyer-protection, disclosure, or deposit guidance. | The sentence `A listing is not proof of title.` is off the hero. On the homepage it appears once, verbatim, inside the longer deposit paragraph in the trust section. The footer line is hidden on the homepage so it is not repeated there, and it still shows on other pages. |
+| Title-verification sentence in the hero. | Keep the wording and move it off the homepage hero into buyer-protection, disclosure, or deposit guidance. | The sentence `A listing is not proof of title.` is off the hero. On the homepage it appears once, as its own line under the guides heading. The longer deposit paragraph, which contains that sentence, lives on `/guides/spotting-scams`. The footer line is hidden on the homepage so it is not repeated there, and it still shows on other pages. |
 | About in the top navigation. | About stays out of the top-level header. It lives in the More menu and the footer. | Header has no About link. More and the footer link to `/about`. |
 | About story. | Reuse the About story from branch `cursor/about-story-6636` word for word. | `/about` uses that copy, including the title and meta description. Presentation may use the new tokens. |
 | Bank rate lists. | No bank names and no bank rate list. The calculator keeps a rate the visitor types. | `/tools` and `MortgageCalculator` are unchanged in P1. |
@@ -201,12 +201,13 @@ Measurements below are the content inside the gutter. “Desktop” means 1280. 
 Order is fixed.
 
 1. **Header.** As specified above. Not repeated in the page body.
-2. **Hero and search.** Full-width photograph of St George's Cathedral in Georgetown, object-fit cover, weighted toward the wooden facade and the blue sky, with a soft curved bottom edge and a dark overlay. The headline “Your next key is in Guyana.” is centred in white over the photograph. There is no subline. Credit stays on the photograph. A white rounded card overlaps the bottom, centred, with a soft shadow. Tabs are Buy, Rent, Land, and Commercial, and the active tab is underlined in Gold. One rounded area field submits to `/listings`, with the search button inside the field. A forest band attached under the card says “Free to list, no limits.” and links “List your property free” to `/advertise`. At 390 the card uses the page margins and the tabs scroll horizontally. No title-verification sentence in this block.
+2. **Hero and search.** Full-width photograph of St George's Cathedral in Georgetown, object-fit cover, weighted toward the wooden facade and the blue sky, with a soft curved bottom edge and a dark overlay. The headline “Your next key is in Guyana.” is centred in white over the photograph. There is no subline. Credit stays on the photograph. A white card overlaps the bottom, centred, radius 22px on every corner, with a soft shadow. Tabs are Buy, Rent, Land, and Commercial, and the active tab is underlined in Gold. One rounded area field submits to `/listings`, with the search button inside the field. The card does not carry a second message. At 390 the card uses the page margins and the tabs scroll horizontally inside the card. No title-verification sentence in this block.
 3. **Explore Guyana by area.** Title, then a grid of six regions that already exist: Georgetown, East Coast Demerara, East Bank Demerara, West Coast Demerara, Essequibo, Berbice. Each card links to `/areas/region/{slug}`, uses the same Forest gradient, and shows the area name at the bottom left. A Gold “Coming soon” pill sits at the top left of a tile only while that region has no live listing, and it is omitted once a live listing exists. Two columns at 390, three from 768px.
-4. **Category editorial cards.** Four graphic cards: Buy, Rent, Land, Commercial, linking to the same URLs as the header. No prices, no bed counts, no “featured home”.
-5. **Trust, then footer.** One trust band quotes, verbatim, the paragraph that used to sit beside the old hero offer: “Prices show GYD and a USD guide. A listing is not proof of title. Have an attorney search the registry before any deposit. A viewing from abroad is a request the agent confirms. This is not a valuation and not a promised return.” Link to `/guides`. Footer follows. The homepage does not repeat the list offer, the deposit paragraph, or “More to come.” There is no founding-agent block on this page. `/agents/apply` is unchanged.
+4. **Guides.** Heading “Guides for buying and renting in Guyana”, then the sentence `A listing is not proof of title.` once, then three cards: Buying from abroad (`/guides/buying-from-abroad`), Spotting property scams (`/guides/spotting-scams`), and Renting in Guyana (`/guides/renting`). Each card has a simple stroke icon, a title, one line, and the words “Read guide”. The index is `/guides`. There is no blog and no category grid, because Buy, Rent, Land, and Commercial already sit in the header and the search card.
+5. **Free to list.** One forest band, separate from the search card, with radius 16px. It says “Free to list, no limits.” and links “List your property free” to `/advertise`. This is the only list pitch on the homepage besides the header button. The footer still links to `/advertise` as a directory item and does not repeat the sentence, because the homepage hides `.footer-base`.
+6. **Listed now, then footer.** If `loadCatalog` returns listings, a “Listed now” grid of `MarketCard`s follows the band. It is omitted entirely when the list is empty. It is not an empty-state message. Footer follows. The homepage does not repeat the deposit paragraph or “More to come.” There is no founding-agent block on this page. `/agents/apply` is unchanged. The full deposit paragraph lives on `/guides/spotting-scams`.
 
-If `loadCatalog` returns listings, a “Listed now” grid of `MarketCard`s is inserted after the category cards. It is omitted entirely when the list is empty. It is not an empty-state message. The sample-preview banner still renders when `sample` is true, above the hero, and sample cards keep their existing sample label.
+The sample-preview banner still renders when `sample` is true, above the hero, and sample cards keep their existing sample label.
 
 ### Buy, Rent, Land, and Commercial `/listings`
 
@@ -277,7 +278,7 @@ Covered under List your property. `/landlords` and `/developers` keep their form
 - Sections appear in the order in section 6, including the footer.
 - With an empty catalogue the page does not say “No homes listed yet” and does not show a fake card.
 - Search submits to `/listings` with the field mapping in this spec.
-- The hero does not contain “A listing is not proof of title.” The trust section does, verbatim, inside the longer deposit paragraph.
+- The hero does not contain “A listing is not proof of title.” The guides section does, once, as its own line. The longer deposit paragraph is on `/guides/spotting-scams`.
 - “Free to list, no limits” is present.
 - Every photograph has a credit that matches `IMAGE-CREDITS.md` and an illustrative label.
 
@@ -298,7 +299,7 @@ Covered under List your property. `/landlords` and `/developers` keep their form
 
 ### P1 Visual (this branch)
 
-Tokens, Manrope, Playfair Display, wordmark, tagline, favicon, header, More menu, Sign in alignment, mobile drawer, homepage in the ten-section order, mobile layout of those sections, prelaunch states on Buy, Rent, Land, Commercial, and Agents, bottom-sheet filters around the existing search form, About story restored word for word, footer, image credits, WhatsApp flag left off.
+Tokens, Manrope, Playfair Display, wordmark, tagline, favicon, header, More menu, Sign in alignment, mobile drawer, homepage in the order in section 6, mobile layout of those sections, prelaunch states on Buy, Rent, Land, Commercial, and Agents, bottom-sheet filters around the existing search form, About story restored word for word, footer, image credits, WhatsApp flag left off.
 
 ### P2 Journeys
 
@@ -368,6 +369,6 @@ Do not add columns and do not run migrations in this workstream. These tables st
 
 - `Do not send an ID image` on `/agents/apply`.
 - `Payment is arranged with Guyana Keys before anything is featured or advertised.` on `/advertise/listing`.
-- `A listing is not proof of title.` wherever it is a disclosure. It leaves the homepage hero. On the homepage it remains once, inside the trust paragraph. The footer keeps the sentence on other pages. Guides and listing pages keep their own copies.
+- `A listing is not proof of title.` wherever it is a disclosure. It leaves the homepage hero. On the homepage it remains once, under the guides heading. The footer keeps the sentence on other pages. `/guides/spotting-scams` keeps the full deposit paragraph, which includes the sentence. Listing pages keep their own copies.
 - `Free to list, no limits` on the homepage, the apply page, and the list offer.
 - The About page story from `cursor/about-story-6636`, including headings and both CTAs.

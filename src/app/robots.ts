@@ -1,13 +1,13 @@
 import type { MetadataRoute } from "next";
-import { siteUrl } from "../lib/contact";
+import { publicOrigin } from "../lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
-      disallow: ["/admin", "/agent/", "/agent$", "/api/", "/account", "/dashboard", "/preview"],
+      allow: ["/", "/agents", "/agents/", "/guides", "/guides/", "/about", "/contact", "/listings", "/listings/", "/advertise", "/advertise/"],
+      disallow: ["/admin$", "/admin/", "/agent$", "/agent/", "/api/", "/account$", "/account/", "/dashboard$", "/dashboard/", "/preview$", "/preview/"],
     },
-    sitemap: `${siteUrl()}/sitemap.xml`,
+    sitemap: `${publicOrigin}/sitemap.xml`,
   };
 }

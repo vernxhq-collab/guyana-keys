@@ -10,6 +10,6 @@ Licence pages:
 | --- | --- | --- | --- | --- |
 | `public/brand/cathedral-georgetown.jpg` | St George's Cathedral, Georgetown | https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg | Ian Mackenzie | CC BY 2.0 |
 
-The original was downloaded from Wikimedia Commons and resized to a maximum width of 1600px. Area tiles and category cards use a Forest/Ivory graphic, not a photograph.
+The original was downloaded from Wikimedia Commons and resized to a maximum width of 1600px. Area tiles use a Forest gradient, not a photograph. `public/brand/og.jpg` is a generated Forest wordmark card for link previews. It is not a photograph.
 
 The Unsplash files already referenced on `/advertise` are not part of this set and are not reused on the homepage.

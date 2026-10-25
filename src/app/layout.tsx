@@ -5,7 +5,8 @@ import { Header } from "../components/Header";
 import { LiveChat } from "../components/LiveChat";
 import { SessionCatcher } from "../components/SessionCatcher";
 import Link from "next/link";
-import { publicEmail, siteUrl } from "../lib/contact";
+import { publicEmail } from "../lib/contact";
+import { publicOrigin } from "../lib/seo";
 import { showCompanyWhatsApp } from "../lib/public-flags";
 
 const description = "Guyana property for locals and diaspora — find, list, invest.";
@@ -14,7 +15,7 @@ const manrope = Manrope({ subsets: ["latin"], display: "swap", variable: "--font
 const playfair = Playfair_Display({ subsets: ["latin"], display: "swap", variable: "--font-display" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
+  metadataBase: new URL(publicOrigin),
   title: { default: "Guyana Keys", template: "%s" },
   description,
   openGraph: {
@@ -23,8 +24,9 @@ export const metadata: Metadata = {
     siteName: "Guyana Keys",
     type: "website",
     locale: "en_GY",
+    images: [{ url: "/brand/og.jpg", width: 1200, height: 630, alt: "Guyana Keys" }],
   },
-  twitter: { card: "summary", title: "Guyana Keys", description },
+  twitter: { card: "summary_large_image", title: "Guyana Keys", description, images: ["/brand/og.jpg"] },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,17 +1,11 @@
 import Link from "next/link";
 import { areas, regionSlug } from "../lib/areas";
 import { SAMPLE_LABEL } from "../lib/sample-label";
+import { GuideCards } from "./GuideCards";
 import { HomeSearch } from "./HomeSearch";
 import { MarketCard, type MarketCardData } from "./MarketCard";
 
 const regions = ["Georgetown", "East Coast Demerara", "East Bank Demerara", "West Coast Demerara", "Essequibo", "Berbice"];
-
-const categories = [
-  { href: "/listings?purpose=Sale", title: "Buy", line: "Houses and apartments for sale." },
-  { href: "/listings?purpose=Rent", title: "Rent", line: "Rentals across Guyana." },
-  { href: "/listings?type=Land", title: "Land", line: "House lots and other land." },
-  { href: "/listings?type=Commercial", title: "Commercial", line: "Offices, shops, and commercial property." },
-];
 
 function Credit({ author, file, licence, licenceHref }: { author: string; file: string; licence: string; licenceHref: string }) {
   return (
@@ -41,13 +35,7 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
           />
         </figure>
         <div className="home-search-wrap">
-          <div className="home-search-unit">
-            <HomeSearch areas={areas.map((area) => ({ slug: area.slug, name: area.name }))} />
-            <div className="home-list-band">
-              <p>Free to list, no limits.</p>
-              <Link className="btn" href="/advertise">List your property free</Link>
-            </div>
-          </div>
+          <HomeSearch areas={areas.map((area) => ({ slug: area.slug, name: area.name }))} />
         </div>
       </section>
       <section className="wrap home-section">
@@ -66,16 +54,15 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
           })}
         </div>
       </section>
+      <section className="wrap home-section home-guides">
+        <h2>Guides for buying and renting in Guyana</h2>
+        <p className="home-note">A listing is not proof of title.</p>
+        <GuideCards />
+      </section>
       <section className="wrap home-section">
-        <h2>Property categories</h2>
-        <div className="category-grid">
-          {categories.map((item) => (
-            <Link className="category-card" key={item.href} href={item.href}>
-              <span className="area-mark" aria-hidden="true" />
-              <strong>{item.title}</strong>
-              <span>{item.line}</span>
-            </Link>
-          ))}
+        <div className="home-list-band">
+          <p>Free to list, no limits.</p>
+          <Link className="btn" href="/advertise">List your property free</Link>
         </div>
       </section>
       {cards.length ? (
@@ -87,11 +74,6 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
           <div className="market-grid">{cards.map((card) => <MarketCard key={card.id} card={card} />)}</div>
         </section>
       ) : null}
-      <section className="wrap home-section home-trust">
-        <h2>Buying with care</h2>
-        <p>Prices show GYD and a USD guide. A listing is not proof of title. Have an attorney search the registry before any deposit. A viewing from abroad is a request the agent confirms. This is not a valuation and not a promised return.</p>
-        <Link className="btn ghost" href="/guides">Read the buying guide</Link>
-      </section>
     </main>
   );
 }

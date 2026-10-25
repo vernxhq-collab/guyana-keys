@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const area = areas.find((item) => item.slug === slug);
-  if (!area) return { title: "Neighbourhood | Guyana Keys" };
+  if (!area) return withCanonical(`/areas/${slug}`, { title: "Neighbourhood | Guyana Keys", description: "That neighbourhood is not listed on Guyana Keys." });
   return withCanonical(`/areas/${area.slug}`, {
     title: `${area.name} property | Guyana Keys`,
     description: `${area.note} Homes for sale and rent in ${area.name}, ${area.region}.`,

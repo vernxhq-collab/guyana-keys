@@ -15,7 +15,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const name = areas.find((item) => regionSlug(item.region) === slug)?.region;
-  if (!name) return { title: "Region | Guyana Keys" };
+  if (!name) return withCanonical(`/areas/region/${slug}`, { title: "Region | Guyana Keys", description: "That region is not listed on Guyana Keys." });
   const guide = regionGuide(name);
   return withCanonical(`/areas/region/${slug}`, { title: `${guide.name} property | Guyana Keys`, description: guide.about });
 }

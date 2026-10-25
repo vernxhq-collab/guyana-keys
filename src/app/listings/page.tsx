@@ -36,10 +36,18 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchQuery> }): Promise<Metadata> {
   const params = await searchParams;
-  return withCanonical(listingsPath(params), {
-    title: "Property in Guyana | Guyana Keys",
-    description: "Search homes, rentals, and land in Guyana. Free to list, no limits. A listing is not proof of title.",
-  });
+  const mode = listingMode(params.purpose, params.type);
+  const label = searchLabel(params);
+  const title = label === "All listings" ? `${mode.title} | Guyana Keys` : `${mode.title}: ${label} | Guyana Keys`;
+  const descriptions = {
+    buy: "Houses and apartments for sale in Guyana.",
+    rent: "Rentals across Guyana, with prices in GYD and a USD guide.",
+    land: "House lots and other land in Guyana.",
+    commercial: "Offices, shops, and commercial property in Guyana.",
+    search: "Search homes, rentals, and land in Guyana. Free to list, no limits. A listing is not proof of title.",
+  } as const;
+  const description = label === "All listings" ? descriptions[mode.kind] : `${descriptions[mode.kind]} ${label}.`;
+  return withCanonical(listingsPath(params), { title, description });
 }
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchQuery> }) {
