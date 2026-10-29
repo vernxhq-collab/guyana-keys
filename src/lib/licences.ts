@@ -36,10 +36,8 @@ export function checkBadge(input: {
 }) {
   const parts: string[] = [];
   const dates: string[] = [];
-  if (input.idStatus === "checked" && input.idCheckedAt) {
-    parts.push("ID");
-    dates.push(input.idCheckedAt);
-  }
+  const idReviewed = input.idStatus === "checked" && Boolean(input.idCheckedAt);
+  if (idReviewed && input.idCheckedAt) dates.push(input.idCheckedAt);
   for (const licence of input.licences) {
     const status = expireStatus(licence.status, licence.expiry || null, input.today);
     const label = licenceLabel(licence.type);
@@ -48,8 +46,13 @@ export function checkBadge(input: {
       if (licence.checkedAt) dates.push(licence.checkedAt);
     }
   }
-  if (!parts.length) return "";
+  if (!parts.length && !idReviewed) return "";
   const when = monthLabel(dates.sort().at(-1) || "");
-  const stem = `${joinParts(parts)} checked by Guyana Keys`;
+  // Boss chose "ID reviewed" on 29 Oct 2026. Licences keep "checked".
+  const stem = !parts.length
+    ? "ID reviewed by Guyana Keys"
+    : idReviewed
+      ? `ID reviewed and ${joinParts(parts)} checked by Guyana Keys`
+      : `${joinParts(parts)} checked by Guyana Keys`;
   return when ? `${stem} · ${when}` : stem;
 }

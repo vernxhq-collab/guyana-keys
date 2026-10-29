@@ -70,7 +70,7 @@ export default function LicencesPage() {
   return (
     <div className="stack">
       <h1>Licences and identity</h1>
-      <p className="quiet">A public badge names the check, for example “ID and GRA House Agent licence checked by Guyana Keys · Oct 2026”. An expired licence drops off that line. The retention review job is switched off and does not delete files.</p>
+      <p className="quiet">A public badge names the check, for example “ID reviewed and GRA House Agent licence checked by Guyana Keys · Oct 2026”. An expired licence drops off that line. The retention review job is switched off and does not delete files.</p>
       {!ready ? <p>These tables are not ready yet.</p> : null}
       {note ? <p>{note}</p> : null}
       <h2>Licences</h2>

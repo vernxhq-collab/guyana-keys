@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { DeskNav } from "../../../components/DeskNav";
 import { privateMeta } from "../../../lib/seo";
 import { SignOut } from "../../../components/SignOut";
+import { TwoStep } from "../../../components/TwoStep";
+import { twoStepDone } from "../../../lib/mfa";
 import { grantAdmin, isAdminEmail, readSession } from "../../../lib/session";
 
 const items: [string, string][] = [["Home", "/admin"], ["People", "/admin/people"], ["Listings", "/admin/listings"], ["Applications", "/admin/applications"], ["Licences", "/admin/licences"], ["Keys Check", "/admin/keys-check"], ["Requests", "/admin/requests"], ["Inbox", "/admin/inbox"]];
@@ -27,6 +29,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p>This desk is for the Guyana Keys admin.</p>
           {session?.user.email ? <p className="quiet">Signed in as {session.user.email}.</p> : null}
           <a className="btn" href="/admin/login">Admin sign in</a>
+          <SignOut next="/admin/login" label="Log out" />
+        </div>
+      ) : !twoStepDone(session.token) ? (
+        <div className="stack">
+          <TwoStep />
           <SignOut next="/admin/login" label="Log out" />
         </div>
       ) : (

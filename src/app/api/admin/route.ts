@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminAgent, adminApplications, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, reviewApplication, saveInstructions, setApproved, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { adminCheckQueue, declineDeletion, openIdentityFile, purgeIdentityFile, reviewIdentity, reviewLicence } from "../../../lib/phase1-desk";
 import { adminKeysQueue, decideKeysCheck, openKeysFiles, saveKeysNotes } from "../../../lib/keys-check-data";
+import { twoStepDone } from "../../../lib/mfa";
 import { isAdminEmail, readSession } from "../../../lib/session";
 
 async function admin() {
@@ -9,6 +10,9 @@ async function admin() {
   if (!session) return { error: NextResponse.json({ error: "Sign in required." }, { status: 401 }) };
   if (!session.profile || session.profile.role !== "admin" || !isAdminEmail(session.user.email)) {
     return { error: NextResponse.json({ error: "This desk is for the Guyana Keys admin." }, { status: 403 }) };
+  }
+  if (!twoStepDone(session.token)) {
+    return { error: NextResponse.json({ error: "Finish two-step sign-in to use the admin desk." }, { status: 403 }) };
   }
   return { profile: session.profile };
 }

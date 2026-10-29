@@ -18,7 +18,7 @@ type Licence = {
 };
 
 type DocumentRow = { id: string; kind: string; createdAt: string; deletedAt: string; consentVersion: string };
-type KeysState = { status: string; code: string; codeIssuedAt: string; idKind: string; idNumber: string; decisionReason: string } | null;
+type KeysState = { status: string; code: string; codeIssuedAt: string; idKind: string; idNumberLast3: string; decisionReason: string } | null;
 
 export default function ChecksPage() {
   const [ready, setReady] = useState(true);

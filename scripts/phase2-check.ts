@@ -122,14 +122,14 @@ const badge = checkBadge({
   licences: [{ type: "gra_house_agent", status: "checked", checkedAt: "2026-10-02", expiry: "2027-01-01" }],
   today: "2026-10-22",
 });
-assert.equal(badge, "ID and GRA House Agent licence checked by Guyana Keys · Oct 2026");
+assert.equal(badge, "ID reviewed and GRA House Agent licence checked by Guyana Keys · Oct 2026");
 assert.equal(badge.includes("Verified"), false);
 assert.equal(checkBadge({
   idStatus: "checked",
   idCheckedAt: "2026-10-02T00:00:00Z",
   licences: [{ type: "gra_house_agent", status: "checked", checkedAt: "2026-10-02", expiry: "2026-10-01" }],
   today: "2026-10-22",
-}), "ID checked by Guyana Keys · Oct 2026");
+}), "ID reviewed by Guyana Keys · Oct 2026");
 assert.equal(checkBadge({ licences: [], today: "2026-10-22" }), "");
 assert.equal(expireStatus("rejected", "2020-01-01", "2026-10-22"), "rejected");
 assert.equal(expireStatus("checked", "2026-10-01", "2026-10-22"), "expired");
