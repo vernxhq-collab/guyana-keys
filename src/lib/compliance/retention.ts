@@ -5,7 +5,7 @@ export const RETENTION_MONTHS = 24;
 export const ID_CONSENT_VERSION = "2026-10-22-keys";
 
 export const idConsentText = [
-  "Guyana Keys asks for photos of your ID, front and back, your licence, a selfie of you holding that ID, and either a photo of you holding a paper with a one-time code or a short video of you saying that code.",
+  "Guyana Keys asks for photos of your ID, front and back, your licence, a selfie of you holding that ID, and a photo of you holding a paper with a one-time code.",
   "A person at Guyana Keys looks at those files. No outside company checks them, and no software compares faces.",
   "The files are stored in a private bucket. They are not on a public link. An admin can open them for a short time, and that open is written to an audit log. Other agents cannot open them.",
   "They are kept while your account is active, and for 24 months after the account closes, unless you ask for them to be deleted sooner or the law requires a different period.",
