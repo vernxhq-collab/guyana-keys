@@ -206,9 +206,11 @@ assert.deepEqual([...SUBJECT_TYPES], ["agent", "tenant", "purchaser", "landlord"
 assert.equal(makeCheckCode(() => 0), "AAAAAA");
 assert.equal(codeStillCurrent(new Date().toISOString()), true);
 assert.equal(codeStillCurrent("2020-01-01T00:00:00Z"), false);
-assert.equal(ID_CONSENT_VERSION, "2026-10-22-keys");
+assert.equal(ID_CONSENT_VERSION, "2026-10-30-keys");
 assert.match(idConsentText, /a photo of you holding a paper with a one-time code/);
 assert.equal(/\b(video|clip)\b/i.test(idConsentText), false);
+assert.equal(/\bverified\b/i.test(idConsentText), false);
+assert.match(idConsentText, /You can withdraw consent at any time by emailing info@gykeys\.com\. If you do, the check stops and your images are deleted under the retention rules\./);
 const tiny = imageQuality({ width: 40, height: 40, sampleWidth: 4, sampleHeight: 4, luminance: Array.from({ length: 16 }, () => 255) });
 assert.equal(tiny.some((line) => line.includes("small")), true);
 assert.equal(tiny.some((line) => line.includes("bright")), true);
