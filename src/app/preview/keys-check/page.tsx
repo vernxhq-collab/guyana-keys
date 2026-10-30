@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { KeysCapture } from "../../../components/KeysCapture";
+import { ReviewBadge } from "../../../components/ReviewBadge";
 import { ID_CONSENT_VERSION } from "../../../lib/compliance/retention";
 import { previewEnabled } from "../../../lib/preview/http";
 import { SAMPLE_LABEL } from "../../../lib/sample-label";
@@ -29,6 +30,11 @@ export default function PreviewKeysCheckPage() {
           ))}
         </div>
         <p>Saving notes does not approve the check. No software compares the faces.</p>
+      </section>
+      <section className="stack">
+        <h2>Badge after approval</h2>
+        <p className="quiet">Sample only. The month is the month a person approved the check. Nothing shows before that.</p>
+        <ReviewBadge status="approved" reviewedAt="2026-10-29T12:00:00Z" subjectType="agent" />
       </section>
     </main>
   );

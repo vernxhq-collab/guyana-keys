@@ -279,8 +279,9 @@ begin
   begin
     execute 'drop policy if exists identity_documents_own_read on storage.objects';
     execute 'create policy identity_documents_own_read on storage.objects for select to authenticated using (bucket_id = ''identity-documents'' and (storage.foldername(name))[1] = auth.uid()::text)';
+    -- Phase 2a: no direct insert by signed-in users. Files arrive through a server-issued
+    -- signed upload URL and the server checks them before they are kept.
     execute 'drop policy if exists identity_documents_own_insert on storage.objects';
-    execute 'create policy identity_documents_own_insert on storage.objects for insert to authenticated with check (bucket_id = ''identity-documents'' and (storage.foldername(name))[1] = auth.uid()::text)';
   exception when others then
     raise notice 'Storage policies for identity-documents were not created. Confirm them in the dashboard. There is no public read policy.';
   end;
@@ -350,16 +351,29 @@ revoke all on table public.keys_checks from public, anon, authenticated;
 revoke all on table public.keys_check_flags from public, anon, authenticated;
 -- Agents can read their own row. They can insert a collecting check, and they can
 -- update only the upload references on that row. Reviewer columns stay revoked.
-grant select (
-  id, agent_id, subject_type, status, provider, id_kind, id_number, code, code_issued_at, submitted_at,
-  reviewer_name, reviewer_notes, reviewed_at, name_matches, face_matches, code_matches,
-  document_not_expired, licence_recorded, licence_expiry_ok, decision, decision_reason,
-  decided_by, decided_at, created_at
-) on table public.keys_checks to authenticated;
-grant insert (id, agent_id, subject_type, status, provider, id_kind, id_number, code, code_issued_at)
-  on table public.keys_checks to authenticated;
-grant update (id_kind, id_number, code, code_issued_at)
-  on table public.keys_checks to authenticated;
+-- Phase 2a replaces the plain id_number with id_number_hmac and id_number_last3, so the
+-- number columns are granted only when they exist. This file stays safe to re-run after
+-- supabase/phase2a-drop-plain-id.sql. Agents never get id_number_hmac.
+do $grants$
+declare
+  plain boolean := exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'keys_checks' and column_name = 'id_number')
+    and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'keys_checks' and column_name = 'id_number_hmac');
+  last3 boolean := exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'keys_checks' and column_name = 'id_number_last3');
+begin
+  execute 'grant select (id, agent_id, subject_type, status, provider, id_kind, '
+    || case when plain then 'id_number, ' else '' end
+    || case when last3 then 'id_number_last3, ' else '' end
+    || 'code, code_issued_at, submitted_at, reviewer_name, reviewer_notes, reviewed_at, name_matches, face_matches, code_matches, '
+    || 'document_not_expired, licence_recorded, licence_expiry_ok, decision, decision_reason, decided_by, decided_at, created_at) '
+    || 'on table public.keys_checks to authenticated';
+  execute 'grant insert (id, agent_id, subject_type, status, provider, id_kind, '
+    || case when plain then 'id_number, ' else '' end
+    || 'code, code_issued_at) on table public.keys_checks to authenticated';
+  execute 'grant update (id_kind, '
+    || case when plain then 'id_number, ' else '' end
+    || 'code, code_issued_at) on table public.keys_checks to authenticated';
+end
+$grants$;
 grant select on table public.keys_check_flags to authenticated;
 
 drop policy if exists keys_checks_own on public.keys_checks;
@@ -552,8 +566,15 @@ before insert or update on public.keys_checks
 for each row execute function private.guard_keys_check_write();
 
 drop trigger if exists flag_duplicate_id_number on public.keys_checks;
-create trigger flag_duplicate_id_number
-after insert or update of id_number on public.keys_checks
-for each row execute function private.flag_duplicate_id_number();
+do $idn$
+begin
+  -- Before Phase 2a only. supabase/phase2a-verify.sql moves duplicate checks to id_number_hmac.
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'keys_checks' and column_name = 'id_number')
+    and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'keys_checks' and column_name = 'id_number_hmac')
+  then
+    execute 'create trigger flag_duplicate_id_number after insert or update of id_number on public.keys_checks for each row execute function private.flag_duplicate_id_number()';
+  end if;
+end
+$idn$;
 
 commit;

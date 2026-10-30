@@ -28,6 +28,7 @@ jobs:
       - run: npx tsc --noEmit
       - run: node --experimental-strip-types scripts/phase1-check.ts
       - run: node --experimental-strip-types scripts/phase2-check.ts
+      - run: node --experimental-strip-types scripts/phase2a-check.ts
       - run: npx next build
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-fixture.sql
@@ -41,6 +42,17 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/listing-site-facts-check.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase1-market-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-seed.sql
+      - run: "! psql \"postgres://postgres:postgres@localhost:5432/keys\" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql"
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-drop-plain-id.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-drop-plain-id.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
   migration:
     runs-on: ubuntu-latest
@@ -72,6 +84,16 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/listing-site-facts.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/listing-site-facts-check.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase1-market-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-seed.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-drop-plain-id.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-drop-plain-id.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
   upgrade:
     runs-on: ubuntu-latest
@@ -106,4 +128,14 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/listing-site-facts-check.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase1-market-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-seed.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
+      - run: PGOPTIONS="-c gk.id_number_hmac_key=phase2a-ci-synthetic-key-not-a-secret-0000" psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-drop-plain-id.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-drop-plain-id.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase1-market.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql

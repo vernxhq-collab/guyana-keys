@@ -10,7 +10,7 @@ type Check = {
   subjectType: string;
   status: string;
   idKind: string;
-  idNumber: string;
+  idNumberLast3: string;
   code: string;
   codeIssuedAt: string;
   reviewerNotes: string;
@@ -84,7 +84,7 @@ export default function KeysCheckAdminPage() {
       {checks.length === 0 ? <p>No check has been sent.</p> : checks.map((row) => (
         <form className="panel stack" key={`${row.id}-${row.status}`} onSubmit={(event) => event.preventDefault()}>
           <strong>{row.agentName}</strong>
-          <p className="quiet">{subjectLabel(row.subjectType) || "Agent"} · {row.status} · {row.idKind || "document not set"} · {row.idNumber || "number not set"} · code {row.code || "not issued"}</p>
+          <p className="quiet">{subjectLabel(row.subjectType) || "Agent"} · {row.status} · {row.idKind || "document not set"} · {row.idNumberLast3 ? `number ends in ${row.idNumberLast3}` : "number not set"} · code {row.code || "not issued"}</p>
           {row.flags.map((flag) => <p key={flag}>{flag}</p>)}
           <button className="btn" type="button" onClick={() => void openSet(row.id)}>Open the files</button>
           {active === row.id && open.length > 0 ? (

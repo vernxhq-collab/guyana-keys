@@ -12,6 +12,7 @@ import {
   type KeysDocumentKind,
   verificationProvider,
 } from "./keys-check";
+import { hashIdNumber, idNumberLast3, normaliseIdNumber } from "./id-number";
 import { serviceDb } from "./supabase";
 
 export const IDENTITY_BUCKET = "identity-documents";
@@ -35,7 +36,7 @@ function viewCheck(row: Row | null) {
     subjectType: text(row.subject_type) || verificationProvider().subjectType,
     provider: text(row.provider) || verificationProvider().id,
     idKind: text(row.id_kind),
-    idNumber: text(row.id_number),
+    idNumberLast3: text(row.id_number_last3),
     code: text(row.code),
     codeIssuedAt: text(row.code_issued_at),
     submittedAt: text(row.submitted_at),
@@ -162,8 +163,11 @@ export async function submitKeysCheck(agentId: string, body: Record<string, unkn
   if (!db) return { error: "The check could not be sent." };
   const idKind = text(body.idKind);
   if (!ID_KINDS.includes(idKind as IdKind)) return { error: "Choose national ID, passport, or driver's licence." };
-  const idNumber = text(body.idNumber).trim().toUpperCase().replace(/\s+/g, "").slice(0, 40);
+  const idNumber = normaliseIdNumber(text(body.idNumber));
   if (idNumber.length < 4) return { error: "Enter the ID number." };
+  // Only a keyed hash and the last 3 characters are stored. The plain number is not kept.
+  const idNumberHmac = hashIdNumber(idNumber);
+  if (!idNumberHmac) return { error: "The ID number cannot be stored on this desk yet. Try again later." };
   const found = await latestCheck(agentId);
   if (found.missing || !found.row || text(found.row.status) !== "collecting") return { error: "Keys Check is not open for this account." };
   if (!text(found.row.code) || !codeStillCurrent(text(found.row.code_issued_at))) return { error: "Issue a current code before you send the check." };
@@ -184,7 +188,8 @@ export async function submitKeysCheck(agentId: string, body: Record<string, unkn
   const { error } = await db.from("keys_checks").update({
     status: "submitted",
     id_kind: idKind,
-    id_number: idNumber,
+    id_number_hmac: idNumberHmac,
+    id_number_last3: idNumberLast3(idNumber),
     submitted_at: new Date().toISOString(),
     provider: "manual",
   }).eq("id", text(found.row.id)).eq("agent_id", agentId).eq("status", "collecting");
