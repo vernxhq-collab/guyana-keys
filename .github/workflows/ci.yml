@@ -26,6 +26,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
+      - run: node --experimental-strip-types scripts/site-origin-check.ts
       - run: node --experimental-strip-types scripts/phase1-check.ts
       - run: node --experimental-strip-types scripts/phase2-check.ts
       - run: node --experimental-strip-types scripts/phase2a-check.ts

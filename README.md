@@ -11,7 +11,7 @@ Copy `.env.example` to `.env.local` and fill in the values there. `.env.example`
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. Use `https://yednogdlhokowqddznht.supabase.co`. A misspelling with an extra `g` in the project ref is rewritten so the site still loads, but the Vercel value should be the correct URL. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public Supabase key used for sign-in. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only key. Never expose it in the browser. |
-| `NEXT_PUBLIC_SITE_URL` | Public site origin, used for links in email and for the sitemap. |
+| `NEXT_PUBLIC_SITE_URL` | Public origin for email links and magic-link sign-in. Defaults to `https://gykeys.com`. A `vercel.app` value is ignored. Canonicals and the sitemap stay on `https://gykeys.com`. |
 | `ADMIN_EMAILS` | Comma-separated emails that can open the admin desk. |
 | `RESEND_API_KEY` | Resend key for alert and enquiry email. Email is skipped when this is empty. |
 | `ALERT_FROM_EMAIL` | From address for those emails. |

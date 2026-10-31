@@ -5,6 +5,7 @@ import { claimPhoneToken, issuePhoneToken, loadPhoneScan, savePhoneDraft } from 
 import { PHONE_SCAN_COOKIE } from "../../../lib/phone-token";
 import { readCheckAgent } from "../../../lib/scan-access";
 import { canUseAgentDesk, readSession } from "../../../lib/session";
+import { handoffOrigin } from "../../../lib/site-origin";
 
 function cookieOptions(maxAge: number) {
   return { httpOnly: true, sameSite: "lax" as const, path: "/", maxAge, secure: process.env.NODE_ENV === "production" };
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     if (tooMany(`phonescan:${session.profile.id}`, 5, 10 * 60 * 1000)) {
       return NextResponse.json({ error: "Too many phone links. Wait 10 minutes." }, { status: 429 });
     }
-    const origin = new URL(request.url).origin;
+    const origin = handoffOrigin(new URL(request.url).origin);
     const issued = await issuePhoneToken(session.profile.id, origin);
     if ("error" in issued && issued.error) return NextResponse.json({ error: issued.error }, { status: 400 });
     return NextResponse.json(issued);

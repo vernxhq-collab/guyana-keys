@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirectForDesk, type DeskName } from "./site-origin";
 import { authClient, serviceDb } from "./supabase";
 
 export const SESSION_COOKIE = "gk_session";
@@ -25,16 +26,10 @@ export type Profile = {
 
 export type SessionUser = { id: string; name: string; email: string };
 
-const redirects = {
-  buyer: "https://guyana-keys.vercel.app/account",
-  agent: "https://guyana-keys.vercel.app/agent",
-  admin: "https://guyana-keys.vercel.app/admin",
-} as const;
-
-export type Desk = keyof typeof redirects;
+export type Desk = DeskName;
 
 export function redirectFor(desk: Desk) {
-  return redirects[desk];
+  return redirectForDesk(desk);
 }
 
 export function isAdminEmail(email: string) {

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { CANONICAL_SITE_ORIGIN } from "./site-origin";
 
 /** Public site origin. Canonicals stay here even when a preview host differs. */
-export const publicOrigin = "https://gykeys.com";
+export const publicOrigin = CANONICAL_SITE_ORIGIN;
 
 const shareImage = {
   url: `${publicOrigin}/brand/og.jpg`,
