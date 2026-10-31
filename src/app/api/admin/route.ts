@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminAgent, adminApplications, adminFeature, adminHide, adminHome, adminInbox, adminLead, adminListings, adminPeople, adminPublish, adminRequest, adminRequests, markPaid, reviewApplication, saveInstructions, setApproved, setPlan, setVerified, suspendAgent, unsuspendAgent } from "../../../lib/admin-data";
 import { adminCheckQueue, declineDeletion, openIdentityFile, purgeIdentityFile, reviewIdentity, reviewLicence } from "../../../lib/phase1-desk";
 import { adminKeysQueue, decideKeysCheck, openKeysFiles, saveKeysNotes } from "../../../lib/keys-check-data";
+import { decideLevel, grantSelfReviewer, loadReviewDesk, loadReviewerAccess } from "../../../lib/levels-data";
 import { twoStepDone } from "../../../lib/mfa";
 import { isAdminEmail, readSession } from "../../../lib/session";
 
@@ -34,14 +35,25 @@ export async function GET(request: Request) {
   if (part === "lead") return NextResponse.json(await adminLead(id));
   if (part === "applications") return NextResponse.json(await adminApplications());
   if (part === "licences") return NextResponse.json(await adminCheckQueue());
-  if (part === "keys") return NextResponse.json(await adminKeysQueue());
-  if (part === "keysFiles") {
+  if (part === "keys" || part === "keysFiles" || part === "levels" || part === "document") {
+    const access = await loadReviewerAccess(gate.profile.id);
+    if (access.offline) return NextResponse.json({ error: "Keys Check could not be loaded." }, { status: 400 });
+    if (part === "levels") {
+      if (access.missing) return NextResponse.json({ ready: false });
+      if (!access.role && access.needsSetup) return NextResponse.json({ ready: true, needsSetup: true, role: "", queues: [], items: [] });
+      if (!access.role) return NextResponse.json({ error: "Your account is not on the review desk yet." }, { status: 403 });
+      const desk = await loadReviewDesk(access.role);
+      if (desk.error) return NextResponse.json({ error: desk.error }, { status: 400 });
+      return NextResponse.json(desk);
+    }
+    if (!access.missing && !access.role) return NextResponse.json({ error: "Your account is not on the review desk yet." }, { status: 403 });
+    if (part === "keys") return NextResponse.json(await adminKeysQueue());
+    if (part === "document") {
+      const opened = await openIdentityFile(gate.profile.id, id, url.searchParams.get("intent") === "download");
+      if ("error" in opened && opened.error) return NextResponse.json(opened, { status: 400 });
+      return NextResponse.json(opened);
+    }
     const opened = await openKeysFiles(gate.profile.id, id);
-    if ("error" in opened && opened.error) return NextResponse.json(opened, { status: 400 });
-    return NextResponse.json(opened);
-  }
-  if (part === "document") {
-    const opened = await openIdentityFile(gate.profile.id, id, url.searchParams.get("intent") === "download");
     if ("error" in opened && opened.error) return NextResponse.json(opened, { status: 400 });
     return NextResponse.json(opened);
   }
@@ -70,6 +82,8 @@ export async function POST(request: Request) {
   else if (action === "declineDeletion") result = await declineDeletion(gate.profile.id, String(body.requestId || ""));
   else if (action === "keysNotes") result = await saveKeysNotes(gate.profile.name || gate.profile.email || "Admin", { ...body, actorId: gate.profile.id });
   else if (action === "keysDecision") result = await decideKeysCheck(gate.profile.name || gate.profile.email || "Admin", gate.profile.id, body);
+  else if (action === "levelDecision") result = await decideLevel(gate.profile.id, body);
+  else if (action === "grantReviewer") result = await grantSelfReviewer(gate.profile.id);
   else if (action === "feature") result = await adminFeature(String(body.propertyId || ""), true);
   else if (action === "unfeature") result = await adminFeature(String(body.propertyId || ""), false);
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
+import { ReviewDesk } from "../../../../components/ReviewDesk";
 import { subjectLabel } from "../../../../lib/keys-check";
+import type { ReviewDeskData } from "../../../../lib/levels";
 
 type Check = {
   id: string;
@@ -29,6 +31,29 @@ type OpenFile = { id: string; kind: string; label: string; url: string; qualityN
 const order = ["id_front", "id_back", "selfie_with_id", "code_selfie", "code_video", "licence"];
 
 export default function KeysCheckAdminPage() {
+  const [desk, setDesk] = useState<ReviewDeskData | null>(null);
+  const [legacy, setLegacy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin?part=levels")
+      .then(async (res) => ({ ok: res.ok, status: res.status, body: await res.json() }))
+      .then(({ ok, status, body }) => {
+        if (status === 403) setError(body.error || "Your account is not on the review desk yet.");
+        else if (!ok || body.error) setError(body.error || "Could not load Keys Check.");
+        else if (body.ready === false) setLegacy(true);
+        else setDesk(body);
+      })
+      .catch(() => setError("Could not load Keys Check."));
+  }, []);
+
+  if (error) return <p>{error}</p>;
+  if (legacy) return <LegacyKeysCheck />;
+  if (!desk) return <DeskSkeleton count={3} />;
+  return <ReviewDesk initial={desk} />;
+}
+
+function LegacyKeysCheck() {
   const [checks, setChecks] = useState<Check[] | null>(null);
   const [ready, setReady] = useState(true);
   const [open, setOpen] = useState<OpenFile[]>([]);

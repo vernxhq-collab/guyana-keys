@@ -12,7 +12,7 @@ Copy `.env.example` to `.env.local` and fill in the values there. `.env.example`
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public Supabase key used for sign-in. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only key. Never expose it in the browser. |
 | `NEXT_PUBLIC_SITE_URL` | Public site origin, used for links in email and for the sitemap. |
-| `ADMIN_EMAILS` | Comma-separated emails that can open the admin desk. |
+| `ADMIN_EMAILS` | Comma-separated emails that can open the admin desk. The review desk also needs a row in `reviewer_roles` after `supabase/phase2b-levels.sql`. |
 | `RESEND_API_KEY` | Resend key for alert and enquiry email. Email is skipped when this is empty. |
 | `ALERT_FROM_EMAIL` | From address for those emails. |
 | `WASENDER_API_KEY` | WhatsApp sender key. Messages are skipped when this is empty. |
