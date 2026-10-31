@@ -1,6 +1,6 @@
 # Image credits
 
-Photographs used in the Priority 1 redesign. Each one is genuine Guyana scenery or architecture. Each is stored under `public/brand/` and marked in the page as illustrative, not a listing.
+Photographs used in the Priority 1 redesign. Each one is genuine Guyana scenery or architecture. Each is stored under `public/brand/`. The homepage hero alt text says the photograph is illustrative and not a listing. The public credit for each file is on `/credits`, linked from the footer. The homepage does not show a caption on the photograph.
 
 Licence pages:
 

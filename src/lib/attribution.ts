@@ -41,3 +41,24 @@ export function formatLeadSource(row: Record<string, unknown>) {
     .join(" ");
   return ["Guyana Keys", channel, page, utmText].filter(Boolean).join(" · ");
 }
+
+/** Third-party photographs. Each row is copied from docs/redesign/IMAGE-CREDITS.md. */
+export type PhotoCredit = {
+  file: string;
+  subject: string;
+  source: string;
+  author: string;
+  licence: string;
+  licenceHref: string;
+};
+
+export const photoCredits: PhotoCredit[] = [
+  {
+    file: "public/brand/cathedral-georgetown.jpg",
+    subject: "St George's Cathedral, Georgetown",
+    source: "https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg",
+    author: "Ian Mackenzie",
+    licence: "CC BY 2.0",
+    licenceHref: "https://creativecommons.org/licenses/by/2.0/",
+  },
+];

@@ -115,6 +115,17 @@ assert.equal(apiSource.includes("lib/market-sample"), false);
 assert.equal(readFileSync(new URL("../src/lib/sample-label.ts", import.meta.url), "utf8").includes("Sample preview — not a real listing"), true);
 assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("marketSample"), true);
 assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
+assert.equal(marketHome.includes("Illustrative. Not a listing. Photo:"), false);
+assert.equal(marketHome.includes("function Credit"), false);
+assert.match(marketHome, /an illustrative photograph, not a listing/);
+const creditsPage = readFileSync(new URL("../src/app/credits/page.tsx", import.meta.url), "utf8");
+assert.match(creditsPage, /Photos are illustrative and are not listings\./);
+assert.match(creditsPage, /photoCredits/);
+assert.match(readFileSync(new URL("../src/lib/attribution.ts", import.meta.url), "utf8"), /Ian Mackenzie/);
+assert.match(readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8"), /href="\/credits">Photo credits/);
+assert.match(readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8"), /\/credits/);
+assert.match(readFileSync(new URL("../src/app/robots.ts", import.meta.url), "utf8"), /\/credits/);
+assert.equal(readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8").includes(".home-hero figcaption"), false);
 
 const badge = checkBadge({
   idStatus: "checked",

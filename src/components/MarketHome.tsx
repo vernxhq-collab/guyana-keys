@@ -17,14 +17,6 @@ const areaLines: Record<string, string> = {
   Berbice: "New Amsterdam and the Corentyne.",
 };
 
-function Credit({ author, file, licence, licenceHref }: { author: string; file: string; licence: string; licenceHref: string }) {
-  return (
-    <figcaption>
-      Illustrative. Not a listing. Photo: <a href={file}>{author}</a>, <a href={licenceHref}>{licence}</a>.
-    </figcaption>
-  );
-}
-
 export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards: MarketCardData[]; sample?: boolean; liveByRegion?: Record<string, number> }) {
   const shown = regions.filter((name) => areas.some((area) => area.region === name));
   return (
@@ -37,12 +29,6 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
           <div className="home-hero-copy">
             <h1>Your next key is in Guyana.</h1>
           </div>
-          <Credit
-            author="Ian Mackenzie"
-            file="https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg"
-            licence="CC BY 2.0"
-            licenceHref="https://creativecommons.org/licenses/by/2.0/"
-          />
         </figure>
         <div className="home-search-wrap">
           <HomeSearch areas={areas.map((area) => ({ slug: area.slug, name: area.name }))} />

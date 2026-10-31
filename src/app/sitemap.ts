@@ -24,6 +24,7 @@ const pages = [
   "/partners",
   "/privacy",
   "/terms",
+  "/credits",
 ];
 
 export const dynamic = "force-dynamic";
