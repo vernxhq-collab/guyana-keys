@@ -24,7 +24,7 @@ export function MarketHome({ cards, sample = false, liveByRegion = {} }: { cards
       {sample ? <p className="market-banner">{SAMPLE_LABEL}. These cards are not on the public site and are not saved.</p> : null}
       <section className="home-hero">
         <figure className="home-hero-media" data-illustrative="true">
-          <Image src="/brand/cathedral-georgetown.jpg" alt="St George's Cathedral in Georgetown, an illustrative photograph, not a listing." fill priority sizes="100vw" />
+          <Image src="/brand/home-hero-living-room.jpg" alt="Bright living room with louvred windows and keys on the table, an illustrative image, not a listing." fill priority sizes="100vw" />
           <div className="home-hero-shade" aria-hidden="true" />
           <div className="home-hero-copy">
             <h1>Your next key is in Guyana.</h1>

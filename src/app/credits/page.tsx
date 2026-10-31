@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { photoCredits } from "../../lib/attribution";
+import { homepageImageCredit, photoCredits } from "../../lib/attribution";
 import { withCanonical } from "../../lib/seo";
 
 export const metadata: Metadata = withCanonical("/credits", {
   title: "Photo credits | Guyana Keys",
-  description: "Authors and licences for photographs on Guyana Keys. Photos are illustrative and are not listings.",
+  description: "Photo credits for Guyana Keys. Photos are illustrative and are not listings.",
 });
 
 function shown(value: string) {
@@ -24,16 +24,19 @@ export default function CreditsPage() {
     <main className="guide-page">
       <h1>Photo credits</h1>
       <p>Photos are illustrative and are not listings.</p>
-      <ul className="credit-list">
-        {photoCredits.map((photo) => (
-          <li key={photo.file}>
-            <p>{shown(photo.subject)}</p>
-            <p>Photo: {shown(photo.author)}</p>
-            <p><CreditLink href={photo.source} label="Source file" /></p>
-            <p><CreditLink href={photo.licenceHref} label={photo.licence} /></p>
-          </li>
-        ))}
-      </ul>
+      <p>{homepageImageCredit}</p>
+      {photoCredits.length ? (
+        <ul className="credit-list">
+          {photoCredits.map((photo) => (
+            <li key={photo.file}>
+              <p>{shown(photo.subject)}</p>
+              <p>Photo: {shown(photo.author)}</p>
+              <p><CreditLink href={photo.source} label="Source file" /></p>
+              <p><CreditLink href={photo.licenceHref} label={photo.licence} /></p>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </main>
   );
 }

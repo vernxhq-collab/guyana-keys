@@ -1,15 +1,11 @@
 # Image credits
 
-Photographs used in the Priority 1 redesign. Each one is genuine Guyana scenery or architecture. Each is stored under `public/brand/`. The homepage hero alt text says the photograph is illustrative and not a listing. The public credit for each file is on `/credits`, linked from the footer. The homepage does not show a caption on the photograph.
+The homepage image is `public/brand/home-hero-living-room.jpg`, with `public/brand/home-hero-living-room.webp` beside it. It is an illustrative image created for Guyana Keys. It is not a third-party photograph. The homepage shows no caption. `/credits` includes the line “Homepage image: illustrative image created for Guyana Keys.” The image alt text says it is an illustrative image and not a listing.
 
-Licence pages:
+No third-party photograph is used on the public site, so `/credits` has no external author or licence row.
 
-- CC BY 2.0: https://creativecommons.org/licenses/by/2.0/
+`public/brand/cathedral-georgetown.jpg` remains in the repository and is not used. It is not listed on `/credits`. If it is used again, the credit is Ian Mackenzie, https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg, CC BY 2.0 (https://creativecommons.org/licenses/by/2.0/).
 
-| File | Subject | Source | Author | Licence |
-| --- | --- | --- | --- | --- |
-| `public/brand/cathedral-georgetown.jpg` | St George's Cathedral, Georgetown | https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg | Ian Mackenzie | CC BY 2.0 |
+Area tiles use a Forest gradient, not a photograph. `public/brand/og.jpg` is a generated Forest wordmark card for link previews. It is not a photograph.
 
-The original was downloaded from Wikimedia Commons and resized to a maximum width of 1600px. Area tiles use a Forest gradient, not a photograph. `public/brand/og.jpg` is a generated Forest wordmark card for link previews. It is not a photograph.
-
-The Unsplash files already referenced on `/advertise` are not part of this set and are not reused on the homepage.
+The Unsplash files in local sample data are not part of this set, are not loaded in production, and are not reused on the homepage.

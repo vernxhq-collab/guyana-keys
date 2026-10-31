@@ -52,13 +52,7 @@ export type PhotoCredit = {
   licenceHref: string;
 };
 
-export const photoCredits: PhotoCredit[] = [
-  {
-    file: "public/brand/cathedral-georgetown.jpg",
-    subject: "St George's Cathedral, Georgetown",
-    source: "https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg",
-    author: "Ian Mackenzie",
-    licence: "CC BY 2.0",
-    licenceHref: "https://creativecommons.org/licenses/by/2.0/",
-  },
-];
+export const homepageImageCredit = "Homepage image: illustrative image created for Guyana Keys.";
+
+/** No third-party photograph is used on the public site. */
+export const photoCredits: PhotoCredit[] = [];

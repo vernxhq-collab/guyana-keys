@@ -117,11 +117,16 @@ assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.met
 assert.equal(readFileSync(new URL("../src/app/preview/home/page.tsx", import.meta.url), "utf8").includes("previewEnabled"), true);
 assert.equal(marketHome.includes("Illustrative. Not a listing. Photo:"), false);
 assert.equal(marketHome.includes("function Credit"), false);
-assert.match(marketHome, /an illustrative photograph, not a listing/);
+assert.equal(marketHome.includes("cathedral-georgetown"), false);
+assert.match(marketHome, /Bright living room with louvred windows and keys on the table, an illustrative image, not a listing\./);
+assert.match(marketHome, /home-hero-living-room\.jpg/);
 const creditsPage = readFileSync(new URL("../src/app/credits/page.tsx", import.meta.url), "utf8");
 assert.match(creditsPage, /Photos are illustrative and are not listings\./);
+assert.match(creditsPage, /homepageImageCredit/);
 assert.match(creditsPage, /photoCredits/);
-assert.match(readFileSync(new URL("../src/lib/attribution.ts", import.meta.url), "utf8"), /Ian Mackenzie/);
+const attributionSource = readFileSync(new URL("../src/lib/attribution.ts", import.meta.url), "utf8");
+assert.match(attributionSource, /Homepage image: illustrative image created for Guyana Keys\./);
+assert.equal(attributionSource.includes("cathedral-georgetown.jpg"), false);
 assert.match(readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8"), /href="\/credits">Photo credits/);
 assert.match(readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8"), /\/credits/);
 assert.match(readFileSync(new URL("../src/app/robots.ts", import.meta.url), "utf8"), /\/credits/);
