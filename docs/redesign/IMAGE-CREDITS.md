@@ -1,15 +1,9 @@
 # Image credits
 
-Photographs used in the Priority 1 redesign. Each one is genuine Guyana scenery or architecture. Each is stored under `public/brand/` and marked in the page as illustrative, not a listing.
+The homepage uses `public/brand/home-hero-living-room.jpg`, with `public/brand/home-hero-living-room.webp` beside it. It is an illustrative image created for Guyana Keys. It is not a licensed third-party photograph. The homepage shows no caption, and the site has no photo-credit page.
 
-Licence pages:
+`public/brand/cathedral-georgetown.jpg` has been removed. It is not used.
 
-- CC BY 2.0: https://creativecommons.org/licenses/by/2.0/
+Area tiles use a Forest gradient, not a photograph. `public/brand/og.jpg` is a generated Forest wordmark card for link previews. It is not a photograph.
 
-| File | Subject | Source | Author | Licence |
-| --- | --- | --- | --- | --- |
-| `public/brand/cathedral-georgetown.jpg` | St George's Cathedral, Georgetown | https://commons.wikimedia.org/wiki/File:St._Georges_Cathedral_Georgetown,_Guyana.jpg | Ian Mackenzie | CC BY 2.0 |
-
-The original was downloaded from Wikimedia Commons and resized to a maximum width of 1600px. Area tiles use a Forest gradient, not a photograph. `public/brand/og.jpg` is a generated Forest wordmark card for link previews. It is not a photograph.
-
-The Unsplash files already referenced on `/advertise` are not part of this set and are not reused on the homepage.
+The Unsplash files in local sample data are not part of this set, are not loaded in production, and are not reused on the homepage.
