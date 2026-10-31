@@ -1,4 +1,5 @@
-import { checkBadge, expireStatus, licenceLabel, LICENCE_TYPES, type LicenceType } from "./licences";
+import { checkBadge, expireStatus, licenceLabel, LICENCE_TYPES, type BadgeLevel, type LicenceType } from "./licences";
+import { loadAgentOutcome } from "./levels-data";
 import { newId } from "./labels";
 import { ID_CONSENT_VERSION, RETENTION_MONTHS } from "./compliance/retention";
 import { loadAgentKeysCheck } from "./keys-check-data";
@@ -41,14 +42,27 @@ export async function badgesFor(agentIds: string[]) {
   const db = serviceDb();
   const ids = agentIds.filter(Boolean);
   if (!db || !ids.length) return badges;
-  const [licences, identity] = await Promise.all([
+  const [licences, identity, levels] = await Promise.all([
     db.from("agent_licences").select("id,agent_id,licence_type,check_status,checked_at,expiry_date").in("agent_id", ids),
     db.from("agent_identity_checks").select("agent_id,id_status,checked_at").in("agent_id", ids),
+    db.from("verification_status").select("agent_id,level,state,badge_month").eq("marketplace_id", "gy").in("agent_id", ids),
   ]);
   if (licences.error || identity.error) return badges;
   const today = todayUtc();
+  const levelRows = missingTable(levels.error) ? null : ((levels.data || []) as Row[]);
   await flagExpired((licences.data || []) as Row[]);
   for (const id of ids) {
+    const level = levelRows?.find((row) => text(row.agent_id) === id);
+    if (level && (text(level.level) === "registered" || text(level.level) === "identity_reviewed" || text(level.level) === "licensed_agent")) {
+      badges[id] = checkBadge({
+        level: text(level.level) as BadgeLevel,
+        state: text(level.state),
+        badgeMonth: text(level.badge_month),
+        licences: [],
+        today,
+      });
+      continue;
+    }
     const own = (licences.data || []).filter((row) => String(row.agent_id) === id);
     const idRow = (identity.data || []).find((row) => String(row.agent_id) === id);
     badges[id] = checkBadge({
@@ -80,11 +94,13 @@ export async function agentChecks(agentId: string) {
   const rows = (licences.data || []) as Row[];
   await flagExpired(rows);
   const keys = await loadAgentKeysCheck(agentId);
+  const outcome = await loadAgentOutcome(agentId).catch(() => null);
   return {
     ready: true,
     consentVersion: ID_CONSENT_VERSION,
     keysCheck: keys.check,
     flags: keys.flags,
+    outcome,
     licences: rows.map(licenceView),
     identity: identity.data ? {
       status: text(identity.data.id_status) || "pending",

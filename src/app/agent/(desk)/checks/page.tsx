@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CheckOutcome } from "../../../../components/CheckOutcome";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { KeysCapture } from "../../../../components/KeysCapture";
 import { PhoneScan } from "../../../../components/PhoneScan";
+import type { AgentOutcome } from "../../../../lib/levels";
 import { documentLabel } from "../../../../lib/keys-check";
 import { LICENCE_TYPES, licenceLabel } from "../../../../lib/licences";
 
@@ -32,6 +34,7 @@ export default function ChecksPage() {
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [earlier, setEarlier] = useState(false);
+  const [outcome, setOutcome] = useState<AgentOutcome | null>(null);
 
   function load() {
     fetch("/api/agent?part=checks")
@@ -46,6 +49,7 @@ export default function ChecksPage() {
           setFlags(data.flags || []);
           setIdentity(data.identity?.status || "not submitted");
           setConsentVersion(data.consentVersion || "");
+          setOutcome(data.outcome || null);
         }
       })
       .catch(() => setError("Could not load checks."));
@@ -92,6 +96,20 @@ export default function ChecksPage() {
       {!ready ? <p>Licence checks are not ready on this desk yet.</p> : null}
       {note ? <p>{note}</p> : null}
       <p className="quiet">ID check status: {identity}. Keys Check is reviewed by a person. No outside company and no face-matching software is used.</p>
+      <p>Get your ID reviewed to help make Guyana Keys a safer place to find property. Thank you.</p>
+      <CheckOutcome outcome={outcome} onAppeal={async (statement) => {
+        const res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "appeal", statement, decisionId: outcome?.appealDecisionId || "" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          load();
+          return "Your appeal has been received. A senior reviewer will look at it. Thank you.";
+        }
+        return data.error || "The appeal could not be sent.";
+      }} />
       <PhoneScan consentVersion={consentVersion} />
       <p className="quiet"><button className="btn ghost" type="button" onClick={() => setEarlier((current) => !current)}>{earlier ? "Hide the earlier form" : "Use the earlier upload form"}</button></p>
       {earlier ? <KeysCapture consentVersion={consentVersion} documents={documents} keysCheck={keysCheck} flags={flags} onDone={(message) => { setNote(message); load(); }} /> : null}

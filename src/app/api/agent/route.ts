@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { agentCalendar, agentHome, agentLead, agentLeadList, agentListing, agentListings, agentPlan, createRequest, deleteListing, duplicateListing, hideListing, saveAgentProfile, saveListing, updateLead } from "../../../lib/agent-data";
+import { openAppeal } from "../../../lib/levels-data";
 import { agentChecks, requestIdDeletion, saveAgentLicence } from "../../../lib/phase1-desk";
 import { issueKeysCode, submitKeysCheck } from "../../../lib/keys-check-data";
 import { encodeWorld, fitWorld, readPreview, WORLD_COOKIE } from "../../../lib/preview/http";
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
   else if (action === "requestDeletion") result = await requestIdDeletion(gate.profile.id, String(body.documentId || ""), String(body.note || ""));
   else if (action === "issueCode") result = await issueKeysCode(gate.profile.id);
   else if (action === "submitKeysCheck") result = await submitKeysCheck(gate.profile.id, body);
+  else if (action === "appeal") result = await openAppeal(gate.profile.id, String(body.statement || ""), String(body.decisionId || ""));
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json(result);
 }

@@ -27,13 +27,30 @@ function joinParts(parts: string[]) {
   return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
 }
 
+export type BadgeLevel = "registered" | "identity_reviewed" | "licensed_agent";
+
+const LEVEL_MONTH = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Oct|Nov|Dec) \d{4}$/;
+
 /** Public badge. Returns nothing when no current check remains. Never the word Verified. */
 export function checkBadge(input: {
   idStatus?: string;
   idCheckedAt?: string | null;
   licences: { type: string; status: string; checkedAt?: string | null; expiry?: string | null }[];
   today: string;
+  /** When set, this is the Phase 2b public line. Level 1 returns nothing. */
+  level?: BadgeLevel | "";
+  state?: string;
+  badgeMonth?: string | null;
 }) {
+  if (input.level) {
+    if (input.state && input.state !== "active") return "";
+    if (input.level === "registered") return "";
+    const when = (input.badgeMonth || "").trim().replace(/\s+/g, " ");
+    if (!LEVEL_MONTH.test(when)) return "";
+    if (input.level === "licensed_agent") return `Licence checked by Guyana Keys · ${when}`;
+    if (input.level === "identity_reviewed") return `ID reviewed by Guyana Keys · ${when}`;
+    return "";
+  }
   const parts: string[] = [];
   const dates: string[] = [];
   const idReviewed = input.idStatus === "checked" && Boolean(input.idCheckedAt);
