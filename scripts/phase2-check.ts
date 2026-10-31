@@ -206,8 +206,8 @@ assert.deepEqual([...SUBJECT_TYPES], ["agent", "tenant", "purchaser", "landlord"
 assert.equal(makeCheckCode(() => 0), "AAAAAA");
 assert.equal(codeStillCurrent(new Date().toISOString()), true);
 assert.equal(codeStillCurrent("2020-01-01T00:00:00Z"), false);
-assert.equal(ID_CONSENT_VERSION, "2026-10-30-keys");
-assert.match(idConsentText, /a photo of you holding a paper with a one-time code/);
+assert.equal(ID_CONSENT_VERSION, "2026-10-31-keys");
+assert.match(idConsentText, /a photo of the one-time code on paper or on another screen/);
 assert.equal(/\b(video|clip)\b/i.test(idConsentText), false);
 assert.equal(/\bverified\b/i.test(idConsentText), false);
 assert.match(idConsentText, /You can withdraw consent at any time by emailing info@gykeys\.com\. If you do, the check stops and your images are deleted under the retention rules\./);

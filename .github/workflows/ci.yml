@@ -29,6 +29,8 @@ jobs:
       - run: node --experimental-strip-types scripts/phase1-check.ts
       - run: node --experimental-strip-types scripts/phase2-check.ts
       - run: node --experimental-strip-types scripts/phase2a-check.ts
+      - run: node scripts/vendor-scan-assets.mjs
+      - run: node --experimental-strip-types scripts/phase3-check.ts
       - run: npx next build
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-fixture.sql
@@ -54,6 +56,10 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase3-phone-scan.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase3-phone-scan.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase3-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase3-attacks.sql
   migration:
     runs-on: ubuntu-latest
     services:
@@ -95,6 +101,10 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase3-phone-scan.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase3-phone-scan.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase3-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase3-attacks.sql
   upgrade:
     runs-on: ubuntu-latest
     services:
@@ -139,3 +149,7 @@ jobs:
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase2a-verify.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase2a-attacks.sql
       - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/rls-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase3-phone-scan.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f supabase/phase3-phone-scan.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase3-attacks.sql
+      - run: psql "postgres://postgres:postgres@localhost:5432/keys" -v ON_ERROR_STOP=1 -f scripts/phase3-attacks.sql

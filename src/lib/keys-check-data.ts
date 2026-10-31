@@ -13,6 +13,7 @@ import {
   verificationProvider,
 } from "./keys-check";
 import { hashIdNumber, idNumberLast3, normaliseIdNumber } from "./id-number";
+import { scanFlagSentences } from "./scan-flags";
 import { serviceDb } from "./supabase";
 
 export const IDENTITY_BUCKET = "identity-documents";
@@ -184,7 +185,7 @@ export async function submitKeysCheck(agentId: string, body: Record<string, unkn
   if (missing) return { error: `Add ${missing[1]} before you send the check.` };
   const issued = new Date(text(found.row.code_issued_at)).getTime();
   const currentCodeFile = live.some((row) => (text(row.kind) === "code_selfie" || text(row.kind) === "code_video") && new Date(text(row.created_at)).getTime() >= issued - 5000);
-  if (!currentCodeFile) return { error: "Add a photo of the current code on paper, or a short clip of you saying that code." };
+  if (!currentCodeFile) return { error: "Add a photo of the current code, on paper or on another screen." };
   const { error } = await db.from("keys_checks").update({
     status: "submitted",
     id_kind: idKind,
@@ -227,7 +228,10 @@ export async function adminKeysQueue() {
       ...viewCheck(row as Row),
       agentId: text(row.agent_id),
       agentName: names.get(text(row.agent_id)) || "Agent",
-      flags: (flags.data || []).filter((flag) => text(flag.agent_id) === text(row.agent_id)).map((flag) => flagSentence(text(flag.flag))).filter(Boolean),
+      flags: ([] as string[]).concat(
+        (flags.data || []).filter((flag) => text(flag.agent_id) === text(row.agent_id)).map((flag) => flagSentence(text(flag.flag))).filter((line) => line.length > 0),
+        scanFlagSentences(text(row.scan_flags)),
+      ),
     })),
   };
 }
