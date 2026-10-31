@@ -151,7 +151,7 @@ The homepage card submits `q` (area text, with the existing area datalist) plus 
 
 ### Cards
 
-White, 1px `--line`, radius 16px, shadow `--shadow`. Image ratio 3:2 where a photograph is used. Hover lifts 2px when motion is allowed. Real listing cards stay on `MarketCard` and only render catalogue rows. The homepage image carries `data-illustrative="true"`. Its alt text says it is an illustrative image and not a listing. `/credits` says the homepage image was created for Guyana Keys.
+White, 1px `--line`, radius 16px, shadow `--shadow`. Image ratio 3:2 where a photograph is used. Hover lifts 2px when motion is allowed. Real listing cards stay on `MarketCard` and only render catalogue rows. The homepage image carries `data-illustrative="true"`. Its alt text says it is an illustrative image and not a listing. There is no photo-credit caption.
 
 Graphic cards (no photograph) use a forest or ivory ground, a 2px gold rule, and a label. They do not use stock houses.
 
@@ -201,7 +201,7 @@ Measurements below are the content inside the gutter. “Desktop” means 1280. 
 Order is fixed.
 
 1. **Header.** As specified above. Not repeated in the page body.
-2. **Hero and search.** Full-width illustrative image of a bright living room, object-fit cover, with the open wall kept in frame. A soft shade sits behind the headline so the white type stays readable, and the room remains visible. The headline “Your next key is in Guyana.” is centred in white over the image. There is no subline and no caption. `/credits` says the homepage image was created for Guyana Keys. A white card overlaps the bottom, centred, radius 22px on every corner, with a soft shadow. Tabs are Buy, Rent, Land, and Commercial, and the active tab is underlined in Gold. One rounded area field submits to `/listings`, with the search button inside the field. The card does not carry a second message. At 390 the card uses the page margins and the tabs scroll horizontally inside the card. No title-verification sentence in this block.
+2. **Hero and search.** Full-width illustrative image of a bright living room, object-fit cover, with the open wall kept in frame. A soft shade sits behind the headline so the white type stays readable, and the room remains visible. The headline “Your next key is in Guyana.” is centred in white over the image. There is no subline and no caption. A white card overlaps the bottom, centred, radius 22px on every corner, with a soft shadow. Tabs are Buy, Rent, Land, and Commercial, and the active tab is underlined in Gold. One rounded area field submits to `/listings`, with the search button inside the field. The card does not carry a second message. At 390 the card uses the page margins and the tabs scroll horizontally inside the card. No title-verification sentence in this block.
 3. **Explore Guyana by area.** Title, then a grid of six regions that already exist: Georgetown, East Coast Demerara, East Bank Demerara, West Coast Demerara, Essequibo, Berbice. Each card links to `/areas/region/{slug}`, uses the same Forest gradient, and shows the area name at the bottom left. A Gold “Coming soon” pill sits at the top left of a tile only while that region has no live listing, and it is omitted once a live listing exists. Two columns at 390, three from 768px.
 4. **Guides.** Heading “Guides for buying and renting in Guyana”, then the sentence `A listing is not proof of title.` once, then three cards: Buying from abroad (`/guides/buying-from-abroad`), Spotting property scams (`/guides/spotting-scams`), and Renting in Guyana (`/guides/renting`). Each card has a simple stroke icon, a title, one line, and the words “Read guide”. The index is `/guides`. There is no blog and no category grid, because Buy, Rent, Land, and Commercial already sit in the header and the search card.
 5. **Free to list.** One forest band, separate from the search card, with radius 16px. It says “Free to list, no limits.” and links “List your property free” to `/advertise`. This is the only list pitch on the homepage besides the header button. The footer still links to `/advertise` as a directory item and does not repeat the sentence, because the homepage hides `.footer-base`.
@@ -280,7 +280,7 @@ Covered under List your property. `/landlords` and `/developers` keep their form
 - Search submits to `/listings` with the field mapping in this spec.
 - The hero does not contain “A listing is not proof of title.” The guides section does, once, as its own line. The longer deposit paragraph is on `/guides/spotting-scams`.
 - “Free to list, no limits” is present.
-- `/credits` matches `IMAGE-CREDITS.md`. The homepage image is recorded there as created for Guyana Keys. The hero alt text says it is an illustrative image and not a listing. The hero has no caption.
+- The hero alt text says the image is illustrative and not a listing. The hero has no caption, and the site has no photo-credit page.
 
 ### Buy, Rent, Land, Agents
 

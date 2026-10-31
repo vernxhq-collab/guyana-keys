@@ -70,7 +70,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p><Link href="/contact">Contact</Link></p>
               <p><Link href="/privacy">Privacy</Link></p>
               <p><Link href="/terms">Terms</Link></p>
-              <p><Link href="/credits">Photo credits</Link></p>
             </div>
           </div>
           <div className="wrap footer-base">

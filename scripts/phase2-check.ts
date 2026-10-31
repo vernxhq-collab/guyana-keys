@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { draftDescription, draftReply } from "../src/lib/ai/local.ts";
 import { DAILY_BRIEFING_ENABLED, dailyBriefingJob } from "../src/lib/ai/briefing.ts";
 import { channelSenders } from "../src/lib/ai/channel.ts";
@@ -120,17 +120,18 @@ assert.equal(marketHome.includes("function Credit"), false);
 assert.equal(marketHome.includes("cathedral-georgetown"), false);
 assert.match(marketHome, /Bright living room with louvred windows and keys on the table, an illustrative image, not a listing\./);
 assert.match(marketHome, /home-hero-living-room\.jpg/);
-const creditsPage = readFileSync(new URL("../src/app/credits/page.tsx", import.meta.url), "utf8");
-assert.match(creditsPage, /Photos are illustrative and are not listings\./);
-assert.match(creditsPage, /homepageImageCredit/);
-assert.match(creditsPage, /photoCredits/);
+assert.equal(existsSync(new URL("../src/app/credits/page.tsx", import.meta.url)), false);
+assert.equal(existsSync(new URL("../public/brand/cathedral-georgetown.jpg", import.meta.url)), false);
 const attributionSource = readFileSync(new URL("../src/lib/attribution.ts", import.meta.url), "utf8");
-assert.match(attributionSource, /Homepage image: illustrative image created for Guyana Keys\./);
-assert.equal(attributionSource.includes("cathedral-georgetown.jpg"), false);
-assert.match(readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8"), /href="\/credits">Photo credits/);
-assert.match(readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8"), /\/credits/);
-assert.match(readFileSync(new URL("../src/app/robots.ts", import.meta.url), "utf8"), /\/credits/);
+assert.equal(attributionSource.includes("photoCredits"), false);
+assert.equal(attributionSource.includes("homepageImageCredit"), false);
+const layoutSource = readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8");
+assert.equal(layoutSource.includes("/credits"), false);
+assert.equal(layoutSource.includes("Photo credits"), false);
+assert.equal(readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8").includes("/credits"), false);
+assert.equal(readFileSync(new URL("../src/app/robots.ts", import.meta.url), "utf8").includes("/credits"), false);
 assert.equal(readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8").includes(".home-hero figcaption"), false);
+assert.equal(readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8").includes(".credit-list"), false);
 
 const badge = checkBadge({
   idStatus: "checked",

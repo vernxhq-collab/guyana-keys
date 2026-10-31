@@ -41,18 +41,3 @@ export function formatLeadSource(row: Record<string, unknown>) {
     .join(" ");
   return ["Guyana Keys", channel, page, utmText].filter(Boolean).join(" · ");
 }
-
-/** Third-party photographs. Each row is copied from docs/redesign/IMAGE-CREDITS.md. */
-export type PhotoCredit = {
-  file: string;
-  subject: string;
-  source: string;
-  author: string;
-  licence: string;
-  licenceHref: string;
-};
-
-export const homepageImageCredit = "Homepage image: illustrative image created for Guyana Keys.";
-
-/** No third-party photograph is used on the public site. */
-export const photoCredits: PhotoCredit[] = [];
