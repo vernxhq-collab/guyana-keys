@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DeskSkeleton } from "../../../../components/DeskSkeleton";
 import { KeysCapture } from "../../../../components/KeysCapture";
+import { PhoneScan } from "../../../../components/PhoneScan";
 import { documentLabel } from "../../../../lib/keys-check";
 import { LICENCE_TYPES, licenceLabel } from "../../../../lib/licences";
 
@@ -30,6 +31,7 @@ export default function ChecksPage() {
   const [consentVersion, setConsentVersion] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
+  const [earlier, setEarlier] = useState(false);
 
   function load() {
     fetch("/api/agent?part=checks")
@@ -90,6 +92,9 @@ export default function ChecksPage() {
       {!ready ? <p>Licence checks are not ready on this desk yet.</p> : null}
       {note ? <p>{note}</p> : null}
       <p className="quiet">ID check status: {identity}. Keys Check is reviewed by a person. No outside company and no face-matching software is used.</p>
+      <PhoneScan consentVersion={consentVersion} />
+      <p className="quiet"><button className="btn ghost" type="button" onClick={() => setEarlier((current) => !current)}>{earlier ? "Hide the earlier form" : "Use the earlier upload form"}</button></p>
+      {earlier ? <KeysCapture consentVersion={consentVersion} documents={documents} keysCheck={keysCheck} flags={flags} onDone={(message) => { setNote(message); load(); }} /> : null}
       {LICENCE_TYPES.map((type) => {
         const current = licences.find((item) => item.type === type);
         return (
@@ -106,7 +111,6 @@ export default function ChecksPage() {
           </form>
         );
       })}
-      <KeysCapture consentVersion={consentVersion} documents={documents} keysCheck={keysCheck} flags={flags} onDone={(message) => { setNote(message); load(); }} />
       {documents.length === 0 ? null : documents.map((row) => (
         <p className="quiet-row" key={row.id}>
           <span>{documentLabel(row.kind)} · {row.deletedAt ? "Deleted" : "Stored"} · consent {row.consentVersion}</span>
